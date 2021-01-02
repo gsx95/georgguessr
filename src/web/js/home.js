@@ -1,8 +1,8 @@
 const ROOMS_ENDPOINT = "http://localhost:3000/rooms?lastRequest=";
 const HOME_VIEW_NAME = "HOME";
 
+
 class HomeView {
-    lastRequestTime;
 
     constructor() {
         if (HomeView._instance) {

@@ -2,8 +2,6 @@ const MAP_VIEW_NAME = "MAP";
 
 class MapView {
 
-    gameID;
-
     constructor(gameID) {
         this.gameID = gameID;
     }
