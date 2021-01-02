@@ -8,6 +8,7 @@
     <script src="js/render.js"></script>
     <script src="js/home.js"></script>
     <script src="js/map.js"></script>
+    <script src="js/utils.js"></script>
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <link href="css/home.css" rel="stylesheet"/>
@@ -29,19 +30,21 @@
                         <th scope="col"><i class="fas fa-user"></i></th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody id ="home-table-body">
                     </tbody>
                 </table>
             </div>
         </div>
     </script>
     <script id="HomeTableRowTemplate" type="x-tmpl-mustache">
+        {{#rooms}}
         <tr>
-            <td scope="row" class="home-table-name">TestTest</td>
-            <td class="home-table-state">Creating</td>
-            <td class="home-table-players">3/4</td>
-            <td class="home-table-join"><button class="home-join-button">Join <i class="fas fa-lock"></i></button></td>
+            <td scope="row" class="home-table-name">{{name}}</td>
+            <td class="home-table-state">{{state}}</td>
+            <td class="home-table-players">{{players}}</td>
+            <td class="home-table-join"><button class="home-join-button">Join {{#protected}}<i class="fas fa-lock"></i>{{/protected}}</button></td>
         </tr>
+        {{/rooms}}
     </script>
 </body>
 </html>

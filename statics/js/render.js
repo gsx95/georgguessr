@@ -9,7 +9,7 @@ function renderWholeView(templName, params) {
     mainDiv.innerHTML = Mustache.render(template, params);
 }
 
-function getRenderedTemplate(templNam, params) {
+function getRenderedTemplate(templName, params) {
     var template = document.getElementById(templName).innerHTML;
     return Mustache.render(template, params);
 }
