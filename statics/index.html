@@ -10,10 +10,15 @@
     <script src="js/map.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
+
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initialize&libraries=&v=weekly" defer></script>
+
 
     <link href="css/home.css" rel="stylesheet"/>
+    <link href="css/map.css" rel="stylesheet"/>
     <link href="css/main.css" rel="stylesheet"/>
 </head>
 
@@ -22,7 +27,7 @@
 
     <script id="HomeTemplate" type="x-tmpl-mustache">
         <div id="page-home">
-            <button class="center">Create Room</button>
+            <button id="create-room-btn" class="center">Create Room</button>
             <div class="home-table">
                 <table>
                     <thead>
@@ -47,6 +52,9 @@
             <td class="home-table-join"><button class="home-join-button">Join {{#protected}}<i class="fas fa-lock"></i>{{/protected}}</button></td>
         </tr>
         {{/rooms}}
+    </script>
+    <script id="MapTemplate" type="x-tmpl-mustache">
+        <div id="map"></div>
     </script>
 </body>
 </html>

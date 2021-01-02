@@ -9,3 +9,7 @@ function showHomeView() {
     homeView.show();
 }
 
+function showMapView(gameID) {
+    let mapView = new MapView(gameID);
+    mapView.show();
+}

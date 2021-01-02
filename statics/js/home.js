@@ -8,18 +8,18 @@ class HomeView {
         if (HomeView._instance) {
             return HomeView._instance
         }
+        this.lastRequestTime = 0;
         HomeView._instance = this;
     }
 
     show() {
         CURRENT_VIEW = HOME_VIEW_NAME;
-        this.initVars();
         renderWholeView("HomeTemplate");
         this.updateRoomTable();
-    }
 
-    initVars() {
-        this.lastRequestTime = 0;
+        document.getElementById("create-room-btn").onclick = function (){
+            showMapView("not-implemented");
+        }
     }
 
     updateRoomTable() {
