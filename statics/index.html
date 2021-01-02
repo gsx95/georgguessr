@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <script src="js/render.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/map.js"></script>
+    <script src="https://unpkg.com/mustache@latest"></script>
+    <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
+    <link href="css/home.css" rel="stylesheet"/>
+    <link href="css/main.css" rel="stylesheet"/>
+</head>
+
+<body onload="initRenderer(); showHome();">
+    <div class="full-size" id="main"></div>
+
+    <script id="HomeTemplate" type="x-tmpl-mustache">
+        <div id="page-home">
+            <button class="center">Create Room</button>
+            <div class="home-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th class="th-no-border"></th>
+                        <th scope="col"><i class="fas fa-info-circle"></i></th>
+                        <th scope="col"><i class="fas fa-user"></i></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </script>
+    <script id="HomeTableRowTemplate" type="x-tmpl-mustache">
+        <tr>
+            <td scope="row" class="home-table-name">TestTest</td>
+            <td class="home-table-state">Creating</td>
+            <td class="home-table-players">3/4</td>
+            <td class="home-table-join"><button class="home-join-button">Join <i class="fas fa-lock"></i></button></td>
+        </tr>
+    </script>
+</body>
+</html>

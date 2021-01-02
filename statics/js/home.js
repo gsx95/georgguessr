@@ -1,0 +1,3 @@
+function showHome() {
+    renderWholeView("HomeTemplate");
+}
