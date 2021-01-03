@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  georgguessr
+  
+  Serverless clone of geoguessr
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  GeorgGuessrFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/backend/
+      Handler: handler
+      Runtime: go1.x
+      Events:
+        GetRoom:
+          Type: Api
+          Properties:
+            Path: /rooms/{roomID}
+            Method: GET
+        GetAvailableRoom:
+          Type: Api
+          Properties:
+            Path: /available-rooms
+            Method: GET
+        PostRoom:
+          Type: Api
+          Properties:
+            Path: /rooms
+            Method: POST
+    Policies:
+    - Version: '2012-10-17'
+      Statement:
+      - Effect: Allow
+        Action:
+        - 'dynamodb:DeleteItem'
+        - 'dynamodb:GetItem'
+        - 'dynamodb:PutItem'
+        - 'dynamodb:UpdateItem'
+        Resource:
+          'Fn::Join':
+          - ''
+          - - 'arn:aws:dynamodb:'
+            - Ref: 'AWS::Region'
+            - ':'
+            - Ref: 'AWS::AccountId'
+            - ':table/GeorgGuessrRooms'
+  GeorgGuessrRooms:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: GeorgGuessrRooms
+      AttributeDefinitions:
+      - AttributeName: ID
+        AttributeType: S
+      KeySchema:
+      - AttributeName: ID
+        KeyType: HASH
