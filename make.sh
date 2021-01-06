@@ -1,5 +1,38 @@
 #!/usr/bin/env bash
 
+echo "------------------------"
+echo "Building Backend..."
+echo "------------------------"
+sam build
+if (( $? != 0 )); then
+    exit
+fi
+echo "------------------------"
+echo "Done!"
+echo ""
+echo "------------------------"
+echo "Deploying Backend..."
+echo "------------------------"
+sam deploy
+if (( $? != 0 )); then
+    exit
+fi
+echo "------------------------"
+echo "Done!"
+echo ""
+echo "------------------------"
+echo "Building Frontend..."
+echo "------------------------"
+RES=$(aws cloudformation describe-stack-resources --stack-name georgguessr)
+API_KEY_ID=$(echo ${RES} | jq -r '.StackResources[]  | select(.ResourceType == "AWS::ApiGateway::ApiKey") | .PhysicalResourceId')
+API_KEY_VALUE=$(aws apigateway get-api-key --include-value --api-key ${API_KEY_ID} | jq -r '.value')
+API_ID=$(echo ${RES} | jq -r '.StackResources[]  | select(.ResourceType == "AWS::ApiGateway::RestApi") | .PhysicalResourceId')
+API_ENDPOINT="https://$API_ID.execute-api.eu-central-1.amazonaws.com/Prod"
+
+
+echo "API KEY:  $API_KEY_VALUE"
+echo "API ENDPOINT:  $API_ENDPOINT"
+
 rm -r statics
 mkdir -p statics
 mkdir -p statics/js
@@ -20,3 +53,7 @@ if [[ $1 = "prod" ]]; then
 else
   cp -R src/web/js/ statics/js/
 fi
+
+echo "------------------------"
+echo "Done!"
+echo ""
