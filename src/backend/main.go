@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 )
 
 func handleGetRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -24,18 +25,16 @@ func handleGetRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProx
 	}
 	room, err := data.GetRoom(roomID)
 	if err != nil {
-		fmt.Println(err)
 		return events.APIGatewayProxyResponse{
-			Body:       "Room not found.",
+			Body:       fmt.Sprintf("%v", err),
 			StatusCode: 404,
 		}, nil
 	}
 
 	bytes, err := json.Marshal(room)
 	if err != nil {
-		fmt.Println(err)
 		return events.APIGatewayProxyResponse{
-			Body:       "Room not found.",
+			Body:       fmt.Sprintf("%v", err),
 			StatusCode: 404,
 		}, nil
 	}
@@ -50,7 +49,12 @@ func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayPro
 	stringBody := request.Body
 	var body map[string]string
 	err := json.Unmarshal([]byte(stringBody), &body)
-
+    if err != nil {
+		return events.APIGatewayProxyResponse{
+			Body:       fmt.Sprintf("%v", err),
+			StatusCode: 500,
+		}, nil
+	}
 	name := body["name"]
 	if name == "" {
 		return events.APIGatewayProxyResponse{
@@ -58,18 +62,15 @@ func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayPro
 			StatusCode: 400,
 		}, nil
 	}
-
 	id := generateRoomID()
-
 	err = data.CreateRoom(data.Room{
 		ID: id,
 		Name: name,
 	})
 
 	if err != nil {
-		fmt.Println(err)
 		return events.APIGatewayProxyResponse{
-			Body:       "server error",
+			Body:       fmt.Sprintf("%v", err),
 			StatusCode: 500,
 		}, nil
 	}
@@ -121,6 +122,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	region := os.Getenv("AWS_REGION")
 	awsSession, err := session.NewSession(&aws.Config{
 		Region: aws.String(region)},
