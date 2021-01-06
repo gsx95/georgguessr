@@ -9,6 +9,22 @@ Globals:
   Function:
     Timeout: 10
 Resources:
+  GuessrAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        ApiKeyRequired: true
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          Description: Guessr API Usage Plan
+          UsagePlanName: GuessrUsagePlan
+          Quota:
+            Limit: 5000
+            Period: DAY
+          Throttle:
+            BurstLimit: 30
+            RateLimit: 30
   GeorgGuessrFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -21,36 +37,49 @@ Resources:
           Properties:
             Path: /rooms/{roomID}
             Method: GET
+            RestApiId:
+              Ref: GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         GetAvailableRoom:
           Type: Api
           Properties:
             Path: /available-rooms
             Method: GET
+            RestApiId:
+              Ref: GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         PostRoom:
           Type: Api
           Properties:
             Path: /rooms
             Method: POST
-    Policies:
-    - Version: '2012-10-17'
-      Statement:
-      - Effect: Allow
-        Action:
-        - dynamodb:DeleteItem
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        Resource:
-          Fn::Join:
-          - ''
-          - - 'arn:aws:dynamodb:'
-            - Ref: AWS::Region
-            - ':'
-            - Ref: AWS::AccountId
-            - :table/GeorgGuessrRooms
+            RestApiId:
+              Ref: GuessrAPI
+            Auth:
+              ApiKeyRequired: trues
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:DeleteItem
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - :table/GeorgGuessrRooms
   GeorgGuessrRooms:
     Type: AWS::DynamoDB::Table
     Properties:
+      BillingMode: PAY_PER_REQUEST
       TableName: GeorgGuessrRooms
       AttributeDefinitions:
       - AttributeName: ID
