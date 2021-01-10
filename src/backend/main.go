@@ -19,31 +19,75 @@ import (
 func handleGetRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	roomID := request.PathParameters["roomID"]
 	if roomID == "" {
-		return events.APIGatewayProxyResponse{
-			Body:       "no room id given.",
-			StatusCode: 400,
-		}, nil
+		return generateResponse("no room id given", 400), nil
 	}
 	room, err := data.GetRoom(roomID)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("%v", err),
-			StatusCode: 404,
-		}, nil
+		return generateResponse(fmt.Sprintf("%v", err), 404), nil
 	}
-
 	bytes, err := json.Marshal(room)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("%v", err),
-			StatusCode: 404,
-		}, nil
+		return generateResponse(fmt.Sprintf("%v", err), 500), nil
+	}
+	return generateResponse(string(bytes), 200), nil
+}
+
+func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	id, err := createRoom(request.Body)
+	if err != nil {
+		return generateResponse(fmt.Sprintf("%v", err), 500), nil
+	}
+	return generateResponse(id, 201), nil
+}
+
+func handleGetAvailableRooms(_ events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	rooms, err := data.GetAvailableRooms()
+	if err != nil {
+		return generateResponse(fmt.Sprintf("%v", err), 500), nil
 	}
 
-	return events.APIGatewayProxyResponse{
-		Body:       string(bytes),
-		StatusCode: 200,
-	}, nil
+	byteRooms, err := json.Marshal(rooms)
+	if err != nil {
+		return generateResponse(fmt.Sprintf("%v", err), 500), nil
+	}
+	return generateResponse(string(byteRooms), 200), nil
+}
+
+func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	if request.HTTPMethod == "OPTIONS" {
+		return generateResponse("hi", 200), nil
+	}
+
+	fmt.Println(request.Path)
+
+	if strings.HasPrefix(request.Path, "/rooms") {
+		if request.HTTPMethod == "GET" {
+			return handleGetRoom(request)
+		}
+		if request.HTTPMethod == "POST" {
+			return handlePostRoom(request)
+		}
+	}
+
+	if strings.HasPrefix(request.Path, "/available-rooms") {
+		return handleGetAvailableRooms(request)
+	}
+
+	return generateResponse("operation not supported", 400), nil
+}
+
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	region := os.Getenv("AWS_REGION")
+	awsSession, err := session.NewSession(&aws.Config{
+		Region: aws.String(region)},
+	)
+	if err != nil {
+		return
+	}
+	data.DynamoClient = dynamodb.New(awsSession)
+	lambda.Start(handler)
 }
 
 func createRoom(body string) (roomId string, err error) {
@@ -73,48 +117,15 @@ func createRoom(body string) (roomId string, err error) {
 	return id, nil
 }
 
-func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-
-	id, err := createRoom(request.Body)
-
-	if err != nil {
-		return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("%v", err),
-			StatusCode: 500,
-		}, nil
-	}
-
+func generateResponse(body string, status int) events.APIGatewayProxyResponse {
 	return events.APIGatewayProxyResponse{
-		Body:       id,
-		StatusCode: 201,
-	}, nil
-}
-
-func handleGetAvailableRooms(_ events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-
-	rooms, err := data.GetAvailableRooms()
-
-	if err != nil {
-		return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("%v", err),
-			StatusCode: 500,
-		}, nil
+		Body: body,
+		StatusCode: status,
+		Headers: map[string]string{
+			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Credentials" : "true",
+		},
 	}
-
-	byteRooms, err := json.Marshal(rooms)
-
-	if err != nil {
-		return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("%v", err),
-			StatusCode: 500,
-		}, nil
-	}
-
-	return events.APIGatewayProxyResponse{
-		Body: string(byteRooms),
-		StatusCode: 501,
-	}, nil
-
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -125,40 +136,4 @@ func generateRoomID() string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
-}
-
-func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-
-	fmt.Println(request.Path)
-
-	if strings.HasPrefix(request.Path, "/rooms") {
-		if request.HTTPMethod == "GET" {
-			return handleGetRoom(request)
-		}
-		if request.HTTPMethod == "POST" {
-			return handlePostRoom(request)
-		}
-	}
-
-	if strings.HasPrefix(request.Path, "/available-rooms") {
-		return handleGetAvailableRooms(request)
-	}
-
-	return events.APIGatewayProxyResponse{
-		Body:       "operation not supported",
-		StatusCode: 400,
-	}, nil
-}
-
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	region := os.Getenv("AWS_REGION")
-	awsSession, err := session.NewSession(&aws.Config{
-		Region: aws.String(region)},
-	)
-	if err != nil {
-		return
-	}
-	data.DynamoClient = dynamodb.New(awsSession)
-	lambda.Start(handler)
 }

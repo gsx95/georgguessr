@@ -1,7 +1,12 @@
-let CURRENT_VIEW = HOME_VIEW_NAME;
+let API_ENDPOINT = "";
+let API_KEY = "";
 
-function doGetRequestJSON(url, onload, onerror, always) {
-    fetch(url)
+function doGetRequestJSON(requestPath, onload, onerror, always) {
+    fetch(API_ENDPOINT + requestPath, {
+        headers: {
+            'x-api-key': API_KEY,
+        },
+    })
         .then((resp) => {
             if(resp.status !== 200) {
                 throw new Error("Got status " + resp.status + " on " + url)
@@ -11,9 +16,10 @@ function doGetRequestJSON(url, onload, onerror, always) {
         .then((resp) => resp.json())
         .then(onload)
         .catch(onerror)
-        .finally(function() {
-            if(always !== undefined) {
-                always();
-            }
-        });
+        .finally(always);
+}
+
+function getRenderedTemplate(templName, params) {
+    var template = document.getElementById(templName).innerHTML;
+    return Mustache.render(template, params);
 }

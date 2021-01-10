@@ -18,7 +18,7 @@ var (
 type Room struct {
 	ID         string `json:"id,omitempty"`
 	Name       string `json:"name"`
-	Players    int    `json:"players,omitempty"`
+	Players    int    `json:"players"`
 	MaxPlayers int    `json:"maxPlayers"`
 	Status     string `json:"status,omitempty"`
 }

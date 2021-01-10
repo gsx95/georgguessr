@@ -8,6 +8,12 @@ Description: >
 Globals:
   Function:
     Timeout: 10
+  Api:
+    Cors:
+      AllowMethods: "'GET,PUT,POST,DELETE,OPTIONS'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+      AllowCredentials: "'*'"
 
 
 Resources:
@@ -16,7 +22,6 @@ Resources:
     Properties:
       StageName: Prod
       Auth:
-        ApiKeyRequired: true
         UsagePlan:
           CreateUsagePlan: PER_API
           Description: Guessr API Usage Plan
@@ -43,6 +48,12 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        Options:
+          Type: Api
+          Properties:
+            Path: /{allEndpoints}
+            Method: OPTION
+            RestApiId: !Ref GuessrAPI
         GetAvailableRoom:
           Type: Api
           Properties:
