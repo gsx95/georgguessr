@@ -3,6 +3,7 @@ package main
 import (
 	"backend/pkg"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -45,28 +46,36 @@ func handleGetRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProx
 	}, nil
 }
 
-func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	stringBody := request.Body
-	var body map[string]string
-	err := json.Unmarshal([]byte(stringBody), &body)
-    if err != nil {
-		return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("%v", err),
-			StatusCode: 500,
-		}, nil
+func createRoom(body string) (roomId string, err error) {
+
+	room := data.Room{}
+	err = json.Unmarshal([]byte(body), &room)
+	if err != nil {
+		return "", err
 	}
-	name := body["name"]
-	if name == "" {
-		return events.APIGatewayProxyResponse{
-			Body:       "no name provided in body",
-			StatusCode: 400,
-		}, nil
+
+	if room.Name == "" {
+		return "", errors.New("no room name provided")
 	}
+
+	if room.MaxPlayers == 0 {
+		return "", errors.New("zero players not possible")
+	}
+
 	id := generateRoomID()
-	err = data.CreateRoom(data.Room{
-		ID: id,
-		Name: name,
-	})
+	room.ID = id
+	room.Players = 0
+	room.Status = "creating"
+	err = data.CreateRoom(room)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	id, err := createRoom(request.Body)
 
 	if err != nil {
 		return events.APIGatewayProxyResponse{
@@ -81,11 +90,31 @@ func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayPro
 	}, nil
 }
 
-func handleGetAvailableRooms(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handleGetAvailableRooms(_ events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	rooms, err := data.GetAvailableRooms()
+
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			Body:       fmt.Sprintf("%v", err),
+			StatusCode: 500,
+		}, nil
+	}
+
+	byteRooms, err := json.Marshal(rooms)
+
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			Body:       fmt.Sprintf("%v", err),
+			StatusCode: 500,
+		}, nil
+	}
+
 	return events.APIGatewayProxyResponse{
-		Body:       "not implemented",
+		Body: string(byteRooms),
 		StatusCode: 501,
 	}, nil
+
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
