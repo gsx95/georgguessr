@@ -7,11 +7,8 @@
     <meta content="width=device-width, initial-scale=1" name="viewport">
 
     <!--DEV-->
-    <script class="dev-script" src="js/render.js"></script>
     <script class="dev-script" src="js/home.js"></script>
-    <script class="dev-script" src="js/map.js"></script>
     <script class="dev-script" src="js/utils.js"></script>
-    <script class="dev-script" src="js/app.js"></script>
     <!--DEV END-->
     <!--PROD
     <script src="js/georgguessr.js"></script>
@@ -19,44 +16,45 @@
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initialize&libraries=&v=weekly" defer></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initialize&libraries=&v=weekly"
+        defer></script>
 
     <link href="css/styles.css" rel="stylesheet"/>
 </head>
 
-<body onload="start()">
-    <div class="full-size" id="main"></div>
-
-    <script id="HomeTemplate" type="x-tmpl-mustache">
-        <div id="page-home">
-            <button id="create-room-btn" class="center">Create Room</button>
-            <div class="home-table">
-                <table>
-                    <thead>
-                    <tr>
-                        <th class="th-no-border"></th>
-                        <th scope="col"><i class="fas fa-info-circle"></i></th>
-                        <th scope="col"><i class="fas fa-user"></i></th>
-                    </tr>
-                    </thead>
-                    <tbody id ="home-table-body">
-                    </tbody>
-                </table>
-            </div>
+<body>
+    <div id="page-home">
+        <button id="create-room-btn" class="center">Create Room</button>
+        <div class="home-table">
+            <table>
+                <thead>
+                <tr>
+                    <th class="th-no-border"></th>
+                    <th scope="col"><i class="fas fa-info-circle"></i></th>
+                    <th scope="col"><i class="fas fa-user"></i></th>
+                </tr>
+                </thead>
+                <tbody id="home-table-body">
+                </tbody>
+            </table>
         </div>
-    </script>
+    </div>
     <script id="HomeTableRowTemplate" type="x-tmpl-mustache">
         {{#rooms}}
         <tr>
             <td scope="row" class="home-table-name">{{name}}</td>
-            <td class="home-table-state">{{state}}</td>
-            <td class="home-table-players">{{players}}</td>
+            <td class="home-table-state">{{status}}</td>
+            <td class="home-table-players">{{players}}/{{maxPlayers}}</td>
             <td class="home-table-join"><button class="home-join-button">Join {{#protected}}<i class="fas fa-lock"></i>{{/protected}}</button></td>
         </tr>
         {{/rooms}}
     </script>
-    <script id="MapTemplate" type="x-tmpl-mustache">
-        <div id="map"></div>
+    <script>
+        window.onload = function(e) {
+            API_ENDPOINT = "{{api-endpoint}}";
+            API_KEY = "{{api-key}}";
+            showHome();
+        }
     </script>
 </body>
 </html>
