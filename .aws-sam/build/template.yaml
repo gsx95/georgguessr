@@ -68,6 +68,7 @@ Resources:
           - dynamodb:GetItem
           - dynamodb:PutItem
           - dynamodb:UpdateItem
+          - dynamodb:Scan
           Resource:
             Fn::Join:
             - ''
@@ -82,8 +83,12 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       TableName: GeorgGuessrRooms
       AttributeDefinitions:
-      - AttributeName: ID
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: status
         AttributeType: S
       KeySchema:
-      - AttributeName: ID
+      - AttributeName: id
         KeyType: HASH
+      - AttributeName: status
+        KeyType: RANGE
