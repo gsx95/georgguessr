@@ -16,7 +16,7 @@
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initialize&libraries=&v=weekly"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initMap&libraries=drawing"
             defer></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
@@ -50,7 +50,7 @@
                 </h2>
             </header>
             <main class="modal__content" id="modal-1-content">
-                <div>
+                <div style="overflow:hidden;">
                     <div style="float:left;">
                         <div>
                             <label style="display:block" for="name">Name</label>
@@ -64,6 +64,13 @@
                             </select>
                             <input style="display:block; visibility: hidden;" placeholder="password" id="pwd"
                                    type="password" value="" name="pwd">
+                        </div>
+                        <div style="margin-top: -20px;">
+                            <select id="set-geo-limits" name="set-geo-limits">
+                                <option value="unlimited">Don't restrict playing area</option>
+                                <option value="list">Use predefined list of areas</option>
+                                <option value="custom">Select custom areas</option>
+                            </select>
                         </div>
                     </div>
                     <div style="float:left; margin-left: 100px;">
@@ -82,7 +89,7 @@
 
                     </div>
                 </div>
-
+                <div id="selection-map" style="display: none"></div>
             </main>
             <footer class="modal__footer">
                 <button class="modal__btn modal__btn-primary">Create & Play</button>
