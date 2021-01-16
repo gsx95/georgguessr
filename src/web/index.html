@@ -8,7 +8,7 @@
 
     <!--DEV-->
     <script class="dev-script" src="js/home.js"></script>
-    <script class="dev-script" src="js/utils.js"></script>
+    <script class="dev-script" src="js/popup.js"></script>
     <!--DEV END-->
     <!--PROD
     <script src="js/georgguessr.js"></script>
@@ -16,30 +16,83 @@
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-        <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initialize&libraries=&v=weekly"
-        defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initialize&libraries=&v=weekly"
+            defer></script>
+    <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
     <link href="css/styles.css" rel="stylesheet"/>
 </head>
 
 <body>
-    <div id="page-home">
-        <button id="create-room-btn" class="center">Create Room</button>
-        <div class="home-table">
-            <table>
-                <thead>
-                <tr>
-                    <th class="th-no-border"></th>
-                    <th scope="col"><i class="fas fa-info-circle"></i></th>
-                    <th scope="col"><i class="fas fa-user"></i></th>
-                </tr>
-                </thead>
-                <tbody id="home-table-body">
-                </tbody>
-            </table>
+<div id="page-home">
+    <button id="create-room-btn" class="center">Create Room</button>
+    <div class="home-table">
+        <table>
+            <thead>
+            <tr>
+                <th class="th-no-border"></th>
+                <th scope="col"><i class="fas fa-info-circle"></i></th>
+                <th scope="col"><i class="fas fa-user"></i></th>
+            </tr>
+            </thead>
+            <tbody id="home-table-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal micromodal-slide" id="modal-1">
+    <div class="modal__overlay" data-micromodal-close>
+        <div class="modal__container">
+            <header class="modal__header">
+                <h2 class="modal__title" id="modal-1-title">
+                    Create Room
+                </h2>
+            </header>
+            <main class="modal__content" id="modal-1-content">
+                <div>
+                    <div style="float:left;">
+                        <div>
+                            <label style="display:block" for="name">Name</label>
+                            <input style="display:block" id="name" placeholder="name" type="text" value="" name="name">
+                        </div>
+
+                        <div style="margin-top:10px;">
+                            <select id="set-pwd" name="set-pwd">
+                                <option value="unprotected">Don't set password</option>
+                                <option value="protected">Set password</option>
+                            </select>
+                            <input style="display:block; visibility: hidden;" placeholder="password" id="pwd"
+                                   type="password" value="" name="pwd">
+                        </div>
+                    </div>
+                    <div style="float:left; margin-left: 100px;">
+                        <div>
+                            <label style="display:block" id="maxplayer-label" for="maxplayer">Player: 2</label>
+                            <input style="display:block" id="maxplayer" type="range" min="1" max="10" value="2">
+                        </div>
+                        <div>
+                            <label style="display:block" id="rounds-label" for="rounds">Rounds: 3</label>
+                            <input style="display:block" id="rounds" type="range" min="1" max="10" value="3">
+                        </div>
+                        <div>
+                            <label style="display:block" id="timelimit-label" for="timelimit">Time limit: 3m</label>
+                            <input style="display:block" id="timelimit" type="range" min="1" max="25" value="8">
+                        </div>
+
+                    </div>
+                </div>
+
+            </main>
+            <footer class="modal__footer">
+                <button class="modal__btn modal__btn-primary">Create & Play</button>
+                <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+            </footer>
         </div>
     </div>
-    <script id="HomeTableRowTemplate" type="x-tmpl-mustache">
+</div>
+
+<script id="HomeTableRowTemplate" type="x-tmpl-mustache">
         {{#rooms}}
         <tr>
             <td scope="row" class="home-table-name">{{name}}</td>
@@ -48,13 +101,15 @@
             <td class="home-table-join"><button class="home-join-button">Join {{#protected}}<i class="fas fa-lock"></i>{{/protected}}</button></td>
         </tr>
         {{/rooms}}
-    </script>
-    <script>
+
+</script>
+<script>
         window.onload = function(e) {
             API_ENDPOINT = "{{api-endpoint}}";
             API_KEY = "{{api-key}}";
             showHome();
         }
-    </script>
+
+</script>
 </body>
 </html>

@@ -23,3 +23,7 @@ function getRenderedTemplate(templName, params) {
     var template = document.getElementById(templName).innerHTML;
     return Mustache.render(template, params);
 }
+
+function byId(id) {
+    return document.getElementById(id);
+}
