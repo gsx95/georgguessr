@@ -103,6 +103,10 @@ body{ margin:0; padding:0; height:100%; width:100%; background-color: black}
     width: 500px;
 }
 
+#area-selector {
+    margin-top: 30px;
+}
+
 /**************************\
   Basic Modal Styles
 \**************************/

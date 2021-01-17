@@ -27,3 +27,10 @@ function getRenderedTemplate(templName, params) {
 function byId(id) {
     return document.getElementById(id);
 }
+
+function addElement(tag, parent, innerText) {
+    var element = document.createElement(tag);
+    parent.appendChild(element);
+    element.innerText = innerText;
+    return element;
+}

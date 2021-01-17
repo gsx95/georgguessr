@@ -89,6 +89,33 @@
 
                     </div>
                 </div>
+
+                <select id="continent-selector" name="continent-selector" style="display: none;">
+                    <option value="all">All Continents</option>
+                    <option value="AF">Africa</option>
+                    <option value="AS">Asia</option>
+                    <option value="EU">Europe</option>
+                    <option value="NA">North America</option>
+                    <option value="OC">Oceania</option>
+                    <option value="SA">South America</option>
+                </select>
+                <select id="country-selector" name="country-selector" style="display: none;">
+                    <option value="all">All Countries</option>
+                </select>
+                <select id="city-selector" name="city-selector" style="display: none;">
+                    <option value="all">All Cities</option>
+                    <option value="disabled">--- Population greater than ---</option>
+                    <option value="pop_gt_10k">Population > 10.000</option>
+                    <option value="pop_gt_100k">Population > 100.000</option>
+                    <option value="pop_gt_500k">Population > 500.000</option>
+                    <option value="pop_gt_1kk">Population > 1.000.000</option>
+                    <option value="pop_gt_5kk">Population > 5.000.000</option>
+                    <option value="disabled">--- Population lesser than ---</option>
+                    <option value="pop_lt_100k">Population < 100.000</option>
+                    <option value="pop_lt_500k">Population < 500.000</option>
+                    <option value="pop_lt_1kk">Population < 1.000.000</option>
+                    <option value="disabled">--- Specific City ---</option>
+                </select>
                 <div id="selection-map" style="display: none"></div>
             </main>
             <footer class="modal__footer">

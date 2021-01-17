@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend/pkg"
+	"backend/data"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -53,13 +53,21 @@ func handleGetAvailableRooms(_ events.APIGatewayProxyRequest) (events.APIGateway
 	return generateResponse(string(byteRooms), 200), nil
 }
 
+func handleGetCountriesInContinent(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	continentCode := req.PathParameters["continent"]
+
+	countries, err := data.GetCountries(continentCode)
+	if err != nil {
+		return generateResponse(fmt.Sprintf("%v", err), 400), nil
+	}
+	return generateResponse(fmt.Sprintf("%s", countries), 200), nil
+}
+
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	if request.HTTPMethod == "OPTIONS" {
 		return generateResponse("hi", 200), nil
 	}
-
-	fmt.Println(request.Path)
 
 	if strings.HasPrefix(request.Path, "/rooms") {
 		if request.HTTPMethod == "GET" {
@@ -72,6 +80,10 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	if strings.HasPrefix(request.Path, "/available-rooms") {
 		return handleGetAvailableRooms(request)
+	}
+
+	if strings.HasPrefix(request.Path, "/countries") {
+		return handleGetCountriesInContinent(request)
 	}
 
 	return generateResponse("operation not supported", 400), nil

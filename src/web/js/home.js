@@ -7,7 +7,6 @@ function showHome() {
     lastRequestTime = 0;
 
     MicroModal.init();
-
     updateRoomTable();
 
     byId("create-room-btn").onclick = showCreateRoom;
@@ -16,6 +15,9 @@ function showHome() {
 function updateRoomTable() {
     doGetRequestJSON("/available-rooms",
         (rooms) => {
+            if (rooms === null || rooms === undefined) {
+                return;
+            }
             rooms.sort(function (x, y) {
                 return y.created - x.created;
             });
@@ -117,6 +119,19 @@ function initMap() {
     this.drawingManager.setMap(selectionMap);
 }
 
+function continentSelected() {
+    var continentCode = byId("continent-selector").value;
+    console.log(continentCode);
+}
+
+function countrySelected() {
+
+}
+
+function citySelected() {
+
+}
+
 function showCreateRoom() {
         MicroModal.show('modal-1');
 
@@ -132,12 +147,25 @@ function showCreateRoom() {
         let timeLimitLabel = byId("timelimit-label");
         let secondLimits = ["10s", "20s", "30s", "40s", "50s"];
 
+        let continentSelect = byId("continent-selector");
+        let countrySelect = byId("country-selector");
+        let citySelect = byId("city-selector");
+
+        continentSelect.onchange = continentSelected;
+        countrySelect.onchange = countrySelected;
+        citySelect.onchange = citySelected;
+
         pwdDropDown.onchange = function() {
             pwdField.style.visibility = pwdDropDown.value == "protected" ? "visible" : "hidden";
             pwdField.style.marginBottom = pwdDropDown.value == "protected" ? "30px" : "0px";
+            pwdField.focus();
         }
         geoDropDown.onchange = function() {
             geoMap.style.display = geoDropDown.value == "custom" ? "block" : "none";
+
+            continentSelect.style.display = geoDropDown.value == "list" ? "block" : "none";
+            countrySelect.style.display = geoDropDown.value == "list" ? "block" : "none";
+            citySelect.style.display = geoDropDown.value == "list" ? "block" : "none";
         }
         maxPlayerSlider.oninput = function() {
             maxPlayerLabel.innerText = "Player: " + maxPlayerSlider.value;
