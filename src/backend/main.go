@@ -60,10 +60,16 @@ func handleGetCountriesInContinent(req events.APIGatewayProxyRequest) (events.AP
 	if err != nil {
 		return generateResponse(fmt.Sprintf("%v", err), 400), nil
 	}
-	return generateResponse(fmt.Sprintf("%s", countries), 200), nil
+	bytes, err := json.Marshal(countries)
+	if err != nil {
+		return generateResponse(fmt.Sprintf("%v", err), 500), nil
+	}
+	return generateResponse(string(bytes), 200), nil
 }
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	fmt.Println(request.HTTPMethod)
 
 	if request.HTTPMethod == "OPTIONS" {
 		return generateResponse("hi", 200), nil

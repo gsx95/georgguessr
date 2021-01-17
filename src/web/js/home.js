@@ -120,8 +120,27 @@ function initMap() {
 }
 
 function continentSelected() {
-    var continentCode = byId("continent-selector").value;
-    console.log(continentCode);
+    let continentCode = byId("continent-selector").value;
+    let countrySelect = byId("country-selector");
+    countrySelect.innerHTML = "";
+    doGetRequestJSON("/countries/" + continentCode,
+        (resp) => {
+            let countries = resp.countries;
+            if (countries === null || countries === undefined || countries.length === 0) {
+                console.log("countries empty " + continentCode)
+                return;
+            }
+            countries.sort(function (x, y) {
+                return y.name - x.name;
+            });
+
+            for(let i = 0;i < countries.length; i++) {
+                addElement("option", countrySelect, countries[i].name).value = countries[i].code;
+            }
+        }, (err) => {
+            console.log(err);
+        }, () => {}
+    );
 }
 
 function countrySelected() {

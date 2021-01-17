@@ -70,6 +70,14 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        GetCountries:
+          Type: Api
+          Properties:
+            Path: /countries/{continent}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
       Policies:
       - Version: '2012-10-17'
         Statement:
