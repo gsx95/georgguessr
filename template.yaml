@@ -69,7 +69,7 @@ Resources:
             Method: POST
             RestApiId: !Ref GuessrAPI
             Auth:
-              ApiKeyRequired: trues
+              ApiKeyRequired: true
       Policies:
       - Version: '2012-10-17'
         Statement:
