@@ -96,6 +96,17 @@ Resources:
               - ':'
               - Ref: 'AWS::AccountId'
               - ':table/GeorgGuessrRooms'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:GetItem'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoContinents'
 
   GeorgGuessrRooms:
     Type: 'AWS::DynamoDB::Table'
@@ -112,3 +123,15 @@ Resources:
         KeyType: HASH
       - AttributeName: status
         KeyType: RANGE
+
+  GeoContinents:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: GeoContinents
+      AttributeDefinitions:
+      - AttributeName: continent
+        AttributeType: S
+      KeySchema:
+      - AttributeName: continent
+        KeyType: HASH

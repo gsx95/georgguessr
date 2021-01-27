@@ -18,6 +18,9 @@ if [[ $2 != "frontend" ]]; then
     if (( $? != 0 )); then
         exit
     fi
+    if [[ $2 != "update" ]]; then
+        aws dynamodb batch-write-item --request-items file://src/resources/continents.json
+    fi
     echo "------------------------"
     echo "Done!"
     echo ""
