@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+declare -a pids
+
+function upload_cities {
+    aws dynamodb batch-write-item --request-items "$1";
+    aws dynamodb batch-write-item --request-items "$2";
+    aws dynamodb batch-write-item --request-items "$3";
+    aws dynamodb batch-write-item --request-items "$4";
+    uploadings=$((uploadings-1))
+}
+
+
 if [[ $2 != "frontend" ]]; then
     echo "------------------------"
     echo "Building Backend..."
@@ -56,6 +67,26 @@ if [[ $1 = "prod" ]]; then
 else
   cp -R src/web/js/ statics/js/
 fi
+
+echo "------------------------"
+echo "Done!"
+echo ""
+echo "------------------------"
+echo "Uploading to DynamoDB (in parallel)..."
+echo "------------------------"
+
+count=0
+while read l1; read l2; read l3; read l4; do
+    (upload_cities "$l1" "$l2" "$l3" "$l4" &> /dev/null) &
+    pids[${count}]=$!
+    count=$((count+1))
+done <src/resources/cities.jsonData
+
+
+for pid in ${pids[*]}; do
+    wait $pid
+done
+
 
 echo "------------------------"
 echo "Done!"

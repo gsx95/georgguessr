@@ -135,3 +135,19 @@ Resources:
       KeySchema:
       - AttributeName: continent
         KeyType: HASH
+
+  GeoCities:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      TableName: GeoCities
+      AttributeDefinitions:
+      - AttributeName: pop
+        AttributeType: N
+      - AttributeName: country
+        AttributeType: S
+      KeySchema:
+      - AttributeName: pop
+        KeyType: HASH
+      - AttributeName: country
+        KeyType: RANGE
