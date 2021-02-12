@@ -16,7 +16,7 @@
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{google-api-key}}&callback=initMap&libraries=drawing"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initGoogleMaps&libraries=drawing,places"
             defer></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
@@ -30,7 +30,7 @@
         <table>
             <thead>
             <tr>
-                <th class="th-no-border"></th>
+                <th class="th-no-border"><button class="clickable" id="refresh-rooms-btn"><i class="fas fa-sync"></i></button></th>
                 <th scope="col"><i class="fas fa-info-circle"></i></th>
                 <th scope="col"><i class="fas fa-user"></i></th>
             </tr>
@@ -69,7 +69,8 @@
                             <select id="set-geo-limits" name="set-geo-limits">
                                 <option value="unlimited">Don't restrict playing area</option>
                                 <option value="list">Use predefined list of areas</option>
-                                <option value="custom">Select custom areas</option>
+                                <option value="place-search">Search place</option>
+                                <option value="custom">Draw custom areas</option>
                             </select>
                         </div>
                     </div>
@@ -90,6 +91,12 @@
                     </div>
                 </div>
 
+                <input id="search-place-input" name="serch-place-input" style="width:200px; display:none" />
+
+                <table id="specific-cities-table" style="display: none; font-size: small">
+
+                </table>
+
                 <select id="continent-selector" name="continent-selector" style="display: none;">
                     <option value="all">All Continents</option>
                     <option value="AF">Africa</option>
@@ -105,7 +112,6 @@
                 <select id="city-selector" name="city-selector" style="display: none;">
                     <option value="all">All Cities</option>
                     <option value="disabled">--- Population greater than ---</option>
-                    <option value="pop_gt_10k">Population > 10.000</option>
                     <option value="pop_gt_100k">Population > 100.000</option>
                     <option value="pop_gt_500k">Population > 500.000</option>
                     <option value="pop_gt_1kk">Population > 1.000.000</option>
@@ -114,15 +120,14 @@
                     <option value="pop_lt_100k">Population < 100.000</option>
                     <option value="pop_lt_500k">Population < 500.000</option>
                     <option value="pop_lt_1kk">Population < 1.000.000</option>
-                    <option value="disabled">--- Specific City ---</option>
                 </select>
                 <div id="selection-map" style="display: none"></div>
             </main>
             <footer class="modal__footer">
-                <button class="modal__btn modal__btn-primary">Create & Play</button>
+                <button id="create-and-play-btn" class="modal__btn modal__btn-primary">Create & Play</button>
                 <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
             </footer>
-        </div>
+        </main>
     </div>
 </div>
 

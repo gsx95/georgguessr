@@ -19,6 +19,23 @@ body{ margin:0; padding:0; height:100%; width:100%; background-color: black}
     transform: translate(-50%, -50%);
 }
 
+select {
+    width: 200px;
+}
+
+.clickable {
+    cursor:pointer;
+}
+
+#specific-cities-table button {
+    background-color: Transparent;
+    background-repeat:no-repeat;
+    border: none;
+    cursor:pointer;
+    overflow: hidden;
+    outline:none;
+}
+
 /***************************/
 /**         MAP          **/
 /***************************/
