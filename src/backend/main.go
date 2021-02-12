@@ -32,12 +32,21 @@ func handleGetRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProx
 	return generateResponse(string(bytes), 200), nil
 }
 
-func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	id, err := createRoom(request.Body)
+func createRoomUnlimted(reqBody string) (events.APIGatewayProxyResponse, error) {
+	id, err := createRoom(reqBody)
 	if err != nil {
 		return generateResponse(fmt.Sprintf("%v", err), 500), nil
 	}
 	return generateResponse(id, 201), nil
+}
+
+func handlePostRoom(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	geoType := request.QueryStringParameters["type"]
+	switch geoType {
+	case "unlimited": return createRoomUnlimted(request.Body)
+	default: return generateResponse("geo type was "+ geoType, 400), nil
+	}
 }
 
 func handleGetAvailableRooms(_ events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {

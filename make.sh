@@ -55,8 +55,8 @@ cp src/web/css/styles.css statics/css/styles.css
 cp src/web/img/* statics/img/
 
 cp src/web/index.html statics/index.html;
-GOOGLE_API_KEY=$(cat config.json| jq -r ".google_api_key");
-sed -i '' "s/{{google-api-key}}/$GOOGLE_API_KEY/g" statics/index.html;
+MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/index.html;
 sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/index.html;
 sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/index.html;
 
@@ -71,10 +71,18 @@ fi
 echo "------------------------"
 echo "Done!"
 echo ""
+
+if [[ $2 = "update" ]]; then
+    exit 0
+fi
+
+if [[ $2 = "frontend" ]]; then
+    exit 0
+fi
+
 echo "------------------------"
 echo "Uploading to DynamoDB (in parallel)..."
 echo "------------------------"
-
 count=0
 while read l1; read l2; read l3; read l4; do
     (upload_cities "$l1" "$l2" "$l3" "$l4" &> /dev/null) &

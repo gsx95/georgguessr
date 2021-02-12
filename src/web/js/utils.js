@@ -8,7 +8,7 @@ function doGetRequestJSON(requestPath, onload, onerror, always) {
         },
     })
         .then((resp) => {
-            if(resp.status !== 200) {
+            if (resp.status !== 200) {
                 throw new Error("Got status " + resp.status + " on " + url)
             }
             return resp;
@@ -17,6 +17,22 @@ function doGetRequestJSON(requestPath, onload, onerror, always) {
         .then(onload)
         .catch(onerror)
         .finally(always);
+}
+
+function doPostRequest(requestPath, data, callback) {
+    fetch(API_ENDPOINT + requestPath, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': API_KEY,
+        },
+        body: JSON.stringify(data),
+    })
+        .then((resp) => resp.text())
+        .then(callback)
+        .catch((error) => {
+            console.error('Error:', error);
+    });
 }
 
 function getRenderedTemplate(templName, params) {
