@@ -107,6 +107,19 @@ Resources:
               - ':'
               - Ref: 'AWS::AccountId'
               - ':table/GeoContinents'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:QueryItem'
+          - 'dynamodb:GetItem'
+          - 'dynamodb:Scan'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoCities'
 
   GeorgGuessrRooms:
     Type: 'AWS::DynamoDB::Table'
@@ -142,12 +155,8 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       TableName: GeoCities
       AttributeDefinitions:
-      - AttributeName: pop
+      - AttributeName: biggest
         AttributeType: N
-      - AttributeName: country
-        AttributeType: S
       KeySchema:
-      - AttributeName: pop
+      - AttributeName: biggest
         KeyType: HASH
-      - AttributeName: country
-        KeyType: RANGE

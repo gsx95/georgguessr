@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/data"
+	h "backend/handler"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,7 +12,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	h "backend/handler"
 )
 
 
