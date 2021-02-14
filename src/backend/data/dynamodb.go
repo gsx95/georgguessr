@@ -6,22 +6,47 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"math/rand"
 	"strconv"
 )
 
 const roomsTable = "GeorgGuessrRooms"
 const continentsTable = "GeoContinents"
+const citiesTable = "GeoCities"
 
 var (
 	DynamoClient dynamodbiface.DynamoDBAPI
 )
 
 type Room struct {
-	ID         string `json:"id,omitempty"`
-	Name       string `json:"name"`
-	Players    int    `json:"players"`
-	MaxPlayers int    `json:"maxPlayers"`
-	Status     string `json:"status,omitempty"`
+	ID            string        `json:"id,omitempty"`
+	Name          string        `json:"name"`
+	Players       int           `json:"players"`
+	MaxPlayers    int           `json:"maxPlayers"`
+	Rounds        int           `json:"maxRounds"`
+	Status        string        `json:"status,omitempty"`
+	GeoBoundaries []GeoBoundary `json:"geoBoundaries"`
+	GamesRounds   []GameRound   `json:"gameRounds"`
+}
+
+type GeoBoundary struct {
+	GeoPoints []GeoPoint `json:"geoPoints"`
+}
+
+type GeoPoint struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+type GameRound struct {
+	No            int
+	StartPosition GeoPoint          `json:"startPosition"`
+	Scores        map[string]string `json:"scores"`
+}
+
+type City struct {
+	Name string
+	Pop  int
 }
 
 func GetRoom(roomID string) (*Room, error) {
@@ -106,7 +131,7 @@ func GetAvailableRooms() ([]*Room, error) {
 	return rooms, nil
 }
 
-func CreateRoom(room Room) error {
+func writeRoomToDB(room Room) error {
 	av, err := dynamodbattribute.MarshalMap(room)
 	if err != nil {
 		return err
@@ -133,6 +158,87 @@ type Countries struct {
 	Countries []CountryName `json:"countries"`
 }
 
+func GetRandomCityName(minPop, maxPop int, countries map[string]bool) (string, error) {
+
+	params := &dynamodb.ScanInput{
+		TableName:            aws.String(citiesTable),
+		ProjectionExpression: aws.String("biggest, country"),
+	}
+	res, err := DynamoClient.Scan(params)
+	if err != nil {
+		return "", err
+	}
+
+	type proj struct {
+		Country string
+		Biggest int
+	}
+
+	var allList []proj
+
+	for _, item := range res.Items {
+		biggest, _ := strconv.Atoi(aws.StringValue(item["biggest"].N))
+		country := aws.StringValue(item["country"].S)
+		if biggest < minPop {
+			continue
+		}
+		if len(countries) != 0 {
+			if _, isAllowed := countries[country]; !isAllowed {
+				continue
+			}
+		}
+		allList = append(allList, proj{
+			Country: country,
+			Biggest: biggest,
+		})
+	}
+
+	ranCountry := allList[rand.Intn(len(allList))]
+	cities, err := getCities(ranCountry.Biggest, minPop, maxPop)
+	if err != nil {
+		return "", err
+	}
+	city := cities[rand.Intn(len(cities))]
+
+	return city.Name, nil
+}
+
+func getCities(biggest, min, max int) ([]City, error) {
+	params := &dynamodb.GetItemInput{
+		TableName: aws.String(citiesTable),
+		Key: map[string]*dynamodb.AttributeValue{
+			"biggest": {
+				N: aws.String(strconv.Itoa(biggest)),
+			},
+		},
+	}
+	res, err := DynamoClient.GetItem(params)
+	if err != nil {
+		return nil, err
+	}
+	citiesAttr := res.Item["cities"].L
+
+	var cities []City
+
+	for _, cityAttr := range citiesAttr {
+		cityMap := cityAttr.M
+
+		name := aws.StringValue(cityMap["name"].S)
+		pop, _ := strconv.Atoi(aws.StringValue(cityMap["pop"].N))
+		if min != -1 && pop < min {
+			continue
+		}
+		if max != -1 && pop > max {
+			continue
+		}
+		cities = append(cities, City{
+			Name: name,
+			Pop:  pop,
+		})
+	}
+	return cities, nil
+}
+
 func GetCountries(continent string) (*Countries, error) {
 	returnCountries := &Countries{}
 
@@ -149,8 +255,6 @@ func GetCountries(continent string) (*Countries, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(res.Item)
 
 	for _, countryItem := range res.Item["countries"].L {
 		country := countryItem.M

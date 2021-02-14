@@ -2,15 +2,6 @@
 
 declare -a pids
 
-function upload_cities {
-    aws dynamodb batch-write-item --request-items "$1";
-    aws dynamodb batch-write-item --request-items "$2";
-    aws dynamodb batch-write-item --request-items "$3";
-    aws dynamodb batch-write-item --request-items "$4";
-    uploadings=$((uploadings-1))
-}
-
-
 if [[ $2 != "frontend" ]]; then
     echo "------------------------"
     echo "Building Backend..."
@@ -28,9 +19,6 @@ if [[ $2 != "frontend" ]]; then
     sam deploy
     if (( $? != 0 )); then
         exit
-    fi
-    if [[ $2 != "update" ]]; then
-        aws dynamodb batch-write-item --request-items file://src/resources/continents.json
     fi
     echo "------------------------"
     echo "Done!"
@@ -72,29 +60,25 @@ echo "------------------------"
 echo "Done!"
 echo ""
 
-if [[ $2 = "update" ]]; then
-    exit 0
-fi
-
 if [[ $2 = "frontend" ]]; then
     exit 0
 fi
 
+
+if [[ $2 = "update" ]]; then
+    exit 0
+fi
+
+
 echo "------------------------"
-echo "Uploading to DynamoDB (in parallel)..."
+echo "Uploading to DynamoDB..."
 echo "------------------------"
-count=0
-while read l1; read l2; read l3; read l4; do
-    (upload_cities "$l1" "$l2" "$l3" "$l4" &> /dev/null) &
-    pids[${count}]=$!
-    count=$((count+1))
+aws dynamodb batch-write-item --request-items file://src/resources/continents.json
+
+
+while read l1; do
+    aws dynamodb batch-write-item --request-items "$l1";
 done <src/resources/cities.jsonData
-
-
-for pid in ${pids[*]}; do
-    wait $pid
-done
-
 
 echo "------------------------"
 echo "Done!"
