@@ -7,6 +7,7 @@ require (
 	github.com/mmcloughlin/globe v0.0.0-20200201185603-653bb586373c // indirect
 	github.com/mmcloughlin/spherand v0.0.0-20200201191112-cd5c4c9261aa
 	github.com/myesui/uuid v1.0.0 // indirect
+	github.com/paulmach/orb v0.2.1
 	github.com/tidwall/pinhole v0.0.0-20210130162507-d8644a7c3d19 // indirect
 	github.com/twinj/uuid v1.0.0
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
