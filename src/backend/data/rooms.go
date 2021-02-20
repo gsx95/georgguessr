@@ -4,6 +4,7 @@ import (
 	"backend/helper"
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 type RoomWithPredefinedArea struct {
@@ -20,6 +21,27 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	continent := room.Continent
+	country := room.Country
+	cities := room.City
+
+	for i := 0; i < room.Rounds; i++ {
+		lat, lon, err := RandomPositionByArea(continent, country, cities)
+		if err != nil {
+			i--
+			fmt.Println(err)
+		}
+		room.GamesRounds = append(room.GamesRounds, GameRound{
+			No: i,
+			StartPosition: GeoPoint{
+				Lat: lat,
+				Lon: lon,
+			},
+		})
+	}
+
+
 	return createRoom(&room.Room)
 }
 
