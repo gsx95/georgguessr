@@ -40,18 +40,26 @@ mkdir -p statics/css
 mkdir -p statics/img
 
 cp src/web/css/styles.css statics/css/styles.css
+cp src/web/css/gamestyles.css statics/css/gamestyles.css
 cp src/web/img/* statics/img/
 
 cp src/web/index.html statics/index.html;
+cp src/web/game.html statics/game.html;
+
 MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
 sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/index.html;
 sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/index.html;
 sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/index.html;
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/game.html;
+sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/game.html;
+sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/game.html;
 
 if [[ $1 = "prod" ]]; then
   babel src/web/js/* --presets minify > statics/js/georgguessr.js;
   sed -i '' "/dev-script/d" statics/index.html;
   sed -i '' "/PROD/d" statics/index.html;
+  sed -i '' "/dev-script/d" statics/game.html;
+  sed -i '' "/PROD/d" statics/game.html;
 else
   cp -R src/web/js/ statics/js/
 fi
