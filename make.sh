@@ -6,7 +6,7 @@ if [[ $1 = "example" ]]; then
     echo "------------------------"
     echo "Uploading example..."
     echo "------------------------"
-    aws dynamodb batch-write-item --request-items file://src/resources/continents.json
+    aws dynamodb batch-write-item --request-items file://src/resources/exampleRoom.json
     echo "<script>window.location.href = 'file:///$PWD/statics/game.html?id=01a67502-c1a1-47e7-88f0-d3fc366c543c'</script>" > temp.html
     open temp.html
     sleep 5
@@ -57,14 +57,20 @@ cp src/web/img/* statics/img/
 
 cp src/web/index.html statics/index.html;
 cp src/web/game.html statics/game.html;
+cp src/web/createRoom.html statics/createRoom.html;
 
 MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
 sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/index.html;
 sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/index.html;
 sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/index.html;
+
 sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/game.html;
 sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/game.html;
 sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/game.html;
+
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/createRoom.html;
+sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/createRoom.html;
+sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/createRoom.html;
 
 if [[ $1 = "prod" ]]; then
   babel src/web/js/* --presets minify > statics/js/georgguessr.js;
@@ -72,6 +78,8 @@ if [[ $1 = "prod" ]]; then
   sed -i '' "/PROD/d" statics/index.html;
   sed -i '' "/dev-script/d" statics/game.html;
   sed -i '' "/PROD/d" statics/game.html;
+  sed -i '' "/dev-script/d" statics/createRoom.html;
+  sed -i '' "/PROD/d" statics/createRoom.html;
 else
   cp -R src/web/js/ statics/js/
 fi
