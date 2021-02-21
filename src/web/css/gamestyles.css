@@ -34,6 +34,54 @@ body{ margin:0; padding:0; height:100%; width:100%; }
     height: 100%;
 }
 
+#stop-overlay {
+    position: absolute;
+    width:100%;
+    height:100%;
+    background-color: #aaaaaa;
+    opacity: 0.7;
+    z-index: 5;
+}
+
+#result-map {
+    width: 90%;
+    height: 240px;
+    margin-left: 5%;
+    margin-top: 5%;
+}
+
+#result-text {
+    width:100%;
+    text-align: center;
+    height: 60px;
+    line-height: 60px;
+    vertical-align: middle;
+    font-size:18px;
+}
+
+#result-btn {
+    width:100%;
+    height: 50px;
+    background-color: #ffbe46;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 0 0 20px 20px;
+}
+
+#stop-popup {
+
+    border-radius: 20px;
+    top: 100px;
+    position: absolute;
+    width:400px;
+    height:350px;
+    background-color: #ffffff;
+    z-index: 7;
+
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
 /***************************/
 /**         STATS         **/
 /***************************/

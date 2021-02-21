@@ -35,10 +35,18 @@ function updateRoomTable() {
 
 function createRoom() {
 
+    let timeString = timeToString(byId("timelimit").value);
+    let timeSeconds = 0;
+    if(timeString.endsWith("s")) {
+        timeSeconds = 1 * timeString.slice(0, -1)
+    } else {
+        timeSeconds = 60 * timeString.slice(0, -1)
+    }
+
     const data = {
         "name": byId("name").value,
         "maxRounds": parseInt(byId("rounds").value),
-        "timeLimit": byId("timelimit").value,
+        "timeLimit": timeSeconds,
         "password": (byId("set-pwd").value === "unprotected" ? "" : byId("pwd").value),
         "maxPlayers": parseInt(byId("maxplayer").value)
     };
