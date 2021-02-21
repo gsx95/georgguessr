@@ -8,7 +8,7 @@
 
     <!--DEV-->
     <script class="dev-script" src="js/home.js"></script>
-    <script class="dev-script" src="js/popup.js"></script>
+    <script class="dev-script" src="js/utils.js"></script>
     <!--DEV END-->
     <!--PROD
     <script src="js/georgguessr.js"></script>
@@ -131,6 +131,9 @@
     </div>
 </div>
 
+<data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
+<data id="API_KEY" value="{{api-key}}"></data>
+
 <script id="HomeTableRowTemplate" type="x-tmpl-mustache">
         {{#rooms}}
         <tr>
@@ -144,11 +147,8 @@
 </script>
 <script>
         window.onload = function(e) {
-            API_ENDPOINT = "{{api-endpoint}}";
-            API_KEY = "{{api-key}}";
             showHome();
         }
-
 </script>
 </body>
 </html>

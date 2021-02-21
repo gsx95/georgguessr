@@ -49,6 +49,22 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        GetGamePos:
+          Type: Api
+          Properties:
+            Path: /game/pos/{gameID}/{round}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
+        GetGameStats:
+          Type: Api
+          Properties:
+            Path: /game/stats/{gameID}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         Options:
           Type: Api
           Properties:
@@ -143,13 +159,9 @@ Resources:
       AttributeDefinitions:
       - AttributeName: id
         AttributeType: S
-      - AttributeName: status
-        AttributeType: S
       KeySchema:
       - AttributeName: id
         KeyType: HASH
-      - AttributeName: status
-        KeyType: RANGE
 
   GeoContinents:
     Type: 'AWS::DynamoDB::Table'

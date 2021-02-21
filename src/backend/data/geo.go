@@ -131,9 +131,6 @@ func isPointInsidePolygon(feature *geojson.Feature, point orb.Point) bool {
 	// if its a polygon, we only care for the polygon with more boundary nodes
 	multiPoly, isMulti := feature.Geometry.(orb.MultiPolygon)
 	if isMulti {
-		if planar.MultiPolygonContains(multiPoly, point) {
-			return true
-		}
 		polyLen := 0
 		for _, pol := range multiPoly {
 			if len(pol[0]) >= polyLen {
