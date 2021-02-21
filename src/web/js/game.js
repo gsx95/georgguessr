@@ -20,7 +20,6 @@ function showGame() {
 function initGameMaps() {
     initUtils();
     gameID = getRequestParameter("id");
-    console.log(gameID);
 
     guessMap = new google.maps.Map(byId("guess-map"), {
         center: {lat: 37.869260, lng: -122.254811},
@@ -36,20 +35,22 @@ function initGameMaps() {
         enableGuessButton();
     });
 
+    streetview = new google.maps.StreetViewPanorama(document.getElementById("pano"),
+        {
+            addressControl: false,
+            fullscreenControl: false,
+            showRoadLabels: false,
+            zoomControl: true,
+            panControl: false,
+        }
+    );
 
-    doGetRequestJSON("/game/pos/" + gameID + "/1", function (resp) {
-        const fenway = { lat: 42.345573, lng: -71.098326 };
-        streetview = new google.maps.StreetViewPanorama(
-            document.getElementById("pano"),
-            {
-                position: fenway,
-                addressControl: false,
-                fullscreenControl: false,
-                showRoadLabels: false,
-                zoomControl: true,
-                panControl: false,
-            }
-        );
+    updateStreetView();
+}
+
+function updateStreetView() {
+    doGetRequest("/game/pos/" + gameID + "/1", function (resp) {
+        streetview.setPano(resp);
     }, function (err) {
         console.log(err);
     });
