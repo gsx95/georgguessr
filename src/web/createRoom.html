@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <!--DEV-->
+    <script class="dev-script" src="js/createRoom.js"></script>
+    <script class="dev-script" src="js/utils.js"></script>
+    <!--DEV END-->
+    <!--PROD
+    <script src="js/georgguessr.js"></script>
+    PROD END-->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=processRooms&libraries=drawing,places"
+            defer></script>
+</head>
+
+<body>
+
+    Creating...
+    <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
+    <data id="API_KEY" value="{{api-key}}"></data>
+</body>
+</html>
