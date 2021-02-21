@@ -33,6 +33,20 @@ function initGameMaps() {
         console.log(err);
     });
 
+
+    const fenway = { lat: 42.345573, lng: -71.098326 };
+    const panorama = new google.maps.StreetViewPanorama(
+        document.getElementById("pano"),
+        {
+            position: fenway,
+            addressControl: false,
+            fullscreenControl: false,
+            showRoadLabels: false,
+            zoomControl: true,
+            panControl: false,
+        }
+    );
+
     guessMap.addListener("click", (data) => {
         drawMarker(data.latLng);
         enableGuessButton();
