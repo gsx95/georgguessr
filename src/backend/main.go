@@ -35,6 +35,10 @@ func webHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 		return h.HandleGetGamePosition(request), nil
 	}
 
+	if strings.HasPrefix(request.Path, "/game/pano") {
+		return h.HandlePostPanoIDs(request), nil
+	}
+
 	if strings.HasPrefix(request.Path, "/game/stats") {
 		return h.HandleGetGameStats(request), nil
 	}

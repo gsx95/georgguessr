@@ -50,6 +50,22 @@ function doGetRequestJSON(requestPath, onload, onerror, always) {
         .finally(always);
 }
 
+function doPostRequestString(requestPath, data, callback) {
+    console.log("body: " + data);
+    fetch(API_ENDPOINT + requestPath, {
+        method: 'POST',
+        headers: {
+            'x-api-key': API_KEY,
+        },
+        body: data,
+    })
+        .then((resp) => resp.text())
+        .then(callback)
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+
 function doPostRequest(requestPath, data, callback) {
     fetch(API_ENDPOINT + requestPath, {
         method: 'POST',

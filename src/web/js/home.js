@@ -56,13 +56,13 @@ function createRoom() {
 
 function createRoomPlaceSearch(data) {
     doPostRequest("/rooms?type=places", data, function (response) {
-        window.location.href = "/game.html?id=" + response;
+        window.location.href = "/createRoom.html?id=" + response;
     });
 }
 
 function createRoomCustom(data) {
     doPostRequest("/rooms?type=custom", data, function (response) {
-        window.location.href = "/game.html?id=" + response;
+        window.location.href = "/createRoom.html?id=" + response;
     });
 }
 
@@ -77,13 +77,13 @@ function createRoomList(data) {
 
 
     doPostRequest("/rooms?type=list", data, function (response) {
-        window.location.href = "/game.html?id=" + response;
+        window.location.href = "/createRoom.html?id=" + response;
     });
 }
 
 function createRoomUnlimited(data) {
     doPostRequest("/rooms?type=unlimited", data, function (response) {
-        window.location.href = "/game.html?id=" + response;
+        window.location.href = "/createRoom.html?id=" + response;
     });
 }
 

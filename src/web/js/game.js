@@ -1,9 +1,19 @@
 let guessMap;
 let gameID;
 let marker;
+let streetview;
+
+let roundNo = 1;
+let gameStats;
 
 function showGame() {
     setGuessMapResizable();
+
+    doGetRequestJSON("/game/stats/" + gameID, function (resp) {
+        gameStats = resp;
+    }, function (err) {
+        console.log(err);
+    });
 
 }
 
@@ -20,38 +30,29 @@ function initGameMaps() {
         streetViewControl: false,
     });
 
-    doGetRequestJSON("/game/stats/" + gameID, function (resp) {
-        let rounds = resp.rounds;
-        for (let i = 1; i <= rounds; i++) {
-            doGetRequestJSON("/game/pos/" + gameID + "/" + i, function (resp) {
-                //drawMarker(resp);
-            }, function (err) {
-                console.log(err);
-            })
-        }
-    }, function (err) {
-        console.log(err);
-    });
-
-
-    const fenway = { lat: 42.345573, lng: -71.098326 };
-    const panorama = new google.maps.StreetViewPanorama(
-        document.getElementById("pano"),
-        {
-            position: fenway,
-            addressControl: false,
-            fullscreenControl: false,
-            showRoadLabels: false,
-            zoomControl: true,
-            panControl: false,
-        }
-    );
 
     guessMap.addListener("click", (data) => {
         drawMarker(data.latLng);
         enableGuessButton();
     });
 
+
+    doGetRequestJSON("/game/pos/" + gameID + "/1", function (resp) {
+        const fenway = { lat: 42.345573, lng: -71.098326 };
+        streetview = new google.maps.StreetViewPanorama(
+            document.getElementById("pano"),
+            {
+                position: fenway,
+                addressControl: false,
+                fullscreenControl: false,
+                showRoadLabels: false,
+                zoomControl: true,
+                panControl: false,
+            }
+        );
+    }, function (err) {
+        console.log(err);
+    });
 }
 
 function enableGuessButton() {

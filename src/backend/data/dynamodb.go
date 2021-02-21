@@ -3,6 +3,7 @@ package data
 import (
 	"backend/helper"
 	"errors"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -51,6 +52,31 @@ type City struct {
 	Name string
 	Pop  int
 	Country string
+}
+
+func PutPanoID(roomID string, round int, panoID string) error {
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(roomsTable),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(roomID),
+			},
+		},
+		UpdateExpression: aws.String(fmt.Sprintf("set gameRounds[%d].panoID = :item", round - 1)),
+		ConditionExpression: aws.String(fmt.Sprintf("attribute_not_exists(gameRounds[%d].panoID)", round - 1)),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue {
+			":item": {
+				S: aws.String(panoID),
+			},
+		},
+	}
+
+	result, err := DynamoClient.UpdateItem(input)
+	if err != nil {
+		fmt.Println(result)
+		return errors.New(fmt.Sprintf("%s     set gameRounds[%d].panoID = '%s'", err, round - 1, panoID))
+	}
+	return nil
 }
 
 func GetRoom(roomID string) (*Room, error) {

@@ -8,6 +8,26 @@ import (
 	"strconv"
 )
 
+func HandlePostPanoIDs(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+	gameID := request.PathParameters["gameID"]
+	round, err := strconv.Atoi(request.PathParameters["round"])
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	if gameID == "" {
+		return GenerateResponse("no game id given", 400)
+	}
+
+	panoId := request.Body
+
+	err = data.PutPanoID(gameID, round, panoId)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	return GenerateResponse("ok", 200)
+
+}
+
 func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	gameID := request.PathParameters["gameID"]
 	round, err := strconv.Atoi(request.PathParameters["round"])
