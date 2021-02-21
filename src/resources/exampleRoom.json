@@ -12,6 +12,9 @@
           "geoBoundaries": {
             "NULL": true
           },
+          "timeLimit": {
+            "N": "180"
+          },
           "maxRounds": {
             "N": "10"
           },

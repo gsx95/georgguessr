@@ -29,6 +29,7 @@ type Room struct {
 	MaxPlayers    int           `json:"maxPlayers"`
 	Rounds        int           `json:"maxRounds"`
 	Status        string        `json:"status,omitempty"`
+	TimeLimit     int           `json:"timeLimit"`
 	GeoBoundaries []GeoBoundary `json:"geoBoundaries"`
 	GamesRounds   []GameRound   `json:"gameRounds"`
 }

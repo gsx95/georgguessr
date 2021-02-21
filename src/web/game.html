@@ -16,7 +16,7 @@
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initGameMaps&libraries=drawing,places"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initGameMaps&libraries=drawing,places,geometry"
             defer></script>
 
     <link href="css/gamestyles.css" rel="stylesheet"/>
@@ -24,9 +24,15 @@
 
 <body>
 
+    <div id="stop-popup" style="display:none">
+        <div id="result-map"></div>
+        <div id="result-text">Distance: 234km</div>
+        <button id="result-btn" class="clickable clear-btn">NEXT ROUND</button>
+    </div>
+    <div id="stop-overlay" style="display:none"></div>
     <div id="game-stats">
-        <div class="game-stats-content game-stats-content-l">Round 1/10</div>
-        <div class="game-stats-content game-stats-content-l">Time: 4:57</div>
+        <div id="round-no" class="game-stats-content game-stats-content-l">Round 1/10</div>
+        <div id="timer" class="game-stats-content game-stats-content-l">Time:</div>
         <div class="game-stats-content game-stats-content-s"><button class="clickable clear-btn full-size" id="game-info-btn"><i class="fas fa-info-circle fa-lg"></i></button></div>
         <div class="game-stats-content game-stats-content-s"><button class="clickable clear-btn full-size" id="users-info-btn"><i class="fas fa-users fa-lg"></i></button></div>
     </div>
