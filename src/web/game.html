@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+
+    <!--DEV-->
+    <script class="dev-script" src="js/game.js"></script>
+    <script class="dev-script" src="js/utils.js"></script>
+    <!--DEV END-->
+    <!--PROD
+    <script src="js/georgguessr.js"></script>
+    PROD END-->
+    <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initGameMaps&libraries=drawing,places"
+            defer></script>
+
+    <link href="css/gamestyles.css" rel="stylesheet"/>
+</head>
+
+<body>
+    <div id="game-stats">
+        <div class="game-stats-content game-stats-content-l">Round 1/10</div>
+        <div class="game-stats-content game-stats-content-l">Time: 4:57</div>
+        <div class="game-stats-content game-stats-content-s"><button class="clickable clear-btn full-size" id="game-info-btn"><i class="fas fa-info-circle fa-lg"></i></button></div>
+        <div class="game-stats-content game-stats-content-s"><button class="clickable clear-btn full-size" id="users-info-btn"><i class="fas fa-users fa-lg"></i></button></div>
+    </div>
+    <div id="guess-map-container" class="resizable">
+    <div id="guess-map"></div>
+    </div>
+    <div id="game-controls">
+        <div id="to-start-btn-container"><button class="clickable clear-btn full-size" id="to-start-btn"><i class="fas fa-backward fa-lg"></i></button></div>
+        <div id="guess-btn-container"><button disabled class="clickable clear-btn full-size btn-disabled" id="guess-btn"><i class="fas fa-check-circle fa-lg"></i> GUESS</button></div>
+
+    </div>
+    <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
+    <data id="API_KEY" value="{{api-key}}"></data>
+
+    <script>
+        window.onload = function(e) {
+            showGame();
+        }
+    </script>
+</body>
+</html>

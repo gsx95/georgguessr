@@ -1,0 +1,131 @@
+/***************************/
+/**         MAIN          **/
+/***************************/
+html{ margin:0; padding:0; height:100%; width:100%; background-color: black;}
+body{ margin:0; padding:0; height:100%; width:100%; }
+
+.full-size{
+    height:100%;
+    width: 100%;
+    overflow:hidden;
+}
+
+.clickable {
+    cursor:pointer;
+}
+
+.full-size {
+    height:100%;
+    width:100%;
+}
+
+.clear-btn {
+    background-color: Transparent;
+    background-repeat:no-repeat;
+    border: none;
+    cursor:pointer;
+    overflow: hidden;
+    outline:none;
+}
+
+/***************************/
+/**         STATS         **/
+/***************************/
+#game-stats {
+    overflow: hidden;
+    width: 400px;
+    background-color:white;
+    height: 25px;
+    border-radius: 0 0 10px 10px;
+    margin: auto;
+}
+
+.game-stats-content {
+    float:left;
+    height:100%;
+    line-height:25px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.game-stats-content-s {
+    width: 10%;
+}
+
+.game-stats-content-l {
+    width: 40%;
+}
+
+/***************************/
+/**       CONTROLS        **/
+/***************************/
+#game-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 300px;
+    height: 30px;
+}
+
+#guess-btn-container {
+    float:left;
+    height:100%;
+    width:70%;
+    line-height:30px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#guess-btn {
+    background-color: #c0ff7b;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+.btn-disabled {
+    cursor: auto !important;
+    background-color: rgba(167, 167, 167, 0.46) !important;
+}
+
+#to-start-btn-container {
+    float:left;
+    height:100%;
+    width:30%;
+    line-height:30px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#to-start-btn {
+    background-color: #ffbe46;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+/***************************/
+/**       GUESS MAP       **/
+/***************************/
+#guess-map {
+    width: 94%;
+    height: 94%;
+    margin: 3% auto auto;
+}
+
+#guess-map-container {
+    background-color:white;
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    width:300px;
+    height:200px;
+    border-radius: 0 10px 0 0;
+    opacity: 0.5;
+
+    /* for resizeable.js */
+    touch-action: none;
+    _box-sizing: border-box;
+}
+
+#guess-map-container:hover {
+    opacity: 1;
+}

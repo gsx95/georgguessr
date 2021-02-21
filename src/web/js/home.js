@@ -5,6 +5,8 @@ let selectionMap;
 function showHome() {
     lastRequestTime = 0;
 
+    initUtils();
+
     MicroModal.init();
     updateRoomTable();
 
@@ -48,17 +50,19 @@ function createRoom() {
         case "place-search": return createRoomPlaceSearch(data);
         case "custom": return createRoomCustom(data);
     }
+
+
 }
 
 function createRoomPlaceSearch(data) {
     doPostRequest("/rooms?type=places", data, function (response) {
-        window.location.href = "/game?id=" + response;
+        window.location.href = "/game.html?id=" + response;
     });
 }
 
 function createRoomCustom(data) {
     doPostRequest("/rooms?type=custom", data, function (response) {
-        window.location.href = "/game?id=" + response;
+        window.location.href = "/game.html?id=" + response;
     });
 }
 
@@ -73,13 +77,13 @@ function createRoomList(data) {
 
 
     doPostRequest("/rooms?type=list", data, function (response) {
-        window.location.href = "/game?id=" + response;
+        window.location.href = "/game.html?id=" + response;
     });
 }
 
 function createRoomUnlimited(data) {
     doPostRequest("/rooms?type=unlimited", data, function (response) {
-        window.location.href = "/game?id=" + response;
+        window.location.href = "/game.html?id=" + response;
     });
 }
 

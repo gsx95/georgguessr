@@ -57,7 +57,7 @@ func GetRoom(roomID string) (*Room, error) {
 
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"ID": {
+			"id": {
 				S: aws.String(roomID),
 			},
 		},

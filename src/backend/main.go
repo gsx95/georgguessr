@@ -31,6 +31,14 @@ func webHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 		}
 	}
 
+	if strings.HasPrefix(request.Path, "/game/pos") {
+		return h.HandleGetGamePosition(request), nil
+	}
+
+	if strings.HasPrefix(request.Path, "/game/stats") {
+		return h.HandleGetGameStats(request), nil
+	}
+
 	if strings.HasPrefix(request.Path, "/available-rooms") {
 		return h.HandleGetAvailableRooms(request), nil
 	}
