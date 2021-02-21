@@ -46,11 +46,12 @@ type GameRound struct {
 	No            int
 	StartPosition GeoPoint          `json:"startPosition"`
 	Scores        map[string]string `json:"scores"`
+	PanoID        string            `json:"panoID"`
 }
 
 type City struct {
-	Name string
-	Pop  int
+	Name    string
+	Pop     int
 	Country string
 }
 
@@ -62,9 +63,9 @@ func PutPanoID(roomID string, round int, panoID string) error {
 				S: aws.String(roomID),
 			},
 		},
-		UpdateExpression: aws.String(fmt.Sprintf("set gameRounds[%d].panoID = :item", round - 1)),
-		ConditionExpression: aws.String(fmt.Sprintf("attribute_not_exists(gameRounds[%d].panoID)", round - 1)),
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue {
+		UpdateExpression:    aws.String(fmt.Sprintf("set gameRounds[%d].panoID = :item", round-1)),
+		ConditionExpression: aws.String(fmt.Sprintf("attribute_not_exists(gameRounds[%d].panoID)", round-1)),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":item": {
 				S: aws.String(panoID),
 			},
@@ -74,7 +75,7 @@ func PutPanoID(roomID string, round int, panoID string) error {
 	result, err := DynamoClient.UpdateItem(input)
 	if err != nil {
 		fmt.Println(result)
-		return errors.New(fmt.Sprintf("%s     set gameRounds[%d].panoID = '%s'", err, round - 1, panoID))
+		return err
 	}
 	return nil
 }
@@ -249,7 +250,6 @@ func GetCountryName(countryCode string) (string, error) {
 	}
 	return aws.StringValue(res.Item["name"].S), nil
 
-
 }
 
 func getCities(biggest, min, max int) ([]City, error) {
@@ -287,8 +287,8 @@ func getCities(biggest, min, max int) ([]City, error) {
 			continue
 		}
 		cities = append(cities, City{
-			Name: name,
-			Pop:  pop,
+			Name:    name,
+			Pop:     pop,
 			Country: countryName,
 		})
 	}

@@ -46,11 +46,7 @@ func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGate
 		return GenerateResponse("no more rounds", 400)
 	}
 	r := rounds[round - 1]
-	bytes, err := json.Marshal(r.StartPosition)
-	if err != nil {
-		return GenerateResponse(fmt.Sprintf("%v", err), 500)
-	}
-	return GenerateResponse(string(bytes), 200)
+	return GenerateResponse(r.PanoID, 200)
 }
 
 func HandleGetGameStats(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
