@@ -7,7 +7,7 @@ if [[ $1 = "example" ]]; then
     echo "Uploading example..."
     echo "------------------------"
     aws dynamodb batch-write-item --request-items file://src/resources/exampleRoom.json
-    echo "<script>window.location.href = 'file:///$PWD/statics/game.html?id=01a67502-c1a1-47e7-88f0-d3fc366c543c'</script>" > temp.html
+    echo "<script>window.location.href = 'file:///$PWD/statics/createRoom.html?id=01a67502-c1a1-47e7-88f0-d3fc366c543c'</script>" > temp.html
     open temp.html
     sleep 5
     rm temp.html

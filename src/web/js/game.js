@@ -6,10 +6,12 @@ let streetview;
 let guessPos;
 let roundNo = 1;
 let gameStats;
-
+let correctMarker;
+let distanceLine;
+let guessMarker;
 let secondsLeft;
 let timerId;
-
+let currentPano;
 let startPos;
 
 function showGame() {
@@ -19,6 +21,7 @@ function showGame() {
 function initGameMaps() {
     initUtils();
     byId("guess-btn").onclick = endRound;
+    byId("result-btn").onclick = nextRound;
     gameID = getRequestParameter("id");
 
     guessMap = new google.maps.Map(byId("guess-map"), {
@@ -57,10 +60,42 @@ function initGameMaps() {
     doGetRequestJSON("/game/stats/" + gameID, function (resp) {
         gameStats = resp;
         secondsLeft = gameStats.timeLimit;
+        byId("round-no").innerText = "Round " + roundNo + "/" + gameStats.rounds;
         setStartView(roundNo);
+        byId("to-start-btn").onclick = backHome;
     }, function (err) {
         console.log(err);
     });
+}
+
+function backHome() {
+    streetview.setPano(currentPano);
+}
+
+function nextRound() {
+    byId("game-controls").style.visibility = "visible";
+    byId("guess-map-container").style.visibility = "visible";
+    byId("stop-overlay").style.display = "none";
+    byId("stop-popup").style.display = "none";
+
+    distanceLine.setMap(null);
+    guessMarker.setMap(null);
+    correctMarker.setMap(null);
+    marker.setMap(null);
+
+    let guessBtn = byId("guess-btn");
+    guessBtn.disabled = true;
+    guessBtn.classList.add("btn-disabled");
+
+    Object.assign(byId("guess-map-container").style, {
+        width: "300px",
+        height: "200px",
+    });
+
+    roundNo++;
+    byId("round-no").innerText = "Round " + roundNo + "/" + gameStats.rounds;
+    secondsLeft = gameStats.timeLimit;
+    setStartView(roundNo);
 }
 
 function endRound() {
@@ -70,22 +105,27 @@ function endRound() {
     byId("stop-overlay").style.display = "block";
     byId("stop-popup").style.display = "block";
 
-    let correctMarker = new google.maps.Marker({
+    correctMarker = new google.maps.Marker({
         position: startPos,
+        icon: {
+            size: new google.maps.Size(60, 30),
+            scaledSize: new google.maps.Size(60, 30),
+            url: "https://i.ibb.co/PgFftmS/flag-2.png"
+        }
     });
 
     if(guessPos === null || guessPos === undefined) {
         byId("result-text").innerText = "No Guess";
     } else {
 
-        let guessMarker = new google.maps.Marker({
+        guessMarker = new google.maps.Marker({
             position: guessPos,
         });
         guessMarker.setMap(resultMap);
         correctMarker.setMap(resultMap);
         resultMap.setCenter(startPos);
 
-        var line = new google.maps.Polyline({
+        distanceLine = new google.maps.Polyline({
             path: [guessPos, startPos],
             geodesic: true,
             strokeColor: '#ff9634',
@@ -93,7 +133,12 @@ function endRound() {
             strokeWeight: 2
         });
 
-        line.setMap(resultMap);
+        distanceLine.setMap(resultMap);
+
+        var bounds = new google.maps.LatLngBounds();
+        bounds.extend(guessMarker.getPosition());
+        bounds.extend(correctMarker.getPosition());
+        resultMap.fitBounds(bounds);
 
         let meters = calculateDistanceInMeter(guessMarker, correctMarker);
 
@@ -140,6 +185,7 @@ function timeToString() {
 function updateStreetView(round, callback) {
     doGetRequestJSON("/game/pos/" + gameID + "/" + round, function (resp) {
         streetview.setPano(resp.panoId);
+        currentPano = resp.panoId;
         startPos = {lat: resp.lat, lng: resp.lon};
         callback();
     }, function (err) {
