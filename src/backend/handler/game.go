@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"strconv"
+	"strings"
 )
 
 func HandlePostPanoIDs(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
@@ -62,6 +63,51 @@ func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGate
 	return GenerateResponse(string(bytes), 200)
 }
 
+func HandlePostPlayers(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+	gameID := request.PathParameters["gameID"]
+	userName := request.PathParameters["userName"]
+
+	if gameID == "" {
+		return GenerateResponse("no game id given", 400)
+	}
+	game, err := data.GetRoom(gameID)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	for _, user := range game.Players {
+		if strings.ToLower(user) == strings.ToLower(userName) {
+			return GenerateResponse("Username already in use", 400)
+		}
+	}
+
+	err = data.PutUsername(gameID, userName)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	return GenerateResponse("ok", 200)
+}
+
+func HandleGetPlayers(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+	gameID := request.PathParameters["gameID"]
+
+	if gameID == "" {
+		return GenerateResponse("no game id given", 400)
+	}
+	game, err := data.GetRoom(gameID)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	bytes, err := json.Marshal(struct{
+		Players []string `json:"players"`
+	}{
+		game.Players,
+	})
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 500)
+	}
+	return GenerateResponse(string(bytes), 200)
+}
+
 func HandleGetGameStats(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	gameID := request.PathParameters["gameID"]
 
@@ -83,7 +129,7 @@ func HandleGetGameStats(request events.APIGatewayProxyRequest) events.APIGateway
 		game.Rounds,
 		game.Name,
 		game.MaxPlayers,
-		game.Players,
+		len(game.Players),
 		game.Status,
 		game.TimeLimit,
 	})

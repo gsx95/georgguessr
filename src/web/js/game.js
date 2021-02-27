@@ -13,9 +13,12 @@ let secondsLeft;
 let timerId;
 let currentPano;
 let startPos;
+let timerStopped = true;
+let playerName;
 
 function showGame() {
     setGuessMapResizable();
+    showPlayerNamePrompt();
 }
 
 function initGameMaps() {
@@ -170,7 +173,9 @@ function setStartView(round) {
 }
 
 function updateTimer() {
-    secondsLeft = secondsLeft - 1;
+    if(!timerStopped) {
+        secondsLeft = secondsLeft - 1;
+    }
     byId("timer").innerText = timeToString();
     if(secondsLeft === 0) {
         endRound();
@@ -231,4 +236,57 @@ function setGuessMapResizable() {
             }
         }
     })
+}
+
+function startGame() {
+    checkName(function() {
+        playerName = byId("player-name-input").value;
+        doPostRequest("/game/players/" + gameID + "/" + playerName);
+        byId("insert-player-name-overlay").style.display = "none";
+        byId("insert-player-name-container").style.display = "none";
+        timerStopped = false;
+    });
+}
+
+function showPlayerNamePrompt() {
+    let input = byId("player-name-input");
+    let startBtn = byId("start-game-button");
+
+    startBtn.onclick = startGame;
+
+    input.onblur=checkName;
+
+    input.onkeyup = function() {
+        if(input.value.length !== 0 && startBtn.disabled) {
+            startBtn.removeAttribute("disabled");
+            startBtn.classList.remove("btn-disabled");
+            input.classList.remove("not-valid");
+        } else if(input.value.length === 0 && !startBtn.disabled){
+            startBtn.disabled = true;
+            startBtn.classList.add("btn-disabled");
+            input.classList.add("not-valid");
+        }
+    }
+}
+
+function checkName(validCallback, notValidCallback) {
+    doGetRequestJSON("/game/players/" + gameID, function (response) {
+        let input = byId("player-name-input");
+        let startBtn = byId("start-game-button");
+        let valid = response["players"].indexOf(input.value) < 0;
+        if (!valid) {
+            startBtn.disabled = true;
+            startBtn.classList.add("btn-disabled");
+            input.classList.add("not-valid");
+            if(notValidCallback) {
+                notValidCallback();
+            }
+            return;
+        }
+        if(validCallback) {
+            validCallback();
+        }
+    }, function(err) {
+        console.log(err);
+    });
 }

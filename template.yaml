@@ -65,6 +65,14 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        GetGamePlayers:
+          Type: Api
+          Properties:
+            Path: /game/players/{gameID}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         Options:
           Type: Api
           Properties:
@@ -91,6 +99,14 @@ Resources:
           Type: Api
           Properties:
             Path: /game/pano/{gameID}/{round}
+            Method: POST
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
+        PostPlayer:
+          Type: Api
+          Properties:
+            Path: /game/players/{gameID}/{username}
             Method: POST
             RestApiId: !Ref GuessrAPI
             Auth:
