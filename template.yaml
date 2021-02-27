@@ -111,6 +111,14 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        PostGuess:
+          Type: Api
+          Properties:
+            Path: /game/guess/{gameID}/{round}/{username}
+            Method: POST
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         GetCountries:
           Type: Api
           Properties:
