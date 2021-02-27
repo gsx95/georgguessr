@@ -34,6 +34,66 @@ body{ margin:0; padding:0; height:100%; width:100%; }
     height: 100%;
 }
 
+.not-valid {
+    border: 2px solid red;
+}
+
+p {
+    font-family: Roboto, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+}
+
+button {
+    font-family: Roboto, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+}
+
+input {
+    font-family: Roboto, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+}
+
+/***************************/
+/**   Enter player name   **/
+/***************************/
+#insert-player-name-overlay {
+    position: absolute;
+    width:100%;
+    height:100%;
+    background-color: #aaaaaa;
+    opacity: 0.7;
+    z-index: 30;
+}
+
+#insert-player-name-container {
+    border-radius: 20px;
+    position: absolute;
+    width:400px;
+    height:150px;
+    background-color: #ffffff;
+    z-index: 35;
+
+    text-align: center;
+    margin: auto;
+    top: 0; left: 0; bottom: 0; right: 0;
+}
+
+#player-name-input {
+    width: 90%;
+    height: 25px;
+}
+
+#start-game-button {
+    width: 90%;
+    height: 50px;
+    margin-top: 10px;
+
+    background-color: #c0ff7b;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+/***************************/
+/**        Results        **/
+/***************************/
+
 #stop-overlay {
     position: absolute;
     width:100%;
