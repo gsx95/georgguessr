@@ -47,14 +47,50 @@ type GeoPoint struct {
 type GameRound struct {
 	No            int
 	StartPosition GeoPoint          `json:"startPosition"`
-	Scores        map[string]string `json:"scores"`
+	Scores        map[string]Guess `json:"scores"`
 	PanoID        string            `json:"panoID"`
+}
+
+type Guess struct {
+	Distance int  `json:"distance"`
+	Position GeoPoint  `json:"guess"`
 }
 
 type City struct {
 	Name    string
 	Pop     int
 	Country string
+}
+
+func PutGuess(gameID, username string, round int, guess Guess) error {
+
+	guessMap, err := dynamodbattribute.Marshal(guess)
+	if err != nil {
+		return err
+	}
+
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(roomsTable),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(gameID),
+			},
+		},
+		UpdateExpression:    aws.String(fmt.Sprintf("SET gameRounds[%d].scores.#username = :score", round)),
+		ExpressionAttributeNames: map[string]*string{
+			"#username": aws.String(username),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":score": guessMap,
+		},
+	}
+
+	result, err := DynamoClient.UpdateItem(input)
+	if err != nil {
+		fmt.Println(result)
+		return errors.New(fmt.Sprintf("%v  username: %s", err, username))
+	}
+	return nil
 }
 
 func PutUsername(gameID, username string) error {

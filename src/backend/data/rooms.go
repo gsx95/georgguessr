@@ -38,6 +38,7 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 				Lat: lat,
 				Lon: lon,
 			},
+			Scores: map[string]Guess{},
 		})
 	}
 
@@ -60,6 +61,7 @@ func CreateRoomUnlimited(reqBody string) (string, error) {
 				Lat: lat,
 				Lon: lon,
 			},
+			Scores: map[string]Guess{},
 		})
 	}
 	return createRoom(&room)

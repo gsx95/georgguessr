@@ -63,9 +63,44 @@ func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGate
 	return GenerateResponse(string(bytes), 200)
 }
 
+func HandlePostGuess(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+	gameID := request.PathParameters["gameID"]
+	username := request.PathParameters["username"]
+	round, err := strconv.Atoi(request.PathParameters["round"])
+
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	if gameID == "" {
+		return GenerateResponse("no game id given", 400)
+	}
+
+	var guess data.Guess
+
+	if err := json.Unmarshal([]byte(request.Body), &guess); err != nil {
+		return GenerateResponse("Invalid guess body: " + err.Error(), 400)
+	}
+
+	game, err := data.GetRoom(gameID)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	scores := game.GamesRounds[round - 1].Scores
+	if _, alreadyExists := scores[username]; alreadyExists {
+		return GenerateResponse("Already posted score for this round", 400)
+	}
+
+	err = data.PutGuess(gameID, username, round - 1, guess)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 400)
+	}
+
+	return GenerateResponse("ok", 200)
+}
+
 func HandlePostPlayers(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	gameID := request.PathParameters["gameID"]
-	userName := request.PathParameters["userName"]
+	username := request.PathParameters["username"]
 
 	if gameID == "" {
 		return GenerateResponse("no game id given", 400)
@@ -75,12 +110,12 @@ func HandlePostPlayers(request events.APIGatewayProxyRequest) events.APIGatewayP
 		return GenerateResponse(fmt.Sprintf("%v", err), 404)
 	}
 	for _, user := range game.Players {
-		if strings.ToLower(user) == strings.ToLower(userName) {
+		if strings.ToLower(user) == strings.ToLower(username) {
 			return GenerateResponse("Username already in use", 400)
 		}
 	}
 
-	err = data.PutUsername(gameID, userName)
+	err = data.PutUsername(gameID, username)
 	if err != nil {
 		return GenerateResponse(fmt.Sprintf("%v", err), 404)
 	}
