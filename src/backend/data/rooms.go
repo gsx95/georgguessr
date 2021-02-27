@@ -88,7 +88,7 @@ func checkRoomAttributes(room *Room) (*Room, error) {
 
 	id := helper.RandomUUID()
 	room.ID = id
-	room.Players = 0
+	room.Players = []string{}
 	room.Status = "waiting"
 
 	return room, nil

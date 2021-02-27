@@ -25,13 +25,14 @@ var (
 type Room struct {
 	ID            string        `json:"id,omitempty"`
 	Name          string        `json:"name"`
-	Players       int           `json:"players"`
+	Players       []string           `json:"players"`
 	MaxPlayers    int           `json:"maxPlayers"`
 	Rounds        int           `json:"maxRounds"`
 	Status        string        `json:"status,omitempty"`
 	TimeLimit     int           `json:"timeLimit"`
 	GeoBoundaries []GeoBoundary `json:"geoBoundaries"`
 	GamesRounds   []GameRound   `json:"gameRounds"`
+
 }
 
 type GeoBoundary struct {
@@ -54,6 +55,37 @@ type City struct {
 	Name    string
 	Pop     int
 	Country string
+}
+
+func PutUsername(gameID, username string) error {
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(roomsTable),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(gameID),
+			},
+		},
+		UpdateExpression:    aws.String("SET players = list_append(if_not_exists(players, :emptylist), :username)"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":emptylist": {
+				L: []*dynamodb.AttributeValue{},
+			},
+			":username": {
+				L: []*dynamodb.AttributeValue{
+					{
+						S: aws.String(username),
+					},
+				},
+			},
+		},
+	}
+
+	result, err := DynamoClient.UpdateItem(input)
+	if err != nil {
+		fmt.Println(result)
+		return err
+	}
+	return nil
 }
 
 func PutPanoID(roomID string, round int, panoID string) error {
@@ -144,13 +176,12 @@ func GetAvailableRooms() ([]*Room, error) {
 			Name:   roomItem["name"],
 		}
 		if roomItem["players"] == "" {
-			room.Players = 0
+			room.Players = []string{}
 		} else {
-			players, err := strconv.Atoi(roomItem["players"])
-			if err != nil {
-				return nil, err
-			}
-			room.Players = players
+			players := roomItem["players"]
+			//TODO:
+			fmt.Println(players)
+			room.Players = []string{}
 		}
 		maxPlayers, err := strconv.Atoi(roomItem["maxPlayers"])
 		if err != nil {

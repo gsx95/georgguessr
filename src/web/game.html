@@ -15,6 +15,7 @@
     PROD END-->
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initGameMaps&libraries=drawing,places,geometry"
             defer></script>
@@ -23,6 +24,14 @@
 </head>
 
 <body>
+
+    <div id="insert-player-name-overlay"></div>
+    <div id="insert-player-name-container">
+        <p>Enter your name</p>
+        <input autocomplete="off" id="player-name-input" name="georgguessr-player-name" type="text" placeholder="player name" />
+        <br/>
+        <button id="start-game-button" class="clickable clear-btn btn-disabled" disabled>START</button>
+    </div>
 
     <div id="stop-popup" style="display:none">
         <div id="result-map"></div>

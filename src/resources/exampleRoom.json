@@ -19,7 +19,11 @@
             "N": "10"
           },
           "players": {
-            "N": "0"
+            "L": [
+              {"S": "max"},
+              {"S": "paul"},
+              {"S": "kevin"}
+            ]
           },
           "maxPlayers": {
             "N": "2"
