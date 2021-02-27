@@ -145,6 +145,16 @@ function endRound() {
 
         let meters = calculateDistanceInMeter(guessMarker, correctMarker);
 
+        doPostRequest("/game/guess/" + gameID + "/" + roundNo + "/" + playerName, {
+            "distance": meters,
+            "guess": {
+                "lat": guessPos.lat(),
+                "lon": guessPos.lng()
+            }
+        }, function(resp) {
+            console.log(resp);
+        });
+
         if (meters < 1000) {
             byId("result-text").innerText = "Distance: " + meters + "m";
         } else if (meters < 100000) {
