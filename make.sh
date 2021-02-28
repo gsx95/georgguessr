@@ -53,7 +53,7 @@ mkdir -p statics/img
 
 cp src/web/css/styles.css statics/css/styles.css
 cp src/web/css/gamestyles.css statics/css/gamestyles.css
-cp src/web/img/* statics/img/
+cp -r src/web/img/* statics/img/
 
 cp src/web/index.html statics/index.html;
 cp src/web/game.html statics/game.html;

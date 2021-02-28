@@ -94,6 +94,11 @@ input {
 /**        Results        **/
 /***************************/
 
+#results-refresh-div {
+    text-align: center;
+    margin-top: 5px;
+}
+
 #stop-overlay {
     position: absolute;
     width:100%;
@@ -113,9 +118,6 @@ input {
 #result-text {
     width:100%;
     text-align: center;
-    height: 60px;
-    line-height: 60px;
-    vertical-align: middle;
     font-size:18px;
 }
 
@@ -133,7 +135,6 @@ input {
     top: 100px;
     position: absolute;
     width:400px;
-    height:350px;
     background-color: #ffffff;
     z-index: 7;
 

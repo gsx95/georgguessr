@@ -16,9 +16,13 @@ let startPos;
 let timerStopped = true;
 let playerName;
 
+let markers = [];
+let lines = [];
+
 function showGame() {
     setGuessMapResizable();
     showPlayerNamePrompt();
+    byId("refresh-results-btn").onclick = function() {showResults(false);};
 }
 
 function initGameMaps() {
@@ -107,6 +111,20 @@ function endRound() {
     byId("guess-map-container").style.visibility = "hidden";
     byId("stop-overlay").style.display = "block";
     byId("stop-popup").style.display = "block";
+    showResults(true);
+
+}
+
+function showResults(postResults) {
+    for(let i = 0; i<markers.length;i++) {
+        let m = markers[i];
+        m.setMap(null);
+    }
+    for(let i = 0; i<lines.length;i++) {
+        let l = lines[i];
+        l.setMap(null);
+    }
+
 
     correctMarker = new google.maps.Marker({
         position: startPos,
@@ -116,56 +134,123 @@ function endRound() {
             url: "https://i.ibb.co/PgFftmS/flag-2.png"
         }
     });
+    correctMarker.setMap(resultMap);
 
-    if(guessPos === null || guessPos === undefined) {
-        byId("result-text").innerText = "No Guess";
-    } else {
+    let distances = [];
 
-        guessMarker = new google.maps.Marker({
-            position: guessPos,
-        });
-        guessMarker.setMap(resultMap);
-        correctMarker.setMap(resultMap);
-        resultMap.setCenter(startPos);
-
-        distanceLine = new google.maps.Polyline({
-            path: [guessPos, startPos],
-            geodesic: true,
-            strokeColor: '#ff9634',
-            strokeOpacity: 1.0,
-            strokeWeight: 2
-        });
-
-        distanceLine.setMap(resultMap);
-
+    if (guessPos !== null && guessPos !== undefined) {
+        // show my guess marker
+        guessMarker = showMarkerAndLine(guessPos, 0);
         var bounds = new google.maps.LatLngBounds();
         bounds.extend(guessMarker.getPosition());
         bounds.extend(correctMarker.getPosition());
         resultMap.fitBounds(bounds);
 
+
         let meters = calculateDistanceInMeter(guessMarker, correctMarker);
+        if(postResults === true) {
+            doPostRequest("/game/guess/" + gameID + "/" + roundNo + "/" + playerName, {
+                "distance": meters,
+                "guess": {
+                    "lat": guessPos.lat(),
+                    "lon": guessPos.lng()
+                }
+            }, function (resp) {
+                console.log(resp);
+            });
+        }
+        distances = [{"name": "Your", "distance": meters}];
+    }
 
-        doPostRequest("/game/guess/" + gameID + "/" + roundNo + "/" + playerName, {
-            "distance": meters,
-            "guess": {
-                "lat": guessPos.lat(),
-                "lon": guessPos.lng()
+    doGetRequestJSON("/game/guesses/" + gameID + "/" + roundNo, function (response) {
+        for (let name in response) {
+            console.log("compare " + name + " with " + playerName);
+            if(name.toLowerCase() === playerName.toLowerCase()) {
+                console.log("continue");
+                continue;
             }
-        }, function(resp) {
-            console.log(resp);
-        });
-
-        if (meters < 1000) {
-            byId("result-text").innerText = "Distance: " + meters + "m";
-        } else if (meters < 100000) {
-            let km = meters / 1000;
-            let mets = meters % 1000;
-            byId("result-text").innerText = "Distance: " + ~~km + "." + (("" + mets).substring(0, 1)) + "km";
-        } else {
-            let km = meters / 1000;
-            byId("result-text").innerText = "Distance: " + ~~km + "km";
+            if (response.hasOwnProperty(name)) {
+                console.log("add to list");
+                let score = response[name];
+                let dist = score["distance"];
+                let pos = score["guess"];
+                distances.push({
+                    "name": name,
+                    "distance": dist,
+                    "lat": pos["lat"],
+                    "lon": pos["lon"]
+                });
+            }
         }
 
+        for(let i = 0; i<distances.length;i++) {
+            let d = distances[i];
+            let name = d["name"];
+            let dist = d["distance"];
+
+            if (dist < 1000) {
+                d["text"] = name + ": " + dist + "m";
+            } else if (dist < 100000) {
+                let km = dist / 1000;
+                let mets = dist % 1000;
+                d["text"] = name + ": " + ~~km + "." + (("" + mets).substring(0, 1)) + "km";
+            } else {
+                let km = dist / 1000;
+                d["text"] =  name + ": " + ~~km + "km";
+            }
+        }
+        showResultDistances(distances);
+    });
+}
+
+let icons = [
+    "https://i.ibb.co/bQqCvPG/icon-0.png",
+    "https://i.ibb.co/D98JKkn/icon-1.png",
+    "https://i.ibb.co/HFfZ9WJ/icon-2.png",
+    "https://i.ibb.co/KLpK0py/icon-3.png",
+    "https://i.ibb.co/yn9FMtc/icon-4.png",
+    "https://i.ibb.co/SVPGvD6/icon-5.png",
+    "https://i.ibb.co/QHB2PZM/icon-6.png",
+    "https://i.ibb.co/Dtf5VKJ/icon-7.png",
+    "https://i.ibb.co/GHLgHKk/icon-8.png",
+    "https://i.ibb.co/rxvXG5S/icon-9.png"
+];
+
+function showMarkerAndLine(pos, iconIndex) {
+    console.log("show maker " + pos["lat"] + "   " + iconIndex);
+    let marker = new google.maps.Marker({
+        position: pos,
+        icon: {
+            size: new google.maps.Size(30, 52),
+            scaledSize: new google.maps.Size(30, 52),
+            url: icons[iconIndex]
+        }
+    });
+    marker.setMap(resultMap);
+
+    let line = new google.maps.Polyline({
+        path: [pos, startPos],
+        geodesic: true,
+        strokeColor: '#ff9634',
+        strokeOpacity: 1.0,
+        strokeWeight: 2
+    });
+
+    line.setMap(resultMap);
+    markers.push(marker);
+    lines.push(line);
+    return marker;
+}
+
+function showResultDistances(distanceTexts) {
+    byId("result-text").innerHTML = "";
+    for(let i = 0;i<distanceTexts.length;i++) {
+        let d = distanceTexts[i];
+        let text = d["text"];
+        addElement("p", byId("result-text"), text);
+        if(d["lat"] !== undefined && d["lat"] !== null) {
+            showMarkerAndLine({lat: d["lat"], lng: d["lon"]}, i + 1)
+        }
     }
 }
 
