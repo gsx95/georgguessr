@@ -76,7 +76,7 @@ func PutGuess(gameID, username string, round int, guess Guess) error {
 				S: aws.String(gameID),
 			},
 		},
-		UpdateExpression:    aws.String(fmt.Sprintf("SET gameRounds[%d].scores.#username = :score", round)),
+		UpdateExpression: aws.String(fmt.Sprintf("SET gameRounds[%d].scores.#username = :score", round)),
 		ExpressionAttributeNames: map[string]*string{
 			"#username": aws.String(username),
 		},

@@ -119,6 +119,14 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        GetGuesses:
+          Type: Api
+          Properties:
+            Path: /game/guesses/{gameID}/{round}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         GetCountries:
           Type: Api
           Properties:

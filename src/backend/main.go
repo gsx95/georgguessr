@@ -47,6 +47,9 @@ func webHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 		if request.HTTPMethod == "POST" {
 			return h.HandlePostGuess(request), nil
 		}
+		if request.HTTPMethod == "GET" {
+			return h.HandleGetGuess(request), nil
+		}
 	}
 
 	if strings.HasPrefix(request.Path, "/game/players") {

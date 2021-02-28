@@ -63,6 +63,28 @@ func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGate
 	return GenerateResponse(string(bytes), 200)
 }
 
+func HandleGetGuess(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+	gameID := request.PathParameters["gameID"]
+	round, err := strconv.Atoi(request.PathParameters["round"])
+
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	if gameID == "" {
+		return GenerateResponse("no game id given", 400)
+	}
+
+	game, err := data.GetRoom(gameID)
+	scores := game.GamesRounds[round - 1].Scores
+
+	bytes, err := json.Marshal(scores)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	return GenerateResponse(string(bytes), 200)
+
+}
+
 func HandlePostGuess(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	gameID := request.PathParameters["gameID"]
 	username := request.PathParameters["username"]
