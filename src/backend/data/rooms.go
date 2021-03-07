@@ -15,7 +15,7 @@ type RoomWithPredefinedArea struct {
 
 }
 
-func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
+func  CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 	room := RoomWithPredefinedArea{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {

@@ -13,6 +13,7 @@
     <!--PROD
     <script src="js/georgguessr.js"></script>
     PROD END-->
+    <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
@@ -36,8 +37,8 @@
     <div id="stop-popup" style="display:none">
         <div id="result-map"></div>
         <div id="results-refresh-div"><button class="clickable clearn-btn" id="refresh-results-btn"><i class="fas fa-sync"></i></button></div>
-        <div id="result-text">
-        </div>
+        <table id="result-table">
+        </table>
         <button id="result-btn" class="clickable clear-btn">NEXT ROUND</button>
     </div>
     <div id="stop-overlay" style="display:none"></div>
@@ -58,6 +59,18 @@
     </div>
     <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
     <data id="API_KEY" value="{{api-key}}"></data>
+
+    <script id="ResultsTableRows" type="x-tmpl-mustache">
+        {{#results}}
+        <tr>
+            <td><img src="{{icon}}" class="mini-pin"/></td>
+            <td>{{name}}</td>
+            <td>{{distance_text}}</td>
+            <td></td>
+        </tr>
+        {{/results}}
+
+</script>
 
     <script>
         window.onload = function(e) {

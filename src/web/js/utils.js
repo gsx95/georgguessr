@@ -16,9 +16,11 @@ function byId(id) {
 }
 
 function addElement(tag, parent, innerText) {
-    var element = document.createElement(tag);
+    let element = document.createElement(tag);
     parent.appendChild(element);
-    element.innerText = innerText;
+    if(innerText !== undefined && innerText !== null) {
+        element.innerText = innerText;
+    }
     return element;
 }
 
