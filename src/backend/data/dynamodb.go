@@ -66,7 +66,7 @@ func PutGuess(gameID, username string, round int, guess Guess) error {
 
 	guessMap, err := dynamodbattribute.Marshal(guess)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Error marshalling guess: %v", err))
 	}
 
 	input := &dynamodb.UpdateItemInput{
@@ -85,10 +85,9 @@ func PutGuess(gameID, username string, round int, guess Guess) error {
 		},
 	}
 
-	result, err := DynamoClient.UpdateItem(input)
+	_, err = DynamoClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println(result)
-		return errors.New(fmt.Sprintf("%v  username: %s", err, username))
+		return errors.New(fmt.Sprintf("error putting guess: %v username: %s", err, username))
 	}
 	return nil
 }
@@ -116,10 +115,9 @@ func PutUsername(gameID, username string) error {
 		},
 	}
 
-	result, err := DynamoClient.UpdateItem(input)
+	_, err := DynamoClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println(result)
-		return err
+		return errors.New(fmt.Sprintf("Error putting username: %v", err))
 	}
 	return nil
 }
@@ -141,10 +139,9 @@ func PutPanoID(roomID string, round int, panoID string) error {
 		},
 	}
 
-	result, err := DynamoClient.UpdateItem(input)
+	_, err := DynamoClient.UpdateItem(input)
 	if err != nil {
-		fmt.Println(result)
-		return err
+		return errors.New(fmt.Sprintf("Error putting panorama ID: %v", err))
 	}
 	return nil
 }
@@ -162,13 +159,13 @@ func GetRoom(roomID string) (*Room, error) {
 
 	result, err := DynamoClient.GetItem(input)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Error getting room item: %v", err))
 	}
 
 	item := new(Room)
 	err = dynamodbattribute.UnmarshalMap(result.Item, item)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Error unmarhsalling room item: %v", err))
 	}
 	return item, nil
 }
@@ -195,13 +192,13 @@ func GetAvailableRooms() ([]*Room, error) {
 
 	result, err := DynamoClient.Scan(input)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Error scanning rooms table: %v", err))
 	}
 
 	var items []map[string]string
 	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &items)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Error unmarhsalling list of rooms: %v", err))
 	}
 
 	var rooms []*Room
@@ -221,7 +218,7 @@ func GetAvailableRooms() ([]*Room, error) {
 		}
 		maxPlayers, err := strconv.Atoi(roomItem["maxPlayers"])
 		if err != nil {
-			return nil, err
+			return nil, errors.New(fmt.Sprintf("Error converting maxPlayers to int: %v", err))
 		}
 		room.MaxPlayers = maxPlayers
 		rooms = append(rooms, room)
@@ -232,7 +229,7 @@ func GetAvailableRooms() ([]*Room, error) {
 func writeRoomToDB(room Room) error {
 	av, err := dynamodbattribute.MarshalMap(room)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Error marshalling room: %v", err))
 	}
 
 	input := &dynamodb.PutItemInput{
@@ -242,7 +239,7 @@ func writeRoomToDB(room Room) error {
 
 	_, err = DynamoClient.PutItem(input)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Error putting room: %v", err))
 	}
 	return nil
 }
@@ -264,7 +261,7 @@ func GetRandomCityName(minPop, maxPop int, countries map[string]bool) (string, s
 	}
 	res, err := DynamoClient.Scan(params)
 	if err != nil {
-		return "", "", err
+		return "", "", errors.New(fmt.Sprintf("Error scanning cities table: %v", err))
 	}
 
 	type proj struct {
@@ -296,13 +293,13 @@ func GetRandomCityName(minPop, maxPop int, countries map[string]bool) (string, s
 	ranCountry := allList[ranNum]
 	cities, err := getCities(ranCountry.Biggest, minPop, maxPop)
 	if err != nil {
-		return "", "", errors.New("something went wrong when getting cities " + err.Error())
+		return "", "", errors.New("Error getting cities " + err.Error())
 	}
 	city := cities[rand.Intn(len(cities))]
 	return city.Name, city.Country, nil
 }
 
-func GetCountryName(countryCode string) (string, error) {
+func getCountryName(countryCode string) (string, error) {
 	params := &dynamodb.GetItemInput{
 		TableName: aws.String(countriesTable),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -314,7 +311,7 @@ func GetCountryName(countryCode string) (string, error) {
 
 	res, err := DynamoClient.GetItem(params)
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("Error getting country: %v", err))
 	}
 	return aws.StringValue(res.Item["name"].S), nil
 
@@ -331,11 +328,11 @@ func getCities(biggest, min, max int) ([]City, error) {
 	}
 	res, err := DynamoClient.GetItem(params)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Error getting cities: %v", err))
 	}
 
 	countryCode := aws.StringValue(res.Item["country"].S)
-	countryName, err := GetCountryName(countryCode)
+	countryName, err := getCountryName(countryCode)
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +374,7 @@ func GetCountries(continent string) (*Countries, error) {
 	res, err := DynamoClient.GetItem(params)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Error getting countries for continent: %v", err))
 	}
 
 	for _, countryItem := range res.Item["countries"].L {
