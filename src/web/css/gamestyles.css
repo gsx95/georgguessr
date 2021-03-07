@@ -115,10 +115,11 @@ input {
     margin-top: 5%;
 }
 
-#result-text {
-    width:100%;
-    text-align: center;
+#result-table {
     font-size:18px;
+    width:80%;
+    margin-left:10%;
+    text-align:center;
 }
 
 #result-btn {
@@ -142,6 +143,12 @@ input {
     -webkit-transform: translateX(-50%);
     transform: translateX(-50%);
 }
+
+.mini-pin {
+    height:20px;
+    width:12px;
+}
+
 
 /***************************/
 /**         STATS         **/

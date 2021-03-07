@@ -35,13 +35,16 @@ function updateRoomTable() {
 
 function createRoom() {
 
-    let timeString = timeToString(byId("timelimit").value);
+    let timeSliderValue = byId("timelimit").value;
     let timeSeconds = 0;
-    if(timeString.endsWith("s")) {
-        timeSeconds = 1 * timeString.slice(0, -1)
+
+    if(timeSliderValue < 5) {
+        timeSeconds = timeSliderValue * 10;
     } else {
-        timeSeconds = 60 * timeString.slice(0, -1)
+        timeSeconds = (timeSliderValue - 5) * 60;
     }
+
+    console.log(timeSeconds);
 
     const data = {
         "name": byId("name").value,

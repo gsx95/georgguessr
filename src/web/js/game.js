@@ -140,7 +140,7 @@ function showResults(postResults) {
 
     if (guessPos !== null && guessPos !== undefined) {
         // show my guess marker
-        guessMarker = showMarkerAndLine(guessPos, 0);
+        guessMarker = showMarkerAndLine(guessPos, icons[0]);
         var bounds = new google.maps.LatLngBounds();
         bounds.extend(guessMarker.getPosition());
         bounds.extend(correctMarker.getPosition());
@@ -155,23 +155,19 @@ function showResults(postResults) {
                     "lat": guessPos.lat(),
                     "lon": guessPos.lng()
                 }
-            }, function (resp) {
-                console.log(resp);
-            });
+            }, function (resp) {});
         }
-        distances = [{"name": "Your", "distance": meters}];
+        distances = [{"name": "You", "distance": meters}];
     }
 
     doGetRequestJSON("/game/guesses/" + gameID + "/" + roundNo, function (response) {
-        for (let name in response) {
-            console.log("compare " + name + " with " + playerName);
+        for (let name_raw in response) {
+            let name = decodeURIComponent(name_raw);
             if(name.toLowerCase() === playerName.toLowerCase()) {
-                console.log("continue");
                 continue;
             }
-            if (response.hasOwnProperty(name)) {
-                console.log("add to list");
-                let score = response[name];
+            if (response.hasOwnProperty(name_raw)) {
+                let score = response[name_raw];
                 let dist = score["distance"];
                 let pos = score["guess"];
                 distances.push({
@@ -185,20 +181,23 @@ function showResults(postResults) {
 
         for(let i = 0; i<distances.length;i++) {
             let d = distances[i];
-            let name = d["name"];
             let dist = d["distance"];
+            d["icon"] = icons[i];
 
             if (dist < 1000) {
-                d["text"] = name + ": " + dist + "m";
+                d["distance_text"] = dist + "m";
             } else if (dist < 100000) {
                 let km = dist / 1000;
                 let mets = dist % 1000;
-                d["text"] = name + ": " + ~~km + "." + (("" + mets).substring(0, 1)) + "km";
+                d["distance_text"] = ~~km + "." + (("" + mets).substring(0, 1)) + "km";
             } else {
                 let km = dist / 1000;
-                d["text"] =  name + ": " + ~~km + "km";
+                d["distance_text"] =  ~~km + "km";
             }
         }
+
+        distances.sort((a,b) => (a["distance"] > b["distance"]) ? 1 : ((b["distance"] > a["distance"]) ? -1 : 0));
+
         showResultDistances(distances);
     });
 }
@@ -216,14 +215,13 @@ let icons = [
     "https://i.ibb.co/rxvXG5S/icon-9.png"
 ];
 
-function showMarkerAndLine(pos, iconIndex) {
-    console.log("show maker " + pos["lat"] + "   " + iconIndex);
+function showMarkerAndLine(pos, iconUrl) {
     let marker = new google.maps.Marker({
         position: pos,
         icon: {
             size: new google.maps.Size(30, 52),
             scaledSize: new google.maps.Size(30, 52),
-            url: icons[iconIndex]
+            url: iconUrl
         }
     });
     marker.setMap(resultMap);
@@ -242,14 +240,16 @@ function showMarkerAndLine(pos, iconIndex) {
     return marker;
 }
 
-function showResultDistances(distanceTexts) {
-    byId("result-text").innerHTML = "";
-    for(let i = 0;i<distanceTexts.length;i++) {
-        let d = distanceTexts[i];
-        let text = d["text"];
-        addElement("p", byId("result-text"), text);
+function showResultDistances(distances) {
+    byId("result-table").innerHTML = "";
+    console.log(distances);
+    let rows = getRenderedTemplate("ResultsTableRows", {"results": distances});
+    byId("result-table").innerHTML = rows;
+
+    for(let i = 0;i<distances.length;i++) {
+        let d = distances[i];
         if(d["lat"] !== undefined && d["lat"] !== null) {
-            showMarkerAndLine({lat: d["lat"], lng: d["lon"]}, i + 1)
+            showMarkerAndLine({lat: d["lat"], lng: d["lon"]}, d["icon"])
         }
     }
 }
@@ -368,7 +368,13 @@ function checkName(validCallback, notValidCallback) {
     doGetRequestJSON("/game/players/" + gameID, function (response) {
         let input = byId("player-name-input");
         let startBtn = byId("start-game-button");
-        let valid = response["players"].indexOf(input.value) < 0;
+        let players = response["players"];
+        let valid = true;
+        for(let i = 0; i < players.length; i++) {
+            if(input.value.toLowerCase() === decodeURIComponent(players[i]).toLowerCase()) {
+                valid = false;
+            }
+        }
         if (!valid) {
             startBtn.disabled = true;
             startBtn.classList.add("btn-disabled");

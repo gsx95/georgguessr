@@ -14,7 +14,26 @@ func HandleGetAvailableRooms(_ events.APIGatewayProxyRequest) events.APIGatewayP
 		return GenerateResponse(fmt.Sprintf("%v", err), 500)
 	}
 
-	byteRooms, err := json.Marshal(rooms)
+	type RoomInfo struct {
+		ID            string        `json:"id,omitempty"`
+		Name          string        `json:"name"`
+		Players       int      		`json:"players"`
+		MaxPlayers    int           `json:"maxPlayers"`
+		Status        string        `json:"status,omitempty"`
+	}
+
+	roomInfos := make([]RoomInfo, 0)
+	for _, room := range rooms {
+		roomInfos = append(roomInfos, RoomInfo{
+			ID: room.ID,
+			Name: room.Name,
+			Players: len(room.Players),
+			MaxPlayers: room.MaxPlayers,
+			Status: room.Status,
+		})
+	}
+
+	byteRooms, err := json.Marshal(roomInfos)
 	if err != nil {
 		return GenerateResponse(fmt.Sprintf("%v", err), 500)
 	}
