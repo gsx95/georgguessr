@@ -20,6 +20,9 @@ const citiesTable = "GeoCities"
 
 var (
 	DynamoClient dynamodbiface.DynamoDBAPI
+	encoder = dynamodbattribute.NewEncoder(func(e *dynamodbattribute.Encoder) {
+		e.EnableEmptyCollections = true
+	})
 )
 
 type Room struct {
@@ -30,7 +33,7 @@ type Room struct {
 	Rounds        int           `json:"maxRounds"`
 	Status        string        `json:"status,omitempty"`
 	TimeLimit     int           `json:"timeLimit"`
-	GeoBoundaries []GeoBoundary `json:"geoBoundaries"`
+	GeoBoundaries []GeoBoundary `json:"geoBoundaries,omitempty"`
 	GamesRounds   []GameRound   `json:"gameRounds"`
 
 }
@@ -48,7 +51,7 @@ type GameRound struct {
 	No            int
 	StartPosition GeoPoint          `json:"startPosition"`
 	Scores        map[string]Guess `json:"scores"`
-	PanoID        string            `json:"panoID"`
+	PanoID        string            `json:"panoID,omitempty"`
 }
 
 type Guess struct {
@@ -64,7 +67,7 @@ type City struct {
 
 func PutGuess(gameID, username string, round int, guess Guess) error {
 
-	guessMap, err := dynamodbattribute.Marshal(guess)
+	guessMap, err := encoder.Encode(guess)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error marshalling guess: %v", err))
 	}
@@ -93,6 +96,7 @@ func PutGuess(gameID, username string, round int, guess Guess) error {
 }
 
 func PutUsername(gameID, username string) error {
+
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(roomsTable),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -123,6 +127,7 @@ func PutUsername(gameID, username string) error {
 }
 
 func PutPanoID(roomID string, round int, panoID string) error {
+
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(roomsTable),
 		Key: map[string]*dynamodb.AttributeValue{
@@ -195,45 +200,23 @@ func GetAvailableRooms() ([]*Room, error) {
 		return nil, errors.New(fmt.Sprintf("Error scanning rooms table: %v", err))
 	}
 
-	var items []map[string]string
+	var items []*Room
 	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &items)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Error unmarhsalling list of rooms: %v", err))
 	}
-
-	var rooms []*Room
-	for _, roomItem := range items {
-		room := &Room{
-			ID:     roomItem["id"],
-			Status: roomItem["status"],
-			Name:   roomItem["name"],
-		}
-		if roomItem["players"] == "" {
-			room.Players = []string{}
-		} else {
-			players := roomItem["players"]
-			//TODO:
-			fmt.Println(players)
-			room.Players = []string{}
-		}
-		maxPlayers, err := strconv.Atoi(roomItem["maxPlayers"])
-		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Error converting maxPlayers to int: %v", err))
-		}
-		room.MaxPlayers = maxPlayers
-		rooms = append(rooms, room)
-	}
-	return rooms, nil
+	return items, nil
 }
 
 func writeRoomToDB(room Room) error {
-	av, err := dynamodbattribute.MarshalMap(room)
+
+	av, err := encoder.Encode(room)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error marshalling room: %v", err))
 	}
 
 	input := &dynamodb.PutItemInput{
-		Item:      av,
+		Item:      av.M,
 		TableName: aws.String(roomsTable),
 	}
 
