@@ -60,26 +60,26 @@ cp src/web/game.html statics/game.html;
 cp src/web/createRoom.html statics/createRoom.html;
 
 MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
-sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/index.html;
-sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/index.html;
-sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/index.html;
+sed -i "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/index.html;
+sed -i "s,{{api-endpoint}},$API_ENDPOINT,g" statics/index.html;
+sed -i "s/{{api-key}}/$API_KEY_VALUE/g" statics/index.html;
 
-sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/game.html;
-sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/game.html;
-sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/game.html;
+sed -i "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/game.html;
+sed -i "s,{{api-endpoint}},$API_ENDPOINT,g" statics/game.html;
+sed -i "s/{{api-key}}/$API_KEY_VALUE/g" statics/game.html;
 
-sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/createRoom.html;
-sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/createRoom.html;
-sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/createRoom.html;
+sed -i "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/createRoom.html;
+sed -i "s,{{api-endpoint}},$API_ENDPOINT,g" statics/createRoom.html;
+sed -i "s/{{api-key}}/$API_KEY_VALUE/g" statics/createRoom.html;
 
 if [[ $1 = "prod" ]]; then
   babel src/web/js/* --presets minify > statics/js/georgguessr.js;
-  sed -i '' "/dev-script/d" statics/index.html;
-  sed -i '' "/PROD/d" statics/index.html;
-  sed -i '' "/dev-script/d" statics/game.html;
-  sed -i '' "/PROD/d" statics/game.html;
-  sed -i '' "/dev-script/d" statics/createRoom.html;
-  sed -i '' "/PROD/d" statics/createRoom.html;
+  sed -i "/dev-script/d" statics/index.html;
+  sed -i "/PROD/d" statics/index.html;
+  sed -i "/dev-script/d" statics/game.html;
+  sed -i "/PROD/d" statics/game.html;
+  sed -i "/dev-script/d" statics/createRoom.html;
+  sed -i "/PROD/d" statics/createRoom.html;
 else
   cp -R src/web/js/ statics/js/
 fi
@@ -115,5 +115,3 @@ done <src/resources/countries.jsonData
 echo "------------------------"
 echo "Done!"
 echo ""
-
-open statics/index.html
