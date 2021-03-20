@@ -6,15 +6,13 @@ let streetview;
 let guessPos;
 let roundNo = 1;
 let gameStats;
-let correctMarker;
-let distanceLine;
-let guessMarker;
 let secondsLeft;
 let timerId;
 let currentPano;
 let startPos;
 let timerStopped = true;
 let playerName;
+let gameEnded = false;
 
 let markers = [];
 let lines = [];
@@ -80,20 +78,31 @@ function backHome() {
 }
 
 function nextRound() {
+    if(gameEnded) {
+        return showEndResults();
+    }
+
     byId("game-controls").style.visibility = "visible";
     byId("guess-map-container").style.visibility = "visible";
     byId("stop-overlay").style.display = "none";
     byId("stop-popup").style.display = "none";
+    byId("result-table").innerText = "";
 
-    distanceLine.setMap(null);
-    guessMarker.setMap(null);
-    correctMarker.setMap(null);
-    marker.setMap(null);
 
     let guessBtn = byId("guess-btn");
     guessBtn.disabled = true;
     guessBtn.classList.add("btn-disabled");
 
+    for(let i = 0; i<markers.length;i++) {
+        let m = markers[i];
+        m.setMap(null);
+    }
+    markers = [];
+    for(let i = 0; i<lines.length;i++) {
+        let l = lines[i];
+        l.setMap(null);
+    }
+    lines = [];
     Object.assign(byId("guess-map-container").style, {
         width: "300px",
         height: "200px",
@@ -105,14 +114,24 @@ function nextRound() {
     setStartView(roundNo);
 }
 
+function showEndResults() {
+    window.location.href = "/results.html?id=" + gameID;
+}
+
+
 function endRound() {
     clearInterval(timerId);
     byId("game-controls").style.visibility = "hidden";
     byId("guess-map-container").style.visibility = "hidden";
     byId("stop-overlay").style.display = "block";
     byId("stop-popup").style.display = "block";
-    showResults(true);
 
+    if(roundNo === gameStats.rounds) {
+        byId("result-btn").innerText = "VIEW RESULTS";
+        gameEnded = true;
+    }
+
+    showResults(true);
 }
 
 function showResults(postResults) {
@@ -125,8 +144,7 @@ function showResults(postResults) {
         l.setMap(null);
     }
 
-
-    correctMarker = new google.maps.Marker({
+    let correctMarker = new google.maps.Marker({
         position: startPos,
         icon: {
             size: new google.maps.Size(60, 30),
@@ -134,18 +152,19 @@ function showResults(postResults) {
             url: "https://i.ibb.co/PgFftmS/flag-2.png"
         }
     });
+    markers.push(correctMarker);
     correctMarker.setMap(resultMap);
 
     let distances = [];
 
     if (guessPos !== null && guessPos !== undefined) {
         // show my guess marker
-        guessMarker = showMarkerAndLine(guessPos, icons[0]);
+        let guessMarker = showMarkerAndLine(guessPos, icons[0]);
         var bounds = new google.maps.LatLngBounds();
         bounds.extend(guessMarker.getPosition());
         bounds.extend(correctMarker.getPosition());
         resultMap.fitBounds(bounds);
-
+        markers.push(guessMarker);
 
         let meters = calculateDistanceInMeter(guessMarker, correctMarker);
         if(postResults === true) {
@@ -242,7 +261,6 @@ function showMarkerAndLine(pos, iconUrl) {
 
 function showResultDistances(distances) {
     byId("result-table").innerHTML = "";
-    console.log(distances);
     let rows = getRenderedTemplate("ResultsTableRows", {"results": distances});
     byId("result-table").innerHTML = rows;
 
@@ -307,6 +325,7 @@ function drawMarker(latlng) {
         position: latlng,
     });
     marker.setMap(guessMap);
+    markers.push(marker);
 }
 
 function setGuessMapResizable() {
