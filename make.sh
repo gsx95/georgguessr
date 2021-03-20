@@ -53,11 +53,13 @@ mkdir -p statics/img
 
 cp src/web/css/styles.css statics/css/styles.css
 cp src/web/css/gamestyles.css statics/css/gamestyles.css
+cp src/web/css/results.css statics/css/results.css
 cp -r src/web/img/* statics/img/
 
 cp src/web/index.html statics/index.html;
 cp src/web/game.html statics/game.html;
 cp src/web/createRoom.html statics/createRoom.html;
+cp src/web/results.html statics/results.html;
 
 MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
 sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/index.html;
@@ -72,6 +74,10 @@ sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/createRoom.html;
 sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/createRoom.html;
 sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/createRoom.html;
 
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/results.html;
+sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/results.html;
+sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/results.html;
+
 if [[ $1 = "prod" ]]; then
   babel src/web/js/* --presets minify > statics/js/georgguessr.js;
   sed -i '' "/dev-script/d" statics/index.html;
@@ -80,6 +86,8 @@ if [[ $1 = "prod" ]]; then
   sed -i '' "/PROD/d" statics/game.html;
   sed -i '' "/dev-script/d" statics/createRoom.html;
   sed -i '' "/PROD/d" statics/createRoom.html;
+  sed -i '' "/dev-script/d" statics/results.html;
+  sed -i '' "/PROD/d" statics/results.html;
 else
   cp -R src/web/js/ statics/js/
 fi
