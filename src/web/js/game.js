@@ -18,16 +18,25 @@ let markers = [];
 let lines = [];
 
 function showGame() {
+    gameID = getRequestParameter("id");
+    byId("share-id").innerText = gameID;
+    console.log(byId("share-link"));
+    byId("share-link").value = window.location.href;
+    byId("copy-game-link-btn").onclick = copyGameLink;
     setGuessMapResizable();
     showPlayerNamePrompt();
     byId("refresh-results-btn").onclick = function() {showResults(false);};
+}
+
+function copyGameLink() {
+    byId("share-link").select();
+    document.execCommand('copy');
 }
 
 function initGameMaps() {
     initUtils();
     byId("guess-btn").onclick = endRound;
     byId("result-btn").onclick = nextRound;
-    gameID = getRequestParameter("id");
 
     guessMap = new google.maps.Map(byId("guess-map"), {
         center: {lat: 37.869260, lng: -122.254811},
