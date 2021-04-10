@@ -5,17 +5,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 )
 
 type RoomWithPredefinedArea struct {
 	Room
-	Continent       string `json:"continent"`
-	Country       string `json:"country"`
-	City       string `json:"city"`
-
+	Continent string `json:"continent"`
+	Country   string `json:"country"`
+	City      string `json:"city"`
 }
 
-func  CreateRoomWithPredefinedArea(reqBody string) (string, error) {
+type RoomWithPlaces struct {
+	Room
+	Places [] struct {
+		Name    string `json:"name"`
+		Country string `json:"country"`
+	} `json:"places"`
+}
+
+func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 	room := RoomWithPredefinedArea{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
@@ -42,7 +50,32 @@ func  CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 		})
 	}
 
+	return createRoom(&room.Room)
+}
 
+func CreateRoomWithPlaces(reqBody string) (string, error) {
+	room := RoomWithPlaces{}
+	err := json.Unmarshal([]byte(reqBody), &room)
+	if err != nil {
+		return "", err
+	}
+
+	for i := 0; i < room.Rounds; i++ {
+		place := room.Places[rand.Intn(len(room.Places))]
+		lat, lon, err := RandomPosForCity(place.Name, place.Country)
+		if err != nil {
+			i--
+			fmt.Println(err)
+		}
+		room.GamesRounds = append(room.GamesRounds, GameRound{
+			No: i,
+			StartPosition: GeoPoint{
+				Lat: lat,
+				Lon: lon,
+			},
+			Scores: map[string]Guess{},
+		})
+	}
 	return createRoom(&room.Room)
 }
 

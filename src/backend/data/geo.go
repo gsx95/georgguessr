@@ -58,13 +58,8 @@ func RandomPositionByArea(continent string, country string, cities string) (lat,
 	return 0, 0, errors.New("unknown city type " + cities)
 }
 
-func getRandomPosByArea(minPop, maxPop int, countries map[string]bool) (lat, lon float64, err error) {
-	randomCity, country, err := GetRandomCityName(minPop, maxPop, countries)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	feature, err := getAdminFeatureForCity(randomCity, country)
+func RandomPosForCity(city, country string) (lat, lon float64, err error) {
+	feature, err := getAdminFeatureForCity(city, country)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -82,6 +77,14 @@ func getRandomPosByArea(minPop, maxPop int, countries map[string]bool) (lat, lon
 	}
 
 	return point.Lat(), point.Lon(), nil
+}
+
+func getRandomPosByArea(minPop, maxPop int, countries map[string]bool) (lat, lon float64, err error) {
+	randomCity, country, err := GetRandomCityName(minPop, maxPop, countries)
+	if err != nil {
+		return 0, 0, err
+	}
+	return RandomPosForCity(randomCity, country)
 }
 
 func getAdminFeatureForCity(city, country string) (*geojson.Feature, error) {
