@@ -113,15 +113,14 @@ func createRoom(room *Room) (string, error) {
 }
 
 func checkRoomAttributes(room *Room) (*Room, error) {
-	if room.Name == "" {
-		return nil, errors.New("no room name provided")
-	}
-
 	if room.MaxPlayers == 0 {
 		return nil, errors.New("zero players not possible")
 	}
 
-	id := helper.RandomUUID()
+	id := helper.RandomRoomID()
+	for RoomExists(id) {
+		id = helper.RandomRoomID()
+	}
 	room.ID = id
 	room.Players = []string{}
 	room.Status = "waiting"

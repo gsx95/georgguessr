@@ -49,6 +49,14 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        GetRoomExists:
+          Type: Api
+          Properties:
+            Path: /exists/{roomID}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         GetGamePos:
           Type: Api
           Properties:
@@ -79,14 +87,6 @@ Resources:
             Path: /{allEndpoints}
             Method: OPTION
             RestApiId: !Ref GuessrAPI
-        GetAvailableRoom:
-          Type: Api
-          Properties:
-            Path: /available-rooms
-            Method: GET
-            RestApiId: !Ref GuessrAPI
-            Auth:
-              ApiKeyRequired: true
         PostRoom:
           Type: Api
           Properties:

@@ -8,38 +8,18 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func HandleGetAvailableRooms(_ events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	rooms, err := data.GetAvailableRooms()
-	if err != nil {
-		return GenerateResponse(fmt.Sprintf("%v", err), 500)
-	}
 
-	type RoomInfo struct {
-		ID            string        `json:"id,omitempty"`
-		Name          string        `json:"name"`
-		Players       int      		`json:"players"`
-		MaxPlayers    int           `json:"maxPlayers"`
-		Status        string        `json:"status,omitempty"`
+func HandleRoomExists(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+	roomID := request.PathParameters["roomID"]
+	if roomID == "" {
+		return GenerateResponse("no room id given", 400)
 	}
-
-	roomInfos := make([]RoomInfo, 0)
-	for _, room := range rooms {
-		roomInfos = append(roomInfos, RoomInfo{
-			ID: room.ID,
-			Name: room.Name,
-			Players: len(room.Players),
-			MaxPlayers: room.MaxPlayers,
-			Status: room.Status,
-		})
+	exists := data.RoomExists(roomID)
+	if exists {
+		return GenerateResponse("{\"exists\": true}", 200)
 	}
-
-	byteRooms, err := json.Marshal(roomInfos)
-	if err != nil {
-		return GenerateResponse(fmt.Sprintf("%v", err), 500)
-	}
-	return GenerateResponse(string(byteRooms), 200)
+	return GenerateResponse("{\"exists\": false}", 404)
 }
-
 
 func HandleGetRoom(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	roomID := request.PathParameters["roomID"]

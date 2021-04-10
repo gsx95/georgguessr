@@ -22,6 +22,10 @@ func webHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 		return h.GenerateResponse("hi", 200), nil
 	}
 
+	if strings.HasPrefix(request.Path, "/exists") {
+		return h.HandleRoomExists(request), nil
+	}
+
 	if strings.HasPrefix(request.Path, "/rooms") {
 		if request.HTTPMethod == "GET" {
 			return h.HandleGetRoom(request), nil
@@ -61,10 +65,6 @@ func webHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 			return h.HandleGetPlayers(request), nil
 		}
 		return h.HandlePostPlayers(request), nil
-	}
-
-	if strings.HasPrefix(request.Path, "/available-rooms") {
-		return h.HandleGetAvailableRooms(request), nil
 	}
 
 	if strings.HasPrefix(request.Path, "/countries") {

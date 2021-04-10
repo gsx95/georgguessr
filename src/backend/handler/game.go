@@ -26,7 +26,6 @@ func HandlePostPanoIDs(request events.APIGatewayProxyRequest) events.APIGatewayP
 		return GenerateResponse(fmt.Sprintf("%v", err), 404)
 	}
 	return GenerateResponse("ok", 200)
-
 }
 
 func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
@@ -204,14 +203,12 @@ func HandleGetGameStats(request events.APIGatewayProxyRequest) events.APIGateway
 	}
 	bytes, err := json.Marshal(struct{
 		Rounds int `json:"rounds"`
-		Name string `json:"name"`
 		MaxPlayers int `json:"maxPlayers"`
 		Players int `json:"players"`
 		Status string `json:"status"`
 		TimeLimit int `json:"timeLimit"`
 	}{
 		game.Rounds,
-		game.Name,
 		game.MaxPlayers,
 		len(game.Players),
 		game.Status,

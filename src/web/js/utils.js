@@ -47,22 +47,14 @@ function getRequestParameter(parameterName) {
     return result;
 }
 
-function doGetRequest(requestPath, onload, onerror, always) {
+function doGetRequest(requestPath, onload, onerror) {
     fetch(API_ENDPOINT + requestPath, {
         headers: {
             'x-api-key': API_KEY,
         },
     })
-        .then((resp) => {
-            if (resp.status !== 200) {
-                throw new Error("Got status " + resp.status + " on " + url)
-            }
-            return resp;
-        })
-        .then((resp) => resp.text())
         .then(onload)
-        .catch(onerror)
-        .finally(always);
+        .catch(onerror);
 }
 
 function doGetRequestJSON(requestPath, onload, onerror, always) {
