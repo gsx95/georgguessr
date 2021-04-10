@@ -65,6 +65,7 @@ func HandlePostRoom(request events.APIGatewayProxyRequest) events.APIGatewayProx
 	switch geoType {
 	case "list": id, err = data.CreateRoomWithPredefinedArea(request.Body)
 	case "unlimited": id, err = data.CreateRoomUnlimited(request.Body)
+	case "places": id, err = data.CreateRoomWithPlaces(request.Body)
 	default: err = errors.New("geo type was " + geoType)
 	}
 

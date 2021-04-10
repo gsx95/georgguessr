@@ -64,6 +64,20 @@ function createRoom() {
 }
 
 function createRoomPlaceSearch(data) {
+    let placesElements = document.getElementsByName("selected-places-item");
+    let places = [];
+    for (let i = 0; i < placesElements.length; i++) {
+        let placeElement = placesElements[i];
+        let place = placeElement.getAttribute("place");
+        let country = placeElement.getAttribute("country");
+        places.push({
+            "name": place,
+            "country": country
+        })
+    }
+
+    data["places"] = places;
+
     doPostRequest("/rooms?type=places", data, function (response) {
         window.location.href = "/createRoom.html?id=" + response;
     });
@@ -139,6 +153,8 @@ function addSpecificCityToList(name, country) {
     };
 
     td.setAttribute("country", country);
+    td.setAttribute("place", name);
+    td.setAttribute("name", "selected-places-item");
 }
 
 function deleteSpecificCity(tr, idx) {
