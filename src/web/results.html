@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initGameMaps&libraries=drawing,places,geometry"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initEndResults&libraries=drawing,places,geometry"
             defer></script>
 
     <link href="css/results.css" rel="stylesheet"/>
@@ -28,9 +28,37 @@
     <div id="page">
         <div id="content">
             <h2 style="margin-top: 20px;">End Results</h2>
+            <h4 id="result-msg"></h4>
+            <table id="result-table"> </table>
+            <div id="result-map"></div>
+            <p class="inline">Select Round:</p>
+            <select class="inline" id="select-round-btns"></select>
         </div>
     </div>
     <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
     <data id="API_KEY" value="{{api-key}}"></data>
+
+    <script id="ResultsTableRows" type="x-tmpl-mustache">
+        <tr>
+          <th></th>
+          <th>Player</th>
+          <th>Wins</th>
+          <th>Distance</th>
+        </tr>
+        {{#results}}
+        <tr>
+            <td><img src="{{icon}}" class="results-pin"/></td>
+            <td>{{name}}</td>
+            <td>{{wins}}</td>
+            <td>{{distance}}</td>
+            <td></td>
+        </tr>
+        {{/results}}
+</script>
+<script id="SelectRoundButtons" type="x-tmpl-mustache">
+        {{#rounds}}
+            <option id="rounds-option-{{.}}">{{.}}</option>
+        {{/rounds}}
+</script>
 </body>
 </html>

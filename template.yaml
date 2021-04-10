@@ -127,6 +127,14 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        GetEndResults:
+          Type: Api
+          Properties:
+            Path: /game/endresults/{gameID}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
         GetCountries:
           Type: Api
           Properties:

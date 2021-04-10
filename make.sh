@@ -2,18 +2,6 @@
 
 declare -a pids
 
-if [[ $1 = "example" ]]; then
-    echo "------------------------"
-    echo "Uploading example..."
-    echo "------------------------"
-    aws dynamodb batch-write-item --request-items file://src/resources/exampleRoom.json
-    echo "<script>window.location.href = 'file:///$PWD/statics/createRoom.html?id=01a67502-c1a1-47e7-88f0-d3fc366c543c'</script>" > temp.html
-    open temp.html
-    sleep 5
-    rm temp.html
-    exit 0
-fi
-
 if [[ $2 != "frontend" ]]; then
     echo "------------------------"
     echo "Building Backend..."
