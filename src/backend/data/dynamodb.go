@@ -27,7 +27,6 @@ var (
 
 type Room struct {
 	ID            string        `json:"id,omitempty"`
-	Name          string        `json:"name"`
 	Players       []string           `json:"players"`
 	MaxPlayers    int           `json:"maxPlayers"`
 	Rounds        int           `json:"maxRounds"`
@@ -151,6 +150,24 @@ func PutPanoID(roomID string, round int, panoID string) error {
 	return nil
 }
 
+func RoomExists(roomID string) bool {
+
+	input := &dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(roomID),
+			},
+		},
+		TableName: aws.String(roomsTable),
+	}
+
+	result, err := DynamoClient.GetItem(input)
+	if err != nil || result == nil || len(result.Item) == 0{
+		return false
+	}
+	return true
+}
+
 func GetRoom(roomID string) (*Room, error) {
 
 	input := &dynamodb.GetItemInput{
@@ -173,39 +190,6 @@ func GetRoom(roomID string) (*Room, error) {
 		return nil, errors.New(fmt.Sprintf("Error unmarhsalling room item: %v", err))
 	}
 	return item, nil
-}
-
-func GetAvailableRooms() ([]*Room, error) {
-
-	exprAttrValues := map[string]*dynamodb.AttributeValue{
-		":creating": {
-			S: aws.String("creating"),
-		},
-		":waiting": {
-			S: aws.String("waiting"),
-		},
-	}
-
-	input := &dynamodb.ScanInput{
-		TableName:                 aws.String(roomsTable),
-		FilterExpression:          aws.String("#status = :creating or #status = :waiting"),
-		ExpressionAttributeValues: exprAttrValues,
-		ExpressionAttributeNames: map[string]*string{
-			"#status": aws.String("status"),
-		},
-	}
-
-	result, err := DynamoClient.Scan(input)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error scanning rooms table: %v", err))
-	}
-
-	var items []*Room
-	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &items)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error unmarhsalling list of rooms: %v", err))
-	}
-	return items, nil
 }
 
 func writeRoomToDB(room Room) error {

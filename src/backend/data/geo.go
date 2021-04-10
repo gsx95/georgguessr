@@ -88,6 +88,7 @@ func getRandomPosByArea(minPop, maxPop int, countries map[string]bool) (lat, lon
 }
 
 func getAdminFeatureForCity(city, country string) (*geojson.Feature, error) {
+	fmt.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
 	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)
 	if err != nil {
 		return nil, err
