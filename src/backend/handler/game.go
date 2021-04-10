@@ -165,6 +165,33 @@ func HandleGetPlayers(request events.APIGatewayProxyRequest) events.APIGatewayPr
 	return GenerateResponse(string(bytes), 200)
 }
 
+func HandleGetGameEndResults(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+	gameID := request.PathParameters["gameID"]
+
+	if gameID == "" {
+		return GenerateResponse("no game id given", 400)
+	}
+	game, err := data.GetRoom(gameID)
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 404)
+	}
+	bytes, err := json.Marshal(struct{
+		Rounds int `json:"rounds"`
+		Players []string `json:"players"`
+		GeoBoundaries []data.GeoBoundary `json:"geoBoundaries,omitempty"`
+		GamesRounds   []data.GameRound   `json:"gameRounds"`
+	}{
+		game.Rounds,
+		game.Players,
+		game.GeoBoundaries,
+		game.GamesRounds,
+	})
+	if err != nil {
+		return GenerateResponse(fmt.Sprintf("%v", err), 500)
+	}
+	return GenerateResponse(string(bytes), 200)
+}
+
 func HandleGetGameStats(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	gameID := request.PathParameters["gameID"]
 

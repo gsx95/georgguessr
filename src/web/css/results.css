@@ -32,3 +32,31 @@ body{ margin:0; padding:0; height:100%; width:100%; background-color: black}
     text-align: center;
     display: inline-block;
 }
+
+#result-table {
+    font-size:18px;
+    width:50%;
+    margin-left:25%;
+    text-align:left;
+    margin-top:30px;
+}
+
+#result-map {
+    width: 80%;
+    margin-left: 10%;
+    height: 300px;
+    margin-top:30px;
+}
+
+.inline {
+    display: inline-block;
+}
+
+.results-pin {
+    height:20px;
+    width:12px;
+}
+
+#select-round-btns {
+    width:100px;
+}

@@ -203,16 +203,7 @@ function showResults(postResults) {
             let dist = d["distance"];
             d["icon"] = icons[i];
 
-            if (dist < 1000) {
-                d["distance_text"] = dist + "m";
-            } else if (dist < 100000) {
-                let km = dist / 1000;
-                let mets = dist % 1000;
-                d["distance_text"] = ~~km + "." + (("" + mets).substring(0, 1)) + "km";
-            } else {
-                let km = dist / 1000;
-                d["distance_text"] =  ~~km + "km";
-            }
+            d["distance_text"] = distanceToText(dist);
         }
 
         distances.sort((a,b) => (a["distance"] > b["distance"]) ? 1 : ((b["distance"] > a["distance"]) ? -1 : 0));

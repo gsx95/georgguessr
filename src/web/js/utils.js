@@ -24,6 +24,19 @@ function addElement(tag, parent, innerText) {
     return element;
 }
 
+function distanceToText(distanceInMeters) {
+    if (distanceInMeters < 1000) {
+        return distanceInMeters + "m";
+    } else if (distanceInMeters < 100000) {
+        let km = distanceInMeters / 1000;
+        let mets = distanceInMeters % 1000;
+        return ~~km + "." + (("" + mets).substring(0, 1)) + "km";
+    } else {
+        let km = distanceInMeters / 1000;
+        return  ~~km + "km";
+    }
+}
+
 function getRequestParameter(parameterName) {
     var result = null, tmp = [];
     var items = location.search.substr(1).split("&");
@@ -60,7 +73,7 @@ function doGetRequestJSON(requestPath, onload, onerror, always) {
     })
         .then((resp) => {
             if (resp.status !== 200) {
-                throw new Error("Got status " + resp.status + " on " + url)
+                throw new Error("Got status " + resp.status + " on " + requestPath)
             }
             return resp;
         })
@@ -71,7 +84,6 @@ function doGetRequestJSON(requestPath, onload, onerror, always) {
 }
 
 function doPostRequestString(requestPath, data, callback) {
-    console.log("body: " + data);
     fetch(API_ENDPOINT + requestPath, {
         method: 'POST',
         headers: {
