@@ -3,34 +3,39 @@ let selectedPolygon;
 let selectionMap;
 
 function showHome() {
-    lastRequestTime = 0;
 
     initUtils();
 
     MicroModal.init();
-    updateRoomTable();
 
     byId("create-room-btn").onclick = showCreateRoom;
+    byId("enter-room-btn").onclick = showEnterRoom;
     byId("create-and-play-btn").onclick = createRoom;
-    byId("refresh-rooms-btn").onclick = updateRoomTable;
+    byId("enter-btn").onclick = enterRoom;
 }
 
-function updateRoomTable() {
-    doGetRequestJSON("/available-rooms",
-        (rooms) => {
-            if (rooms === null || rooms === undefined) {
-                return;
-            }
-            rooms.sort(function (x, y) {
-                return y.created - x.created;
-            });
-            let rows = getRenderedTemplate("HomeTableRowTemplate", {"rooms": rooms});
-            let roomsTableBody = byId("home-table-body");
-            roomsTableBody.innerHTML = rows;
-        }, (err) => {
-            console.log(err);
+function enterRoom() {
+    let id = byId("enter-room-id").value;
+    byId("enter-room-id").setCustomValidity("");
+    if (id.length === 0) {
+        showRoomIDInvalid();
+        return;
+    }
+    doGetRequest("/exists/" + id, function(response) {
+        if(response.status !== 200) {
+            showRoomIDInvalid();
+            return;
         }
-    );
+        window.location.href = "/game.html?id=" + id;
+    }, function(response) {
+        showRoomIDInvalid();
+    });
+}
+
+function showRoomIDInvalid() {
+    console.log("invalid");
+    byId("enter-room-id").setCustomValidity("No room found with this id.");
+    byId("enter-room-id").reportValidity();
 }
 
 function createRoom() {
@@ -45,10 +50,8 @@ function createRoom() {
     }
 
     const data = {
-        "name": byId("name").value,
         "maxRounds": parseInt(byId("rounds").value),
         "timeLimit": timeSeconds,
-        "password": (byId("set-pwd").value === "unprotected" ? "" : byId("pwd").value),
         "maxPlayers": parseInt(byId("maxplayer").value)
     };
 
@@ -59,8 +62,6 @@ function createRoom() {
         case "place-search": return createRoomPlaceSearch(data);
         case "custom": return createRoomCustom(data);
     }
-
-
 }
 
 function createRoomPlaceSearch(data) {
@@ -274,19 +275,13 @@ function continentSelected() {
     );
 }
 
-function countrySelected() {
-
-}
-
-function citySelected() {
-
+function showEnterRoom() {
+    MicroModal.show('modal-2');
 }
 
 function showCreateRoom() {
         MicroModal.show('modal-1');
 
-        let pwdDropDown = byId("set-pwd");
-        let pwdField = byId("pwd");
         let geoDropDown = byId("set-geo-limits");
         let geoMap = byId("selection-map");
         let maxPlayerSlider = byId("maxplayer");
@@ -305,14 +300,7 @@ function showCreateRoom() {
         let citySearchTable = byId("specific-cities-table");
 
         continentSelect.onchange = continentSelected;
-        countrySelect.onchange = countrySelected;
-        citySelect.onchange = citySelected;
 
-        pwdDropDown.onchange = function() {
-            pwdField.style.visibility = pwdDropDown.value === "protected" ? "visible" : "hidden";
-            pwdField.style.marginBottom = pwdDropDown.value === "protected" ? "30px" : "0px";
-            pwdField.focus();
-        };
         geoDropDown.onchange = function() {
             geoMap.style.display = geoDropDown.value === "custom" ? "block" : "none";
 

@@ -1,8 +1,8 @@
 package helper
 
 import "math/rand"
-import "github.com/twinj/uuid"
 
+var letters = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 
 func GetRandom(min, max int) int {
 	if max == min {
@@ -18,7 +18,11 @@ func GetRandomFloat(min, max float64) float64 {
 	return rand.Float64() * (max - min) + min
 }
 
-func RandomUUID() string {
-	u := uuid.NewV4()
-	return u.String()
+
+func RandomRoomID() string {
+	b := make([]rune, 10)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

@@ -25,19 +25,28 @@
 
 <body>
 <div id="page-home">
-    <button id="create-room-btn" class="center">Create Room</button>
-    <div class="home-table">
-        <table>
-            <thead>
-            <tr>
-                <th class="th-no-border"><button class="clickable" id="refresh-rooms-btn"><i class="fas fa-sync"></i></button></th>
-                <th scope="col"><i class="fas fa-info-circle"></i></th>
-                <th scope="col"><i class="fas fa-user"></i></th>
-            </tr>
-            </thead>
-            <tbody id="home-table-body">
-            </tbody>
-        </table>
+    <div class="center">
+        <button id="create-room-btn">Create Room</button>
+        <button id="enter-room-btn">Enter Room</button>
+    </div>
+</div>
+
+<div class="modal micromodal-slide" id="modal-2">
+    <div class="modal__overlay" data-micromodal-close>
+        <div class="modal__container">
+            <header class="modal__header">
+                <h2 class="modal__title" id="modal-2-title">
+                    Enter Room
+                </h2>
+            </header>
+            <main class="modal__content" id="modal-2-content">
+                <input type="text" id="enter-room-id" required/>
+            </main>
+            <footer class="modal__footer">
+                <button id="enter-btn" class="modal__btn modal__btn-primary">Enter</button>
+                <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+            </footer>
+        </div>
     </div>
 </div>
 
@@ -50,101 +59,74 @@
                 </h2>
             </header>
             <main class="modal__content" id="modal-1-content">
-                <div style="overflow:hidden;">
-                    <div style="float:left;">
-                        <div>
-                            <label style="display:block" for="name">Name</label>
-                            <input style="display:block" id="name" placeholder="name" type="text" value="" name="name">
-                        </div>
-
-                        <div style="margin-top:10px;">
-                            <select id="set-pwd" name="set-pwd">
-                                <option value="unprotected">Don't set password</option>
-                                <option value="protected">Set password</option>
-                            </select>
-                            <input style="display:block; visibility: hidden;" placeholder="password" id="pwd"
-                                   type="password" value="" name="pwd">
-                        </div>
-                        <div style="margin-top: -20px;">
+                <table>
+                    <tr>
+                        <td style="vertical-align: top;">
                             <select id="set-geo-limits" name="set-geo-limits">
                                 <option value="unlimited">Don't restrict playing area</option>
                                 <option value="list">Use predefined list of areas</option>
                                 <option value="place-search">Search place</option>
                                 <option value="custom">Draw custom areas</option>
                             </select>
-                        </div>
-                    </div>
-                    <div style="float:left; margin-left: 100px;">
-                        <div>
-                            <label style="display:block" id="maxplayer-label" for="maxplayer">Player: 2</label>
-                            <input style="display:block" id="maxplayer" type="range" min="1" max="10" value="2">
-                        </div>
-                        <div>
-                            <label style="display:block" id="rounds-label" for="rounds">Rounds: 3</label>
-                            <input style="display:block" id="rounds" type="range" min="1" max="10" value="3">
-                        </div>
-                        <div>
-                            <label style="display:block" id="timelimit-label" for="timelimit">Time limit: 3m</label>
-                            <input style="display:block" id="timelimit" type="range" min="1" max="25" value="8">
-                        </div>
+                            <input id="search-place-input" name="serch-place-input" style="width:200px; display:none" />
 
-                    </div>
-                </div>
+                            <table id="specific-cities-table" style="display: none; font-size: small">
 
-                <input id="search-place-input" name="serch-place-input" style="width:200px; display:none" />
+                            </table>
 
-                <table id="specific-cities-table" style="display: none; font-size: small">
-
+                            <select id="continent-selector" name="continent-selector" style="display: none;">
+                                <option value="all">All Continents</option>
+                                <option value="AF">Africa</option>
+                                <option value="AS">Asia</option>
+                                <option value="EU">Europe</option>
+                                <option value="NA">North America</option>
+                                <option value="OC">Oceania</option>
+                                <option value="SA">South America</option>
+                            </select>
+                            <select id="country-selector" name="country-selector" style="display: none;">
+                                <option value="all">All Areas</option>
+                            </select>
+                            <select id="city-selector" name="city-selector" style="display: none;">
+                                <option value="all">All Cities</option>
+                                <option value="disabled">--- Population greater than ---</option>
+                                <option value="pop_gt_100k">Population > 100.000</option>
+                                <option value="pop_gt_500k">Population > 500.000</option>
+                                <option value="pop_gt_1kk">Population > 1.000.000</option>
+                                <option value="pop_gt_5kk">Population > 5.000.000</option>
+                                <option value="disabled">--- Population lesser than ---</option>
+                                <option value="pop_lt_100k">Population < 100.000</option>
+                                <option value="pop_lt_500k">Population < 500.000</option>
+                                <option value="pop_lt_1kk">Population < 1.000.000</option>
+                            </select>
+                            <div id="selection-map" style="display: none"></div>
+                        </td>
+                        <td style="padding-left: 150px">
+                            <div>
+                                <label style="display:block" id="maxplayer-label" for="maxplayer">Player: 2</label>
+                                <input style="display:block" id="maxplayer" type="range" min="1" max="10" value="2">
+                            </div>
+                            <div>
+                                <label style="display:block" id="rounds-label" for="rounds">Rounds: 3</label>
+                                <input style="display:block" id="rounds" type="range" min="1" max="10" value="3">
+                            </div>
+                            <div>
+                                <label style="display:block" id="timelimit-label" for="timelimit">Time limit: 3m</label>
+                                <input style="display:block" id="timelimit" type="range" min="1" max="25" value="8">
+                            </div>
+                        </td>
+                    </tr>
                 </table>
-
-                <select id="continent-selector" name="continent-selector" style="display: none;">
-                    <option value="all">All Continents</option>
-                    <option value="AF">Africa</option>
-                    <option value="AS">Asia</option>
-                    <option value="EU">Europe</option>
-                    <option value="NA">North America</option>
-                    <option value="OC">Oceania</option>
-                    <option value="SA">South America</option>
-                </select>
-                <select id="country-selector" name="country-selector" style="display: none;">
-                    <option value="all">All Areas</option>
-                </select>
-                <select id="city-selector" name="city-selector" style="display: none;">
-                    <option value="all">All Cities</option>
-                    <option value="disabled">--- Population greater than ---</option>
-                    <option value="pop_gt_100k">Population > 100.000</option>
-                    <option value="pop_gt_500k">Population > 500.000</option>
-                    <option value="pop_gt_1kk">Population > 1.000.000</option>
-                    <option value="pop_gt_5kk">Population > 5.000.000</option>
-                    <option value="disabled">--- Population lesser than ---</option>
-                    <option value="pop_lt_100k">Population < 100.000</option>
-                    <option value="pop_lt_500k">Population < 500.000</option>
-                    <option value="pop_lt_1kk">Population < 1.000.000</option>
-                </select>
-                <div id="selection-map" style="display: none"></div>
             </main>
             <footer class="modal__footer">
                 <button id="create-and-play-btn" class="modal__btn modal__btn-primary">Create & Play</button>
                 <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
             </footer>
-        </main>
     </div>
 </div>
 
 <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
 <data id="API_KEY" value="{{api-key}}"></data>
 
-<script id="HomeTableRowTemplate" type="x-tmpl-mustache">
-        {{#rooms}}
-        <tr>
-            <td scope="row" class="home-table-name">{{name}}</td>
-            <td class="home-table-state">{{status}}</td>
-            <td class="home-table-players">{{players}}/{{maxPlayers}}</td>
-            <td class="home-table-join"><button class="home-join-button">Join {{#protected}}<i class="fas fa-lock"></i>{{/protected}}</button></td>
-        </tr>
-        {{/rooms}}
-
-</script>
 <script>
         window.onload = function(e) {
             showHome();
