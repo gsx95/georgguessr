@@ -28,6 +28,8 @@
 
     <div id="insert-player-name-overlay"></div>
     <div id="insert-player-name-container">
+        <p>Share Game:  <code id="share-id"></code>  <button class="clear-btn" id="copy-game-link-btn"><i class="fas fa-copy"></i></button></p>
+        <hr/>
         <p>Enter your name</p>
         <input autocomplete="off" id="player-name-input" name="georgguessr-player-name" type="text" placeholder="player name" />
         <br/>
@@ -77,5 +79,6 @@
             showGame();
         }
     </script>
+<input type="text" style="position:absolute; top: -1000px; left:-1000px;" id="share-link"/>
 </body>
 </html>
