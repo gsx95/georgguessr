@@ -44,8 +44,6 @@ function createRoom() {
         timeSeconds = (timeSliderValue - 5) * 60;
     }
 
-    console.log(timeSeconds);
-
     const data = {
         "name": byId("name").value,
         "maxRounds": parseInt(byId("rounds").value),
@@ -229,7 +227,6 @@ function initGoogleMaps() {
         selectedAreas[selectedAreas.length - 1].addListener('click', function(e, p1, p2) {
           selectArea(this)
         });
-        console.log(selectedAreas.length);
       }
     });
 
