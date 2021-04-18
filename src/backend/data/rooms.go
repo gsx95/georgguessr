@@ -53,6 +53,32 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 	return createRoom(&room.Room)
 }
 
+func CreateRoomWithCustomAreas(reqBody string) (string, error) {
+	room := Room{}
+	err := json.Unmarshal([]byte(reqBody), &room)
+	if err != nil {
+		return "", err
+	}
+
+	for i := 0; i < room.Rounds; i++ {
+		area := room.Areas[rand.Intn(len(room.Areas))]
+		lat, lon, err := RandomPositionInArea(area)
+		if err != nil {
+			i--
+			fmt.Println(err)
+		}
+		room.GamesRounds = append(room.GamesRounds, GameRound{
+			No: i,
+			StartPosition: GeoPoint{
+				Lat: lat,
+				Lon: lon,
+			},
+			Scores: map[string]Guess{},
+		})
+	}
+	return createRoom(&room)
+}
+
 func CreateRoomWithPlaces(reqBody string) (string, error) {
 	room := RoomWithPlaces{}
 	err := json.Unmarshal([]byte(reqBody), &room)
