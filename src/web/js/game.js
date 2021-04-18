@@ -34,6 +34,7 @@ function copyGameLink() {
 }
 
 function initGameMaps() {
+    gameID = getRequestParameter("id");
     initUtils();
     byId("guess-btn").onclick = endRound;
     byId("result-btn").onclick = nextRound;
@@ -302,6 +303,10 @@ function timeToString() {
 
 function updateStreetView(round, callback) {
     doGetRequestJSON("/game/pos/" + gameID + "/" + round, function (resp) {
+        console.log(resp);
+        if(resp.areas !== undefined && resp.areas !== null) {
+            showAreasInGuessMap(resp.areas)
+        }
         streetview.setPano(resp.panoId);
         currentPano = resp.panoId;
         startPos = {lat: resp.lat, lng: resp.lon};
@@ -315,6 +320,40 @@ function enableGuessButton() {
     let guessBtn = byId("guess-btn");
     guessBtn.removeAttribute("disabled");
     guessBtn.classList.remove("btn-disabled");
+}
+
+function showAreasInGuessMap(areas) {
+    let outerBounds = [ // whole world
+        new google.maps.LatLng(-85.1054596961173, -180),
+        new google.maps.LatLng(85.1054596961173, -180),
+        new google.maps.LatLng(85.1054596961173, 180),
+        new google.maps.LatLng(-85.1054596961173, 180),
+        new google.maps.LatLng(-85.1054596961173, 0)
+    ];
+    let allBounds = [];
+    allBounds.push(outerBounds);
+    for (let i = 0; i < areas.length; i++) {
+        let area = areas[i];
+        let gArea = [];
+        for (let j = 0; j < area.length; j++) {
+            let point = area[j];
+            let gPoint = new google.maps.LatLng(point.lat, point.lng);
+            gArea.push(gPoint);
+        }
+        if(google.maps.geometry.spherical.computeSignedArea(gArea) >= 0 ){
+            allBounds.push(gArea);
+        } else {
+            allBounds.push(gArea.reverse());
+        }
+    }
+    new google.maps.Polygon({
+        paths: allBounds,
+        strokeColor: "#000000",
+        strokeOpacity: 0.2,
+        strokeWeight: 3,
+        map: guessMap
+    });
+
 }
 
 function drawMarker(latlng) {

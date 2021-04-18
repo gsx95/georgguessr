@@ -45,13 +45,15 @@ func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGate
 	if len(rounds) < round {
 		return GenerateResponse("no more rounds", 400)
 	}
-	r := rounds[round - 1]
+	r := rounds[round-1]
 
-	bytes, err := json.Marshal(struct{
-		PanoID string `json:"panoId"`
-		Lat float64 `json:"lat"`
-		Lon float64 `json:"lon"`
+	bytes, err := json.Marshal(struct {
+		Areas  [][]data.GeoPoint `json:"areas,omitempty"`
+		PanoID string            `json:"panoId"`
+		Lat    float64           `json:"lat"`
+		Lon    float64           `json:"lon"`
 	}{
+		game.Areas,
 		r.PanoID,
 		r.StartPosition.Lat,
 		r.StartPosition.Lon,
@@ -74,7 +76,7 @@ func HandleGetGuess(request events.APIGatewayProxyRequest) events.APIGatewayProx
 	}
 
 	game, err := data.GetRoom(gameID)
-	scores := game.GamesRounds[round - 1].Scores
+	scores := game.GamesRounds[round-1].Scores
 
 	bytes, err := json.Marshal(scores)
 	if err != nil {
@@ -99,19 +101,19 @@ func HandlePostGuess(request events.APIGatewayProxyRequest) events.APIGatewayPro
 	var guess data.Guess
 
 	if err := json.Unmarshal([]byte(request.Body), &guess); err != nil {
-		return GenerateResponse("Invalid guess body: " + err.Error(), 400)
+		return GenerateResponse("Invalid guess body: "+err.Error(), 400)
 	}
 
 	game, err := data.GetRoom(gameID)
 	if err != nil {
 		return GenerateResponse(fmt.Sprintf("%v", err), 404)
 	}
-	scores := game.GamesRounds[round - 1].Scores
+	scores := game.GamesRounds[round-1].Scores
 	if _, alreadyExists := scores[username]; alreadyExists {
 		return GenerateResponse("Already posted score for this round", 400)
 	}
 
-	err = data.PutGuess(gameID, username, round - 1, guess)
+	err = data.PutGuess(gameID, username, round-1, guess)
 	if err != nil {
 		return GenerateResponse(fmt.Sprintf("%v", err), 400)
 	}
@@ -153,7 +155,7 @@ func HandleGetPlayers(request events.APIGatewayProxyRequest) events.APIGatewayPr
 	if err != nil {
 		return GenerateResponse(fmt.Sprintf("%v", err), 404)
 	}
-	bytes, err := json.Marshal(struct{
+	bytes, err := json.Marshal(struct {
 		Players []string `json:"players"`
 	}{
 		game.Players,
@@ -174,15 +176,15 @@ func HandleGetGameEndResults(request events.APIGatewayProxyRequest) events.APIGa
 	if err != nil {
 		return GenerateResponse(fmt.Sprintf("%v", err), 404)
 	}
-	bytes, err := json.Marshal(struct{
-		Rounds int `json:"rounds"`
-		Players []string `json:"players"`
-		GeoBoundaries []data.GeoBoundary `json:"geoBoundaries,omitempty"`
-		GamesRounds   []data.GameRound   `json:"gameRounds"`
+	bytes, err := json.Marshal(struct {
+		Rounds      int               `json:"rounds"`
+		Players     []string          `json:"players"`
+		Areas       [][]data.GeoPoint `json:"areas,omitempty"`
+		GamesRounds []data.GameRound  `json:"gameRounds"`
 	}{
 		game.Rounds,
 		game.Players,
-		game.GeoBoundaries,
+		game.Areas,
 		game.GamesRounds,
 	})
 	if err != nil {
@@ -201,12 +203,12 @@ func HandleGetGameStats(request events.APIGatewayProxyRequest) events.APIGateway
 	if err != nil {
 		return GenerateResponse(fmt.Sprintf("%v", err), 404)
 	}
-	bytes, err := json.Marshal(struct{
-		Rounds int `json:"rounds"`
-		MaxPlayers int `json:"maxPlayers"`
-		Players int `json:"players"`
-		Status string `json:"status"`
-		TimeLimit int `json:"timeLimit"`
+	bytes, err := json.Marshal(struct {
+		Rounds     int    `json:"rounds"`
+		MaxPlayers int    `json:"maxPlayers"`
+		Players    int    `json:"players"`
+		Status     string `json:"status"`
+		TimeLimit  int    `json:"timeLimit"`
 	}{
 		game.Rounds,
 		game.MaxPlayers,

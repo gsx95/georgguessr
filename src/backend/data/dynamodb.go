@@ -27,23 +27,19 @@ var (
 
 type Room struct {
 	ID            string        `json:"id,omitempty"`
-	Players       []string           `json:"players"`
+	Players       []string      `json:"players"`
 	MaxPlayers    int           `json:"maxPlayers"`
 	Rounds        int           `json:"maxRounds"`
 	Status        string        `json:"status,omitempty"`
 	TimeLimit     int           `json:"timeLimit"`
-	GeoBoundaries []GeoBoundary `json:"geoBoundaries,omitempty"`
+	Areas 		  [][]GeoPoint 	`json:"areas,omitempty"`
 	GamesRounds   []GameRound   `json:"gameRounds"`
 
 }
 
-type GeoBoundary struct {
-	GeoPoints []GeoPoint `json:"geoPoints"`
-}
-
 type GeoPoint struct {
 	Lat float64 `json:"lat"`
-	Lon float64 `json:"lon"`
+	Lon float64 `json:"lng"`
 }
 
 type GameRound struct {

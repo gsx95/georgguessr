@@ -85,6 +85,16 @@ function createRoomPlaceSearch(data) {
 }
 
 function createRoomCustom(data) {
+    let areasData = [];
+    for (let i = 0; i < selectedAreas.length; i++) {
+        areasData[i] = [];
+        let area = selectedAreas[i];
+        let path = area.getPath().getArray();
+        for (let j = 0; j < path.length; j++) {
+            areasData[i][j] = path[j].toJSON();
+        }
+    }
+    data["areas"] = areasData;
     doPostRequest("/rooms?type=custom", data, function (response) {
         window.location.href = "/createRoom.html?id=" + response;
     });

@@ -20,6 +20,20 @@ func RandomPosition() (lat, lon float64) {
 	return
 }
 
+func RandomPositionInArea(area []GeoPoint) (lat, lon float64, err error) {
+	polygon := pointsToPolygon(area)
+	pointValid := false
+	var point orb.Point
+	bound := polygon.Bound()
+	for !pointValid {
+		lat := helper.GetRandomFloat(bound.Min.Lat(), bound.Max.Lat())
+		lon := helper.GetRandomFloat(bound.Min.Lon(), bound.Max.Lon())
+		point = orb.Point{lon, lat}
+		pointValid = planar.PolygonContains(polygon, point)
+	}
+	return point.Lat(), point.Lon(), nil
+}
+
 func RandomPositionByArea(continent string, country string, cities string) (lat, lon float64, err error) {
 
 	countries := map[string]bool{}
@@ -150,4 +164,16 @@ func isPointInsidePolygon(feature *geojson.Feature, point orb.Point) bool {
 		return true
 	}
 	return false
+}
+
+func pointsToPolygon(points []GeoPoint) (polygon orb.Polygon) {
+	var ring orb.Ring
+	ring = []orb.Point{}
+	for _, point := range points {
+		p := orb.Point{}
+		p[0] = point.Lon
+		p[1] = point.Lat
+		ring = append(ring, p)
+	}
+	return []orb.Ring{ring}
 }
