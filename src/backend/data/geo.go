@@ -101,6 +101,8 @@ func getRandomPosByArea(minPop, maxPop int, countries map[string]bool) (lat, lon
 	return RandomPosForCity(randomCity, country)
 }
 
+// TODO: this fails for places that are not "administrative" features, e.g. the village 'Afrikaskop'
+// include all valid feature types of openstreetmaps, see branch "single-point-places"
 func getAdminFeatureForCity(city, country string) (*geojson.Feature, error) {
 	fmt.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
 	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)

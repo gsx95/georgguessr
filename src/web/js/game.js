@@ -1,451 +1,460 @@
-let guessMap;
-let resultMap;
-let gameID;
-let marker;
-let streetview;
-let guessPos;
-let roundNo = 1;
-let gameStats;
-let secondsLeft;
-let timerId;
-let currentPano;
-let startPos;
-let timerStopped = true;
-let playerName;
-let gameEnded = false;
+let GuessrGame = {
 
-let markers = [];
-let lines = [];
+    roundNo: 1,
+    timerStopped: true,
+    gameEnded: false,
 
-function showGame() {
-    gameID = getRequestParameter("id");
-    byId("share-id").innerText = gameID;
-    console.log(byId("share-link"));
-    byId("share-link").value = window.location.href;
-    byId("copy-game-link-btn").onclick = copyGameLink;
-    setGuessMapResizable();
-    showPlayerNamePrompt();
-    byId("refresh-results-btn").onclick = function() {showResults(false);};
-}
+    markers: [],
+    lines: [],
 
-function copyGameLink() {
-    byId("share-link").select();
-    document.execCommand('copy');
-}
+    // TODO: serve from own domain
+    icons: [
+        "https://i.ibb.co/bQqCvPG/icon-0.png",
+        "https://i.ibb.co/D98JKkn/icon-1.png",
+        "https://i.ibb.co/HFfZ9WJ/icon-2.png",
+        "https://i.ibb.co/KLpK0py/icon-3.png",
+        "https://i.ibb.co/yn9FMtc/icon-4.png",
+        "https://i.ibb.co/SVPGvD6/icon-5.png",
+        "https://i.ibb.co/QHB2PZM/icon-6.png",
+        "https://i.ibb.co/Dtf5VKJ/icon-7.png",
+        "https://i.ibb.co/GHLgHKk/icon-8.png",
+        "https://i.ibb.co/rxvXG5S/icon-9.png"
+    ],
 
-function initGameMaps() {
-    gameID = getRequestParameter("id");
-    initUtils();
-    byId("guess-btn").onclick = endRound;
-    byId("result-btn").onclick = nextRound;
+    guessMap: null,
+    resultMap: null,
+    gameID: null,
+    marker: null,
+    streetview: null,
+    guessPos: null,
+    gameStats: null,
+    secondsLeft: null,
+    timerId: null,
+    currentPano: null,
+    startPos: null,
+    playerName: null,
 
-    guessMap = new google.maps.Map(byId("guess-map"), {
-        center: {lat: 37.869260, lng: -122.254811},
-        zoom: 1,
-        fullscreenControl: true,
-        mapTypeControl: false,
-        streetViewControl: false,
-    });
+    showGame: function() {
+        GuessrGame.gameID = getRequestParameter("id");
+        byId("share-id").innerText = GuessrGame.gameID;
+        console.log(byId("share-link"));
+        byId("share-link").value = window.location.href;
+        byId("copy-game-link-btn").onclick = GuessrGame.copyGameLink;
+        GuessrGame.setGuessMapResizable();
+        GuessrGame.showPlayerNamePrompt();
+        byId("refresh-results-btn").onclick = function () {
+            GuessrGame.showResults(false);
+        };
+    },
 
-    resultMap = new google.maps.Map(byId("result-map"), {
-        center: {lat: 37.869260, lng: -122.254811},
-        zoom: 1,
-        fullscreenControl: false,
-        mapTypeControl: false,
-        streetViewControl: false,
-        zoomControl: false
-    });
+    copyGameLink: function() {
+        byId("share-link").select();
+        document.execCommand('copy');
+    },
 
+    initMaps: function() {
+        GuessrGame.gameID = getRequestParameter("id");
+        initUtils();
+        byId("guess-btn").onclick = GuessrGame.endRound;
+        byId("result-btn").onclick = GuessrGame.nextRound;
 
-    guessMap.addListener("click", (data) => {
-        guessPos = data.latLng;
-        drawMarker(data.latLng);
-        enableGuessButton();
-    });
+        GuessrGame.guessMap = new google.maps.Map(byId("guess-map"), {
+            center: {lat: 37.869260, lng: -122.254811},
+            zoom: 1,
+            fullscreenControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+        });
 
-    streetview = new google.maps.StreetViewPanorama(document.getElementById("pano"),
-        {
-            addressControl: false,
+        GuessrGame.resultMap = new google.maps.Map(byId("result-map"), {
+            center: {lat: 37.869260, lng: -122.254811},
+            zoom: 1,
             fullscreenControl: false,
-            showRoadLabels: false,
-            zoomControl: true,
-            panControl: false,
+            mapTypeControl: false,
+            streetViewControl: false,
+            zoomControl: false
+        });
+
+
+        GuessrGame.guessMap.addListener("click", (data) => {
+            GuessrGame.guessPos = data.latLng;
+            GuessrGame.drawMarker(data.latLng);
+            GuessrGame.enableGuessButton();
+        });
+
+        GuessrGame.streetview = new google.maps.StreetViewPanorama(document.getElementById("pano"),
+            {
+                addressControl: false,
+                fullscreenControl: false,
+                showRoadLabels: false,
+                zoomControl: true,
+                panControl: false,
+            }
+        );
+        doGetRequestJSON("/game/stats/" + GuessrGame.gameID, function (resp) {
+            GuessrGame.gameStats = resp;
+            GuessrGame.secondsLeft = GuessrGame.gameStats.timeLimit;
+            byId("round-no").innerText = "Round " + GuessrGame.roundNo + "/" + GuessrGame.gameStats.rounds;
+            GuessrGame.setStartView(GuessrGame.roundNo);
+            byId("to-start-btn").onclick = GuessrGame.backHome;
+        }, function (err) {
+            console.log(err);
+        });
+    },
+
+    backHome: function() {
+        GuessrGame.streetview.setPano(GuessrGame.currentPano);
+    },
+
+    nextRound: function() {
+        if (GuessrGame.gameEnded) {
+            return GuessrGame.showEndResults();
         }
-    );
-    doGetRequestJSON("/game/stats/" + gameID, function (resp) {
-        gameStats = resp;
-        secondsLeft = gameStats.timeLimit;
-        byId("round-no").innerText = "Round " + roundNo + "/" + gameStats.rounds;
-        setStartView(roundNo);
-        byId("to-start-btn").onclick = backHome;
-    }, function (err) {
-        console.log(err);
-    });
-}
 
-function backHome() {
-    streetview.setPano(currentPano);
-}
-
-function nextRound() {
-    if(gameEnded) {
-        return showEndResults();
-    }
-
-    byId("game-controls").style.visibility = "visible";
-    byId("guess-map-container").style.visibility = "visible";
-    byId("stop-overlay").style.display = "none";
-    byId("stop-popup").style.display = "none";
-    byId("result-table").innerText = "";
+        byId("game-controls").style.visibility = "visible";
+        byId("guess-map-container").style.visibility = "visible";
+        byId("stop-overlay").style.display = "none";
+        byId("stop-popup").style.display = "none";
+        byId("result-table").innerText = "";
 
 
-    let guessBtn = byId("guess-btn");
-    guessBtn.disabled = true;
-    guessBtn.classList.add("btn-disabled");
+        let guessBtn = byId("guess-btn");
+        guessBtn.disabled = true;
+        guessBtn.classList.add("btn-disabled");
 
-    for(let i = 0; i<markers.length;i++) {
-        let m = markers[i];
-        m.setMap(null);
-    }
-    markers = [];
-    for(let i = 0; i<lines.length;i++) {
-        let l = lines[i];
-        l.setMap(null);
-    }
-    lines = [];
-    Object.assign(byId("guess-map-container").style, {
-        width: "300px",
-        height: "200px",
-    });
-
-    roundNo++;
-    byId("round-no").innerText = "Round " + roundNo + "/" + gameStats.rounds;
-    secondsLeft = gameStats.timeLimit;
-    setStartView(roundNo);
-}
-
-function showEndResults() {
-    window.location.href = "/results.html?id=" + gameID;
-}
-
-
-function endRound() {
-    clearInterval(timerId);
-    byId("game-controls").style.visibility = "hidden";
-    byId("guess-map-container").style.visibility = "hidden";
-    byId("stop-overlay").style.display = "block";
-    byId("stop-popup").style.display = "block";
-
-    if(roundNo === gameStats.rounds) {
-        byId("result-btn").innerText = "VIEW RESULTS";
-        gameEnded = true;
-    }
-
-    showResults(true);
-}
-
-function showResults(postResults) {
-    for(let i = 0; i<markers.length;i++) {
-        let m = markers[i];
-        m.setMap(null);
-    }
-    for(let i = 0; i<lines.length;i++) {
-        let l = lines[i];
-        l.setMap(null);
-    }
-
-    let correctMarker = new google.maps.Marker({
-        position: startPos,
-        icon: {
-            size: new google.maps.Size(60, 30),
-            scaledSize: new google.maps.Size(60, 30),
-            url: "https://i.ibb.co/PgFftmS/flag-2.png"
+        for (let i = 0; i < GuessrGame.markers.length; i++) {
+            let m = GuessrGame.markers[i];
+            m.setMap(null);
         }
-    });
-    markers.push(correctMarker);
-    correctMarker.setMap(resultMap);
+        GuessrGame.markers = [];
+        for (let i = 0; i < GuessrGame.lines.length; i++) {
+            let l = GuessrGame.lines[i];
+            l.setMap(null);
+        }
+        GuessrGame.lines = [];
+        Object.assign(byId("guess-map-container").style, {
+            width: "300px",
+            height: "200px",
+        });
 
-    let distances = [];
+        GuessrGame.roundNo++;
+        byId("round-no").innerText = "Round " + GuessrGame.roundNo + "/" + GuessrGame.gameStats.rounds;
+        GuessrGame.secondsLeft = GuessrGame.gameStats.timeLimit;
+        GuessrGame.setStartView(GuessrGame.roundNo);
+    },
 
-    if (guessPos !== null && guessPos !== undefined) {
-        // show my guess marker
-        let guessMarker = showMarkerAndLine(guessPos, icons[0]);
-        var bounds = new google.maps.LatLngBounds();
-        bounds.extend(guessMarker.getPosition());
-        bounds.extend(correctMarker.getPosition());
-        resultMap.fitBounds(bounds);
-        markers.push(guessMarker);
+    showEndResults: function() {
+        window.location.href = "/results?id=" + GuessrGame.gameID;
+    },
 
-        let meters = calculateDistanceInMeter(guessMarker, correctMarker);
-        if(postResults === true) {
-            doPostRequest("/game/guess/" + gameID + "/" + roundNo + "/" + playerName, {
-                "distance": meters,
-                "guess": {
-                    "lat": guessPos.lat(),
-                    "lon": guessPos.lng()
+    endRound: function() {
+        clearInterval(GuessrGame.timerId);
+        byId("game-controls").style.visibility = "hidden";
+        byId("guess-map-container").style.visibility = "hidden";
+        byId("stop-overlay").style.display = "block";
+        byId("stop-popup").style.display = "block";
+
+        if (GuessrGame.roundNo === GuessrGame.gameStats.rounds) {
+            byId("result-btn").innerText = "VIEW RESULTS";
+            GuessrGame.gameEnded = true;
+        }
+
+        GuessrGame.showResults(true);
+    },
+
+    showResults: function(postResults) {
+        for (let i = 0; i < GuessrGame.markers.length; i++) {
+            let m = GuessrGame.markers[i];
+            m.setMap(null);
+        }
+        for (let i = 0; i < GuessrGame.lines.length; i++) {
+            let l = GuessrGame.lines[i];
+            l.setMap(null);
+        }
+
+        let correctMarker = new google.maps.Marker({
+            position: GuessrGame.startPos,
+            icon: {
+                size: new google.maps.Size(60, 30),
+                scaledSize: new google.maps.Size(60, 30),
+                url: "https://i.ibb.co/PgFftmS/flag-2.png"
+            }
+        });
+        GuessrGame.markers.push(correctMarker);
+        correctMarker.setMap(GuessrGame.resultMap);
+
+        let distances = [];
+
+        if (GuessrGame.guessPos !== null && GuessrGame.guessPos !== undefined) {
+            // show my guess marker
+            let guessMarker = GuessrGame.showMarkerAndLine(GuessrGame.guessPos, GuessrGame.icons[0]);
+            var bounds = new google.maps.LatLngBounds();
+            bounds.extend(guessMarker.getPosition());
+            bounds.extend(correctMarker.getPosition());
+            GuessrGame.resultMap.fitBounds(bounds);
+            GuessrGame.markers.push(guessMarker);
+
+            let meters = GuessrGame.calculateDistanceInMeter(guessMarker, correctMarker);
+            if (postResults === true) {
+                doPostRequest("/game/guess/" + GuessrGame.gameID + "/" + GuessrGame.roundNo + "/" + GuessrGame.playerName, {
+                    "distance": meters,
+                    "guess": {
+                        "lat": GuessrGame.guessPos.lat(),
+                        "lng": GuessrGame.guessPos.lng()
+                    }
+                }, function (resp) {
+                });
+            }
+            distances = [{"name": "You", "distance": meters}];
+        }
+
+        doGetRequestJSON("/game/guesses/" + GuessrGame.gameID + "/" + GuessrGame.roundNo, function (response) {
+            for (let name_raw in response) {
+                let name = decodeURIComponent(name_raw);
+                if (name.toLowerCase() === GuessrGame.playerName.toLowerCase()) {
+                    continue;
                 }
-            }, function (resp) {});
-        }
-        distances = [{"name": "You", "distance": meters}];
-    }
-
-    doGetRequestJSON("/game/guesses/" + gameID + "/" + roundNo, function (response) {
-        for (let name_raw in response) {
-            let name = decodeURIComponent(name_raw);
-            if(name.toLowerCase() === playerName.toLowerCase()) {
-                continue;
+                if (response.hasOwnProperty(name_raw)) {
+                    let score = response[name_raw];
+                    let dist = score["distance"];
+                    let pos = score["guess"];
+                    console.log(pos);
+                    distances.push({
+                        "name": name,
+                        "distance": dist,
+                        "lat": pos["lat"],
+                        "lon": pos["lng"]
+                    });
+                }
             }
-            if (response.hasOwnProperty(name_raw)) {
-                let score = response[name_raw];
-                let dist = score["distance"];
-                let pos = score["guess"];
-                distances.push({
-                    "name": name,
-                    "distance": dist,
-                    "lat": pos["lat"],
-                    "lon": pos["lon"]
-                });
-            }
-        }
 
-        for(let i = 0; i<distances.length;i++) {
+            for (let i = 0; i < distances.length; i++) {
+                let d = distances[i];
+                let dist = d["distance"];
+                d["icon"] = GuessrGame.icons[i];
+
+                d["distance_text"] = distanceToText(dist);
+            }
+
+            distances.sort((a, b) => (a["distance"] > b["distance"]) ? 1 : ((b["distance"] > a["distance"]) ? -1 : 0));
+            console.log(distances);
+            GuessrGame.showResultDistances(distances);
+        });
+    },
+
+    showMarkerAndLine: function(pos, iconUrl) {
+        let marker = new google.maps.Marker({
+            position: pos,
+            icon: {
+                size: new google.maps.Size(30, 52),
+                scaledSize: new google.maps.Size(30, 52),
+                url: iconUrl
+            }
+        });
+        marker.setMap(GuessrGame.resultMap);
+
+        let line = new google.maps.Polyline({
+            path: [pos, GuessrGame.startPos],
+            geodesic: true,
+            strokeColor: '#ff9634',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
+
+        line.setMap(GuessrGame.resultMap);
+        GuessrGame.markers.push(marker);
+        GuessrGame.lines.push(line);
+        return marker;
+    },
+
+    showResultDistances: function(distances) {
+        byId("result-table").innerHTML = "";
+        let rows = getRenderedTemplate("ResultsTableRows", {"results": distances});
+        byId("result-table").innerHTML = rows;
+
+        for (let i = 0; i < distances.length; i++) {
             let d = distances[i];
-            let dist = d["distance"];
-            d["icon"] = icons[i];
-
-            d["distance_text"] = distanceToText(dist);
-        }
-
-        distances.sort((a,b) => (a["distance"] > b["distance"]) ? 1 : ((b["distance"] > a["distance"]) ? -1 : 0));
-
-        showResultDistances(distances);
-    });
-}
-
-let icons = [
-    "https://i.ibb.co/bQqCvPG/icon-0.png",
-    "https://i.ibb.co/D98JKkn/icon-1.png",
-    "https://i.ibb.co/HFfZ9WJ/icon-2.png",
-    "https://i.ibb.co/KLpK0py/icon-3.png",
-    "https://i.ibb.co/yn9FMtc/icon-4.png",
-    "https://i.ibb.co/SVPGvD6/icon-5.png",
-    "https://i.ibb.co/QHB2PZM/icon-6.png",
-    "https://i.ibb.co/Dtf5VKJ/icon-7.png",
-    "https://i.ibb.co/GHLgHKk/icon-8.png",
-    "https://i.ibb.co/rxvXG5S/icon-9.png"
-];
-
-function showMarkerAndLine(pos, iconUrl) {
-    let marker = new google.maps.Marker({
-        position: pos,
-        icon: {
-            size: new google.maps.Size(30, 52),
-            scaledSize: new google.maps.Size(30, 52),
-            url: iconUrl
-        }
-    });
-    marker.setMap(resultMap);
-
-    let line = new google.maps.Polyline({
-        path: [pos, startPos],
-        geodesic: true,
-        strokeColor: '#ff9634',
-        strokeOpacity: 1.0,
-        strokeWeight: 2
-    });
-
-    line.setMap(resultMap);
-    markers.push(marker);
-    lines.push(line);
-    return marker;
-}
-
-function showResultDistances(distances) {
-    byId("result-table").innerHTML = "";
-    let rows = getRenderedTemplate("ResultsTableRows", {"results": distances});
-    byId("result-table").innerHTML = rows;
-
-    for(let i = 0;i<distances.length;i++) {
-        let d = distances[i];
-        if(d["lat"] !== undefined && d["lat"] !== null) {
-            showMarkerAndLine({lat: d["lat"], lng: d["lon"]}, d["icon"])
-        }
-    }
-}
-
-function calculateDistanceInMeter(marker1, marker2){
-    let distance = google.maps.geometry.spherical.computeDistanceBetween(marker1.getPosition(), marker2.getPosition());
-    return ~~distance;
-}
-
-function setStartView(round) {
-    updateStreetView(round, function () {
-        updateTimer();
-        timerId = setInterval(updateTimer, 1000);
-    });
-
-}
-
-function updateTimer() {
-    if(!timerStopped) {
-        secondsLeft = secondsLeft - 1;
-    }
-    byId("timer").innerText = timeToString();
-    if(secondsLeft === 0) {
-        endRound();
-    }
-}
-
-function timeToString() {
-    let s = secondsLeft + 0;
-    return "Time: " + (s-(s%=60))/60+(9<s?':':':0')+s;
-}
-
-function updateStreetView(round, callback) {
-    doGetRequestJSON("/game/pos/" + gameID + "/" + round, function (resp) {
-        console.log(resp);
-        if(resp.areas !== undefined && resp.areas !== null) {
-            showAreasInGuessMap(resp.areas)
-        }
-        streetview.setPano(resp.panoId);
-        currentPano = resp.panoId;
-        startPos = {lat: resp.lat, lng: resp.lon};
-        callback();
-    }, function (err) {
-        console.log(err);
-    });
-}
-
-function enableGuessButton() {
-    let guessBtn = byId("guess-btn");
-    guessBtn.removeAttribute("disabled");
-    guessBtn.classList.remove("btn-disabled");
-}
-
-function showAreasInGuessMap(areas) {
-    let outerBounds = [ // whole world
-        new google.maps.LatLng(-85.1054596961173, -180),
-        new google.maps.LatLng(85.1054596961173, -180),
-        new google.maps.LatLng(85.1054596961173, 180),
-        new google.maps.LatLng(-85.1054596961173, 180),
-        new google.maps.LatLng(-85.1054596961173, 0)
-    ];
-    let allBounds = [];
-    allBounds.push(outerBounds);
-    for (let i = 0; i < areas.length; i++) {
-        let area = areas[i];
-        let gArea = [];
-        for (let j = 0; j < area.length; j++) {
-            let point = area[j];
-            let gPoint = new google.maps.LatLng(point.lat, point.lng);
-            gArea.push(gPoint);
-        }
-        if(google.maps.geometry.spherical.computeSignedArea(gArea) >= 0 ){
-            allBounds.push(gArea);
-        } else {
-            allBounds.push(gArea.reverse());
-        }
-    }
-    new google.maps.Polygon({
-        paths: allBounds,
-        strokeColor: "#000000",
-        strokeOpacity: 0.2,
-        strokeWeight: 3,
-        map: guessMap
-    });
-
-}
-
-function drawMarker(latlng) {
-    if (marker !== null && marker !== undefined) {
-        marker.setMap(null);
-    }
-    marker = new google.maps.Marker({
-        position: latlng,
-    });
-    marker.setMap(guessMap);
-    markers.push(marker);
-}
-
-function setGuessMapResizable() {
-    interact('.resizable').resizable({
-        edges: {top: true, left: false, bottom: false, right: true},
-        listeners: {
-            move: function (event) {
-                let {x, y} = event.target.dataset;
-
-                x = (parseFloat(x) || 0) + event.deltaRect.left;
-                y = (parseFloat(y) || 0) + event.deltaRect.top;
-
-                event.rect.width = event.rect.width < 350 ? 300 : event.rect.width;
-                event.rect.height = event.rect.height < 250 ? 200 : event.rect.height;
-
-                Object.assign(event.target.style, {
-                    width: `${event.rect.width}px`,
-                    height: `${event.rect.height}px`,
-                });
-
-                Object.assign(event.target.dataset, {x, y})
+            if (d["lat"] !== undefined && d["lat"] !== null) {
+                console.log(d);
+                GuessrGame.showMarkerAndLine({lat: d["lat"], lng: d["lon"]}, d["icon"])
             }
         }
-    })
-}
+    },
 
-function startGame() {
-    checkName(function() {
-        playerName = byId("player-name-input").value;
-        doPostRequest("/game/players/" + gameID + "/" + playerName);
-        byId("insert-player-name-overlay").style.display = "none";
-        byId("insert-player-name-container").style.display = "none";
-        timerStopped = false;
-    });
-}
+    calculateDistanceInMeter: function(marker1, marker2) {
+        let distance = google.maps.geometry.spherical.computeDistanceBetween(marker1.getPosition(), marker2.getPosition());
+        return ~~distance;
+    },
 
-function showPlayerNamePrompt() {
-    let input = byId("player-name-input");
-    let startBtn = byId("start-game-button");
+    setStartView: function(round) {
+        GuessrGame.updateStreetView(round, function () {
+            GuessrGame.updateTimer();
+            GuessrGame.timerId = setInterval(GuessrGame.updateTimer, 1000);
+        });
 
-    startBtn.onclick = startGame;
+    },
 
-    input.onblur=checkName;
-
-    input.onkeyup = function() {
-        if(input.value.length !== 0 && startBtn.disabled) {
-            startBtn.removeAttribute("disabled");
-            startBtn.classList.remove("btn-disabled");
-            input.classList.remove("not-valid");
-        } else if(input.value.length === 0 && !startBtn.disabled){
-            startBtn.disabled = true;
-            startBtn.classList.add("btn-disabled");
-            input.classList.add("not-valid");
+    updateTimer: function() {
+        if (!GuessrGame.timerStopped) {
+            GuessrGame.secondsLeft = GuessrGame.secondsLeft - 1;
         }
-    }
-}
+        byId("timer").innerText = GuessrGame.timeToString();
+        if (GuessrGame.secondsLeft === 0) {
+            GuessrGame.endRound();
+        }
+    },
 
-function checkName(validCallback, notValidCallback) {
-    doGetRequestJSON("/game/players/" + gameID, function (response) {
+    timeToString: function() {
+        let s = GuessrGame.secondsLeft + 0;
+        return "Time: " + (s - (s %= 60)) / 60 + (9 < s ? ':' : ':0') + s;
+    },
+
+    updateStreetView: function(round, callback) {
+        doGetRequestJSON("/game/pos/" + GuessrGame.gameID + "/" + round, function (resp) {
+            console.log(resp);
+            if (resp.areas !== undefined && resp.areas !== null) {
+                GuessrGame.showAreasInGuessMap(resp.areas)
+            }
+            GuessrGame.streetview.setPano(resp.panoId);
+            GuessrGame.currentPano = resp.panoId;
+            GuessrGame.startPos = {lat: resp.lat, lng: resp.lon};
+            callback();
+        }, function (err) {
+            console.log(err);
+        });
+    },
+
+    enableGuessButton: function() {
+        let guessBtn = byId("guess-btn");
+        guessBtn.removeAttribute("disabled");
+        guessBtn.classList.remove("btn-disabled");
+    },
+
+    showAreasInGuessMap: function(areas) {
+        let outerBounds = [ // whole world
+            new google.maps.LatLng(-85.1054596961173, -180),
+            new google.maps.LatLng(85.1054596961173, -180),
+            new google.maps.LatLng(85.1054596961173, 180),
+            new google.maps.LatLng(-85.1054596961173, 180),
+            new google.maps.LatLng(-85.1054596961173, 0)
+        ];
+        let allBounds = [];
+        allBounds.push(outerBounds);
+        for (let i = 0; i < areas.length; i++) {
+            let area = areas[i];
+            let gArea = [];
+            for (let j = 0; j < area.length; j++) {
+                let point = area[j];
+                let gPoint = new google.maps.LatLng(point.lat, point.lng);
+                gArea.push(gPoint);
+            }
+            if (google.maps.geometry.spherical.computeSignedArea(gArea) >= 0) {
+                allBounds.push(gArea);
+            } else {
+                allBounds.push(gArea.reverse());
+            }
+        }
+        new google.maps.Polygon({
+            paths: allBounds,
+            strokeColor: "#000000",
+            strokeOpacity: 0.2,
+            strokeWeight: 3,
+            map: GuessrGame.guessMap
+        });
+
+    },
+
+    drawMarker: function(latlng) {
+        if (GuessrGame.marker !== null && GuessrGame.marker !== undefined) {
+            GuessrGame.marker.setMap(null);
+        }
+        GuessrGame.marker = new google.maps.Marker({
+            position: latlng,
+        });
+        GuessrGame.marker.setMap(GuessrGame.guessMap);
+        GuessrGame.markers.push(GuessrGame.marker);
+    },
+
+    setGuessMapResizable: function() {
+        interact('.resizable').resizable({
+            edges: {top: true, left: false, bottom: false, right: true},
+            listeners: {
+                move: function (event) {
+                    let {x, y} = event.target.dataset;
+
+                    x = (parseFloat(x) || 0) + event.deltaRect.left;
+                    y = (parseFloat(y) || 0) + event.deltaRect.top;
+
+                    event.rect.width = event.rect.width < 350 ? 300 : event.rect.width;
+                    event.rect.height = event.rect.height < 250 ? 200 : event.rect.height;
+
+                    Object.assign(event.target.style, {
+                        width: `${event.rect.width}px`,
+                        height: `${event.rect.height}px`,
+                    });
+
+                    Object.assign(event.target.dataset, {x, y})
+                }
+            }
+        })
+    },
+
+    startGame: function() {
+        GuessrGame.checkName(function () {
+            GuessrGame.playerName = byId("player-name-input").value;
+            doPostRequest("/game/players/" + GuessrGame.gameID + "/" + GuessrGame.playerName);
+            byId("insert-player-name-overlay").style.display = "none";
+            byId("insert-player-name-container").style.display = "none";
+            GuessrGame.timerStopped = false;
+        });
+    },
+
+    showPlayerNamePrompt: function() {
         let input = byId("player-name-input");
         let startBtn = byId("start-game-button");
-        let players = response["players"];
-        let valid = true;
-        for(let i = 0; i < players.length; i++) {
-            if(input.value.toLowerCase() === decodeURIComponent(players[i]).toLowerCase()) {
-                valid = false;
+
+        startBtn.onclick = GuessrGame.startGame;
+
+        input.onblur = GuessrGame.checkName;
+
+        input.onkeyup = function () {
+            if (input.value.length !== 0 && startBtn.disabled) {
+                startBtn.removeAttribute("disabled");
+                startBtn.classList.remove("btn-disabled");
+                input.classList.remove("not-valid");
+            } else if (input.value.length === 0 && !startBtn.disabled) {
+                startBtn.disabled = true;
+                startBtn.classList.add("btn-disabled");
+                input.classList.add("not-valid");
             }
         }
-        if (!valid) {
-            startBtn.disabled = true;
-            startBtn.classList.add("btn-disabled");
-            input.classList.add("not-valid");
-            if(notValidCallback) {
-                notValidCallback();
+    },
+
+    checkName: function(validCallback, notValidCallback) {
+        doGetRequestJSON("/game/players/" + GuessrGame.gameID, function (response) {
+            let input = byId("player-name-input");
+            let startBtn = byId("start-game-button");
+            let players = response["players"];
+            let valid = true;
+            for (let i = 0; i < players.length; i++) {
+                if (input.value.toLowerCase() === decodeURIComponent(players[i]).toLowerCase()) {
+                    valid = false;
+                }
             }
-            return;
-        }
-        if(validCallback) {
-            validCallback();
-        }
-    }, function(err) {
-        console.log(err);
-    });
-}
+            if (!valid) {
+                startBtn.disabled = true;
+                startBtn.classList.add("btn-disabled");
+                input.classList.add("not-valid");
+                if (notValidCallback) {
+                    notValidCallback();
+                }
+                return;
+            }
+            if (validCallback) {
+                validCallback();
+            }
+        }, function (err) {
+            console.log(err);
+        });
+    },
+};

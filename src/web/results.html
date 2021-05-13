@@ -11,7 +11,7 @@
     <script class="dev-script" src="js/utils.js"></script>
     <!--DEV END-->
     <!--PROD
-    <script src="js/georgguessr.js"></script>
+    <script src="../js/georgguessr.js"></script>
     PROD END-->
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
@@ -21,7 +21,7 @@
     <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initEndResults&libraries=drawing,places,geometry"
             defer></script>
 
-    <link href="css/results.css" rel="stylesheet"/>
+    <link href="../css/results.css" rel="stylesheet"/>
 </head>
 
 <body>
@@ -37,6 +37,12 @@
     </div>
     <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
     <data id="API_KEY" value="{{api-key}}"></data>
+
+    <script>
+        initEndResults = function() {
+            GuessrResults.initResults();
+        }
+    </script>
 
     <script id="ResultsTableRows" type="x-tmpl-mustache">
         <tr>
