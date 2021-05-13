@@ -15,6 +15,23 @@ import (
 
 const getCityBoundariesUrl = "https://nominatim.openstreetmap.org/search.php?q=%s+%s&polygon_geojson=1&format=geojson"
 
+var adminType = []string{"administrative"}
+var settlementTypes = []string{
+	"city",
+	"borough",
+	"suburb",
+	"quarter",
+	"neighbourhood",
+	"city_block",
+	"plot",
+	"town",
+	"village",
+	"hamlet",
+	"isolated_dwelling",
+	"allotments",
+	"locality",
+}
+
 func RandomPosition() (lat, lon float64) {
 	lat, lon = spherand.Geographical()
 	return
@@ -79,6 +96,10 @@ func RandomPosForCity(city, country string) (lat, lon float64, err error) {
 	}
 
 	bbound := feature.BBox.Bound()
+	if bbound.Max.Equal(bbound.Min) {
+		fmt.Println("feature is only a point - return this point")
+		return bbound.Max.Lat(), bbound.Max.Lon(), nil
+	}
 
 	pointValid := false
 	var point orb.Point
@@ -125,45 +146,48 @@ func getAdminFeatureForCity(city, country string) (*geojson.Feature, error) {
 		return nil, err
 	}
 
-	var adminFeature *geojson.Feature
-	adminImportance := 0.0
+	feature := getMostImportantFeatureByType(featureCollection, adminType)
+	if feature == nil {
+		feature = getMostImportantFeatureByType(featureCollection, settlementTypes)
+	}
+	return feature, nil
+}
 
-	for _, feature := range featureCollection.Features {
-		featureType := strings.ToLower(feature.Properties.MustString("type"))
-		if featureType == "administrative" {
+func getMostImportantFeatureByType(collection *geojson.FeatureCollection, featureTypes []string) (mostImportantFeature *geojson.Feature) {
+	adminImportance := 0.0
+	for _, feature := range collection.Features {
+		typeOfThisFeature := strings.ToLower(feature.Properties.MustString("type"))
+		if helper.Contains(featureTypes, typeOfThisFeature) {
 			importance := feature.Properties.MustFloat64("importance", 0)
 			if importance >= adminImportance {
-				adminFeature = feature
+				mostImportantFeature = feature
 				adminImportance = importance
 			}
 		}
 	}
-
-	return adminFeature, nil
+	return
 }
 
 func isPointInsidePolygon(feature *geojson.Feature, point orb.Point) bool {
-
-	var polygon orb.Polygon
-
-	// if its a polygon, we only care for the polygon with more boundary nodes
-	multiPoly, isMulti := feature.Geometry.(orb.MultiPolygon)
-	if isMulti {
+	switch v := feature.Geometry.(type) {
+	case orb.MultiPolygon:
+		var polygon orb.Polygon
 		polyLen := 0
-		for _, pol := range multiPoly {
+		for _, pol := range v {
 			if len(pol[0]) >= polyLen {
 				polyLen = len(pol[0])
 				polygon = pol
 			}
 		}
-	} else {
-		polygon, _ = feature.Geometry.(orb.Polygon)
-	}
-
-	if planar.PolygonContains(polygon, point) {
+		return planar.PolygonContains(polygon, point)
+	case orb.Polygon:
+		return planar.PolygonContains(v, point)
+	case orb.Point:
+		fmt.Println("feature geometry is point")
 		return true
+	default:
+		panic(errors.New(fmt.Sprintf("Unknown type of geometry: %T", v)))
 	}
-	return false
 }
 
 func pointsToPolygon(points []GeoPoint) (polygon orb.Polygon) {

@@ -10,10 +10,10 @@ function processRooms() {
 
     doGetRequestJSON("/game/stats/" + gameID, function (resp) {
         let rounds = resp.rounds;
-        for(let i = 1;i <= rounds; i++) {
+        for (let i = 1; i <= rounds; i++) {
             doGetRequestJSON("/game/pos/" + gameID + "/" + i, function (resp) {
                 console.log(resp);
-                getStreetViewForPos(resp.lat, resp.lon, 0, function(panoId) {
+                getStreetViewForPos(resp.lat, resp.lon, 0, function (panoId) {
                     doPostRequestString("/game/pano/" + gameID + "/" + i, panoId, function (resp) {
                         processedCount++;
                     })
@@ -23,11 +23,10 @@ function processRooms() {
             });
         }
 
-        function waitForProcessToFinish(){
-            if(processedCount >= rounds){
+        function waitForProcessToFinish() {
+            if (processedCount >= rounds) {
                 window.location.href = "/game.html?id=" + gameID;
-            }
-            else{
+            } else {
                 setTimeout(waitForProcessToFinish, 100);
             }
         }
@@ -41,14 +40,24 @@ function processRooms() {
 }
 
 function getStreetViewForPos(lat, lon, count, callback) {
-    svService.getPanorama({ location: { "lat": lat, "lng": lon }, "radius": searchRad[count]}, function(data, status) {
-        if(status !== "OK") {
-            if(count + 1 === searchRad.length){
-                return null;
+    svService.getPanorama(
+        {
+            location: {
+                "lat": lat,
+                "lng": lon
+            },
+            preference: google.maps.StreetViewPreference.NEAREST,
+            "radius": searchRad[count],
+            source: google.maps.StreetViewSource.OUTDOOR,
+        },
+        function (data, status) {
+            if (status !== "OK") {
+                if (count + 1 === searchRad.length) {
+                    return null;
+                }
+                return getStreetViewForPos(lat, lon, count + 1, callback)
             }
-            return getStreetViewForPos(lat, lon, count+1, callback)
-        }
-        const location = data.location;
-        callback(location.pano);
-    });
+            const location = data.location;
+            callback(location.pano);
+        });
 }

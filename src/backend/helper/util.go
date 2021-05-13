@@ -1,6 +1,8 @@
 package helper
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 
@@ -25,4 +27,13 @@ func RandomRoomID() string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func Contains(slice []string, element string) bool {
+	for _, sliceElement := range slice {
+		if sliceElement == element {
+			return true
+		}
+	}
+	return false
 }
