@@ -1,54 +1,56 @@
-let svService;
-let searchRad = [50, 100, 500, 1000, 5000, 10000, 50000, 100000];
+let GuessrRoomCreation = {
 
-function processRooms() {
-    initUtils();
-    svService = new google.maps.StreetViewService();
+    searchRad: [50, 100, 500, 1000, 5000, 10000, 50000, 100000],
+    svService: null,
 
-    let gameID = getRequestParameter("id");
-    let processedCount = 0;
+    processRoom: function() {
+        initUtils();
+        GuessrRoomCreation.svService = new google.maps.StreetViewService();
 
-    doGetRequestJSON("/game/stats/" + gameID, function (resp) {
-        let rounds = resp.rounds;
-        for(let i = 1;i <= rounds; i++) {
-            doGetRequestJSON("/game/pos/" + gameID + "/" + i, function (resp) {
-                console.log(resp);
-                getStreetViewForPos(resp.lat, resp.lon, 0, function(panoId) {
-                    doPostRequestString("/game/pano/" + gameID + "/" + i, panoId, function (resp) {
-                        processedCount++;
-                    })
+        let gameID = getRequestParameter("id");
+        let processedCount = 0;
+
+        doGetRequestJSON("/game/stats/" + gameID, function (resp) {
+            let rounds = resp.rounds;
+            for (let i = 1; i <= rounds; i++) {
+                doGetRequestJSON("/game/pos/" + gameID + "/" + i, function (resp) {
+                    console.log(resp);
+                    GuessrRoomCreation.getStreetViewForPos(resp.lat, resp.lon, 0, function (panoId) {
+                        doPostRequestString("/game/pano/" + gameID + "/" + i, panoId, function (resp) {
+                            processedCount++;
+                        })
+                    });
+                }, function (err) {
+                    console.log(err);
                 });
-            }, function (err) {
-                console.log(err);
-            });
-        }
-
-        function waitForProcessToFinish(){
-            if(processedCount >= rounds){
-                window.location.href = "/game.html?id=" + gameID;
             }
-            else{
-                setTimeout(waitForProcessToFinish, 100);
+
+            function waitForProcessToFinish() {
+                if (processedCount >= rounds) {
+                    window.location.href = "/game?id=" + gameID;
+                } else {
+                    setTimeout(waitForProcessToFinish, 100);
+                }
             }
-        }
 
-        waitForProcessToFinish();
+            waitForProcessToFinish();
 
-    }, function (err) {
-        console.log(err);
-    });
+        }, function (err) {
+            console.log(err);
+        });
 
-}
+    },
 
-function getStreetViewForPos(lat, lon, count, callback) {
-    svService.getPanorama({ location: { "lat": lat, "lng": lon }, "radius": searchRad[count]}, function(data, status) {
-        if(status !== "OK") {
-            if(count + 1 === searchRad.length){
-                return null;
+    getStreetViewForPos: function(lat, lon, count, callback) {
+        GuessrRoomCreation.svService.getPanorama({location: {"lat": lat, "lng": lon}, "radius": GuessrRoomCreation.searchRad[count]}, function (data, status) {
+            if (status !== "OK") {
+                if (count + 1 === GuessrRoomCreation.searchRad.length) {
+                    return null;
+                }
+                return GuessrRoomCreation.getStreetViewForPos(lat, lon, count + 1, callback)
             }
-            return getStreetViewForPos(lat, lon, count+1, callback)
-        }
-        const location = data.location;
-        callback(location.pano);
-    });
-}
+            const location = data.location;
+            callback(location.pano);
+        });
+    },
+};

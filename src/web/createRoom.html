@@ -11,9 +11,9 @@
     <script class="dev-script" src="js/utils.js"></script>
     <!--DEV END-->
     <!--PROD
-    <script src="js/georgguessr.js"></script>
+    <script src="../js/georgguessr.js"></script>
     PROD END-->
-    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=processRooms&libraries=drawing,places"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=startCreateRoom&libraries=drawing,places"
             defer></script>
 </head>
 
@@ -23,4 +23,9 @@
     <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
     <data id="API_KEY" value="{{api-key}}"></data>
 </body>
+<script>
+    startCreateRoom = function(){
+        GuessrRoomCreation.processRoom();
+    }
+</script>
 </html>
