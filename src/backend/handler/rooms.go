@@ -8,6 +8,10 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
+// TODO: why did I seperate 'Room' and 'Game', they are the same thing in our dynamodb
+// split them in two different data structures entirely OR just merge them in the codebase
+// currently, the methods here are just for creating or joining a game.
+// Maybe create a separate 'GameLobby'? Or just merge the methods here into the game.go and rename references from 'Room' to 'Game'
 
 func HandleRoomExists(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
 	roomID := request.PathParameters["roomID"]

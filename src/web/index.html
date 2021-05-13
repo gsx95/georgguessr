@@ -16,7 +16,7 @@
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initGoogleMaps&libraries=drawing,places"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=startHome&libraries=drawing,places"
             defer></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
@@ -128,8 +128,8 @@
 <data id="API_KEY" value="{{api-key}}"></data>
 
 <script>
-        window.onload = function(e) {
-            showHome();
+        startHome = function() {
+            GuessrHome.init();
         }
 </script>
 </body>

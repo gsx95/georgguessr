@@ -2,12 +2,11 @@ Prerequisites:
 
 1. `npm install -g babel-cli`
 2. `npm install -g babel-preset-minify`
-3. copy `example_config.json` to `config.json` and add your API key
+3. `npm install -g http-server` for local testing
+4. copy `example_config.json` to `config.json` and add your API key
 
-Build for Dev:  `./make.sh`
+Build all:  `./make.sh prod`
 
-Build for Prod:  `./make.sh prod`
+Rebuild Frontend: `./make.sh prod frontend`
 
-Only Build Prod Frontend: `./make.sh prod frontend`
-
-Update Infrastructure without uploading to dynamodb again: `./make.sh prod update`
+Update Backend without uploading to dynamodb again: `./make.sh prod update`

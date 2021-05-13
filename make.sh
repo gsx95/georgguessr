@@ -35,53 +35,58 @@ API_ENDPOINT="https://$API_ID.execute-api.eu-central-1.amazonaws.com/Prod"
 
 rm -r statics
 mkdir -p statics
-mkdir -p statics/js
-mkdir -p statics/css
-mkdir -p statics/img
+mkdir -p statics/guessr
+mkdir -p statics/guessr/js
+mkdir -p statics/guessr/css
+mkdir -p statics/guessr/img
+mkdir -p statics/guessr/game
+mkdir -p statics/guessr/createRoom
+mkdir -p statics/guessr/results
 
-cp src/web/css/styles.css statics/css/styles.css
-cp src/web/css/gamestyles.css statics/css/gamestyles.css
-cp src/web/css/results.css statics/css/results.css
-cp -r src/web/img/* statics/img/
+cp src/web/css/styles.css statics/guessr/css/styles.css
+cp src/web/css/gamestyles.css statics/guessr/css/gamestyles.css
+cp src/web/css/results.css statics/guessr/css/results.css
+cp -r src/web/img/* statics/guessr/img/
 
-cp src/web/index.html statics/index.html;
-cp src/web/game.html statics/game.html;
-cp src/web/createRoom.html statics/createRoom.html;
-cp src/web/results.html statics/results.html;
+cp src/web/index.html statics/guessr/index.html;
+cp src/web/game.html statics/guessr/game/index.html;
+cp src/web/createRoom.html statics/guessr/createRoom/index.html;
+cp src/web/results.html statics/guessr/results/index.html;
 
 MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
-sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/index.html;
-sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/index.html;
-sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/index.html;
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/index.html;
+sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/index.html;
+sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/index.html;
 
-sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/game.html;
-sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/game.html;
-sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/game.html;
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/game/index.html;
+sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/game/index.html;
+sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/game/index.html;
 
-sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/createRoom.html;
-sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/createRoom.html;
-sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/createRoom.html;
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/createRoom/index.html;
+sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/createRoom/index.html;
+sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/createRoom/index.html;
 
-sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/results.html;
-sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/results.html;
-sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/results.html;
+sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/results/index.html;
+sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/results/index.html;
+sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/results/index.html;
 
 if [[ $1 = "prod" ]]; then
-  babel src/web/js/* --presets minify > statics/js/georgguessr.js;
-  sed -i '' "/dev-script/d" statics/index.html;
-  sed -i '' "/PROD/d" statics/index.html;
-  sed -i '' "/dev-script/d" statics/game.html;
-  sed -i '' "/PROD/d" statics/game.html;
-  sed -i '' "/dev-script/d" statics/createRoom.html;
-  sed -i '' "/PROD/d" statics/createRoom.html;
-  sed -i '' "/dev-script/d" statics/results.html;
-  sed -i '' "/PROD/d" statics/results.html;
+  babel src/web/js/* --presets minify > statics/guessr/js/georgguessr.js;
+  sed -i '' "/dev-script/d" statics/guessr/index.html;
+  sed -i '' "/PROD/d" statics/guessr/index.html;
+  sed -i '' "/dev-script/d" statics/guessr/game/index.html;
+  sed -i '' "/PROD/d" statics/guessr/game/index.html;
+  sed -i '' "/dev-script/d" statics/guessr/createRoom/index.html;
+  sed -i '' "/PROD/d" statics/guessr/createRoom/index.html;
+  sed -i '' "/dev-script/d" statics/guessr/results/index.html;
+  sed -i '' "/PROD/d" statics/guessr/results/index.html;
 else
   cp -R src/web/js/ statics/js/
 fi
 
 echo "------------------------"
 echo "Done!"
+echo "Run the frontend local with ' http-server statics/guessr '"
 echo ""
 
 if [[ $2 = "frontend" ]]; then

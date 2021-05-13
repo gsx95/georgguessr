@@ -18,6 +18,8 @@ import (
 
 func webHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
+	//TODO: restructure this, its ugly af
+
 	if request.HTTPMethod == "OPTIONS" {
 		return h.GenerateResponse("hi", 200), nil
 	}
