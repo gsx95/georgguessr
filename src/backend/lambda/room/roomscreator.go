@@ -1,22 +1,22 @@
-package data
+package main
 
 import (
-	"backend/helper"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"georgguessr.com/pkg"
 	"math/rand"
 )
 
 type RoomWithPredefinedArea struct {
-	Room
+	pkg.Room
 	Continent string `json:"continent"`
 	Country   string `json:"country"`
 	City      string `json:"city"`
 }
 
 type RoomWithPlaces struct {
-	Room
+	pkg.Room
 	Places [] struct {
 		Name    string `json:"name"`
 		Country string `json:"country"`
@@ -40,13 +40,13 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 			i--
 			fmt.Println(err)
 		}
-		room.GamesRounds = append(room.GamesRounds, GameRound{
+		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
 			No: i,
-			StartPosition: GeoPoint{
+			StartPosition: pkg.GeoPoint{
 				Lat: lat,
 				Lon: lon,
 			},
-			Scores: map[string]Guess{},
+			Scores: map[string]pkg.Guess{},
 		})
 	}
 
@@ -54,7 +54,7 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 }
 
 func CreateRoomWithCustomAreas(reqBody string) (string, error) {
-	room := Room{}
+	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
 		return "", err
@@ -67,13 +67,13 @@ func CreateRoomWithCustomAreas(reqBody string) (string, error) {
 			i--
 			fmt.Println(err)
 		}
-		room.GamesRounds = append(room.GamesRounds, GameRound{
+		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
 			No: i,
-			StartPosition: GeoPoint{
+			StartPosition: pkg.GeoPoint{
 				Lat: lat,
 				Lon: lon,
 			},
-			Scores: map[string]Guess{},
+			Scores: map[string]pkg.Guess{},
 		})
 	}
 	return createRoom(&room)
@@ -93,20 +93,20 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 			i--
 			fmt.Println(err)
 		}
-		room.GamesRounds = append(room.GamesRounds, GameRound{
+		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
 			No: i,
-			StartPosition: GeoPoint{
+			StartPosition: pkg.GeoPoint{
 				Lat: lat,
 				Lon: lon,
 			},
-			Scores: map[string]Guess{},
+			Scores: map[string]pkg.Guess{},
 		})
 	}
 	return createRoom(&room.Room)
 }
 
 func CreateRoomUnlimited(reqBody string) (string, error) {
-	room := Room{}
+	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
 		return "", err
@@ -114,19 +114,19 @@ func CreateRoomUnlimited(reqBody string) (string, error) {
 
 	for i := 0; i < room.Rounds; i++ {
 		lat, lon := RandomPosition()
-		room.GamesRounds = append(room.GamesRounds, GameRound{
+		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
 			No: i,
-			StartPosition: GeoPoint{
+			StartPosition: pkg.GeoPoint{
 				Lat: lat,
 				Lon: lon,
 			},
-			Scores: map[string]Guess{},
+			Scores: map[string]pkg.Guess{},
 		})
 	}
 	return createRoom(&room)
 }
 
-func createRoom(room *Room) (string, error) {
+func createRoom(room *pkg.Room) (string, error) {
 	room, err := checkRoomAttributes(room)
 	if err != nil {
 		return "", err
@@ -138,14 +138,14 @@ func createRoom(room *Room) (string, error) {
 	return room.ID, nil
 }
 
-func checkRoomAttributes(room *Room) (*Room, error) {
+func checkRoomAttributes(room *pkg.Room) (*pkg.Room, error) {
 	if room.MaxPlayers == 0 {
 		return nil, errors.New("zero players not possible")
 	}
 
-	id := helper.RandomRoomID()
+	id := pkg.RandomRoomID()
 	for RoomExists(id) {
-		id = helper.RandomRoomID()
+		id = pkg.RandomRoomID()
 	}
 	room.ID = id
 	room.Players = []string{}
