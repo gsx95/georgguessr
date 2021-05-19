@@ -33,10 +33,68 @@ Resources:
             BurstLimit: 30
             RateLimit: 30
 
-  GeorgGuessrFunction:
+  GuessrGeoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/backend/
+      CodeUri: src/backend/lambda/geo/
+      Handler: handler
+      Runtime: go1.x
+      Timeout: 20
+      Events:
+        GetCountries:
+          Type: Api
+          Properties:
+            Path: /countries/{continent}
+            Method: GET
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
+
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - 'dynamodb:GetItem'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoContinents'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:QueryItem'
+          - 'dynamodb:GetItem'
+          - 'dynamodb:Scan'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoCities'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:QueryItem'
+          - 'dynamodb:GetItem'
+          - 'dynamodb:Scan'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoCountries'
+
+  GuessrRoomsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/backend/lambda/room/
       Handler: handler
       Runtime: go1.x
       Timeout: 20
@@ -57,6 +115,78 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
+        PostRoom:
+          Type: Api
+          Properties:
+            Path: /rooms
+            Method: POST
+            RestApiId: !Ref GuessrAPI
+            Auth:
+              ApiKeyRequired: true
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - 'dynamodb:DeleteItem'
+          - 'dynamodb:GetItem'
+          - 'dynamodb:PutItem'
+          - 'dynamodb:UpdateItem'
+          - 'dynamodb:Scan'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeorgGuessrRooms'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:GetItem'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoContinents'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:QueryItem'
+          - 'dynamodb:GetItem'
+          - 'dynamodb:Scan'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoCities'
+        - Effect: Allow
+          Action:
+          - 'dynamodb:QueryItem'
+          - 'dynamodb:GetItem'
+          - 'dynamodb:Scan'
+          Resource:
+            'Fn::Join':
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: 'AWS::Region'
+              - ':'
+              - Ref: 'AWS::AccountId'
+              - ':table/GeoCountries'
+
+  GuessrGamesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/backend/lambda/game/
+      Handler: handler
+      Runtime: go1.x
+      Timeout: 20
+      Events:
         GetGamePos:
           Type: Api
           Properties:
@@ -78,20 +208,6 @@ Resources:
           Properties:
             Path: /game/players/{gameID}
             Method: GET
-            RestApiId: !Ref GuessrAPI
-            Auth:
-              ApiKeyRequired: true
-        Options:
-          Type: Api
-          Properties:
-            Path: /{allEndpoints}
-            Method: OPTION
-            RestApiId: !Ref GuessrAPI
-        PostRoom:
-          Type: Api
-          Properties:
-            Path: /rooms
-            Method: POST
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
@@ -131,14 +247,6 @@ Resources:
           Type: Api
           Properties:
             Path: /game/endresults/{gameID}
-            Method: GET
-            RestApiId: !Ref GuessrAPI
-            Auth:
-              ApiKeyRequired: true
-        GetCountries:
-          Type: Api
-          Properties:
-            Path: /countries/{continent}
             Method: GET
             RestApiId: !Ref GuessrAPI
             Auth:
