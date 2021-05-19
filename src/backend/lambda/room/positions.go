@@ -1,9 +1,9 @@
-package data
+package main
 
 import (
-	"backend/helper"
 	"errors"
 	"fmt"
+	"georgguessr.com/pkg"
 	"github.com/mmcloughlin/spherand"
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
@@ -20,14 +20,14 @@ func RandomPosition() (lat, lon float64) {
 	return
 }
 
-func RandomPositionInArea(area []GeoPoint) (lat, lon float64, err error) {
+func RandomPositionInArea(area []pkg.GeoPoint) (lat, lon float64, err error) {
 	polygon := pointsToPolygon(area)
 	pointValid := false
 	var point orb.Point
 	bound := polygon.Bound()
 	for !pointValid {
-		lat := helper.GetRandomFloat(bound.Min.Lat(), bound.Max.Lat())
-		lon := helper.GetRandomFloat(bound.Min.Lon(), bound.Max.Lon())
+		lat := pkg.GetRandomFloat(bound.Min.Lat(), bound.Max.Lat())
+		lon := pkg.GetRandomFloat(bound.Min.Lon(), bound.Max.Lon())
 		point = orb.Point{lon, lat}
 		pointValid = planar.PolygonContains(polygon, point)
 	}
@@ -41,7 +41,7 @@ func RandomPositionByArea(continent string, country string, cities string) (lat,
 	if country != "all" {
 		countries[strings.ToLower(country)] = true
 	} else if continent != "all" {
-		continentCountries, err := GetCountries(continent)
+		continentCountries, err := pkg.GetCountries(continent)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -84,8 +84,8 @@ func RandomPosForCity(city, country string) (lat, lon float64, err error) {
 	var point orb.Point
 
 	for !pointValid {
-		lat := helper.GetRandomFloat(bbound.Min.Lat(), bbound.Max.Lat())
-		lon := helper.GetRandomFloat(bbound.Min.Lon(), bbound.Max.Lon())
+		lat := pkg.GetRandomFloat(bbound.Min.Lat(), bbound.Max.Lat())
+		lon := pkg.GetRandomFloat(bbound.Min.Lon(), bbound.Max.Lon())
 		point = orb.Point{lon, lat}
 		pointValid = isPointInsidePolygon(feature, point)
 	}
@@ -94,7 +94,7 @@ func RandomPosForCity(city, country string) (lat, lon float64, err error) {
 }
 
 func getRandomPosByArea(minPop, maxPop int, countries map[string]bool) (lat, lon float64, err error) {
-	randomCity, country, err := GetRandomCityName(minPop, maxPop, countries)
+	randomCity, country, err := pkg.GetRandomCityName(minPop, maxPop, countries)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -168,7 +168,7 @@ func isPointInsidePolygon(feature *geojson.Feature, point orb.Point) bool {
 	return false
 }
 
-func pointsToPolygon(points []GeoPoint) (polygon orb.Polygon) {
+func pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
 	var ring orb.Ring
 	ring = []orb.Point{}
 	for _, point := range points {

@@ -94,7 +94,7 @@ let GuessrGame = {
         doGetRequestJSON("/game/stats/" + GuessrGame.gameID, function (resp) {
             GuessrGame.gameStats = resp;
             GuessrGame.secondsLeft = GuessrGame.gameStats.timeLimit;
-            byId("round-no").innerText = "Round " + GuessrGame.roundNo + "/" + GuessrGame.gameStats.rounds;
+            byId("round-no").innerText = "Round " + GuessrGame.roundNo + "/" + GuessrGame.gameStats.gameRounds.length;
             GuessrGame.setStartView(GuessrGame.roundNo);
             byId("to-start-btn").onclick = GuessrGame.backHome;
         }, function (err) {
@@ -138,7 +138,7 @@ let GuessrGame = {
         });
 
         GuessrGame.roundNo++;
-        byId("round-no").innerText = "Round " + GuessrGame.roundNo + "/" + GuessrGame.gameStats.rounds;
+        byId("round-no").innerText = "Round " + GuessrGame.roundNo + "/" + GuessrGame.gameStats.gameRounds.length;
         GuessrGame.secondsLeft = GuessrGame.gameStats.timeLimit;
         GuessrGame.setStartView(GuessrGame.roundNo);
     },
@@ -154,7 +154,7 @@ let GuessrGame = {
         byId("stop-overlay").style.display = "block";
         byId("stop-popup").style.display = "block";
 
-        if (GuessrGame.roundNo === GuessrGame.gameStats.rounds) {
+        if (GuessrGame.roundNo === GuessrGame.gameStats.gameRounds.length) {
             byId("result-btn").innerText = "VIEW RESULTS";
             GuessrGame.gameEnded = true;
         }

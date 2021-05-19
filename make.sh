@@ -86,7 +86,6 @@ fi
 
 echo "------------------------"
 echo "Done!"
-echo "Run the frontend local with ' http-server statics/guessr '"
 echo ""
 
 if [[ $2 = "frontend" ]]; then
@@ -116,5 +115,6 @@ done <src/resources/countries.jsonData
 echo "------------------------"
 echo "Done!"
 echo ""
+echo ""
 
-open statics/index.html
+echo "Run the frontend local with ' http-server statics/guessr '"
