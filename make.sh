@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-declare -a pids
-
-if [[ $2 != "frontend" ]]; then
+if [[ $1 != "frontend" ]]; then
     echo "------------------------"
     echo "Building Backend..."
     echo "------------------------"
@@ -16,7 +14,12 @@ if [[ $2 != "frontend" ]]; then
     echo "------------------------"
     echo "Deploying Backend..."
     echo "------------------------"
-    sam deploy
+    if [[ $1 = "guided" ]]; then
+        sam deploy --guided
+    else
+        sam deploy
+    fi
+
     if (( $? != 0 )); then
         exit
     fi
@@ -70,30 +73,18 @@ sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/results/index.html
 sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/results/index.html;
 sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/results/index.html;
 
-if [[ $1 = "prod" ]]; then
-  babel src/web/js/* --presets minify > statics/guessr/js/georgguessr.js;
-  sed -i '' "/dev-script/d" statics/guessr/index.html;
-  sed -i '' "/PROD/d" statics/guessr/index.html;
-  sed -i '' "/dev-script/d" statics/guessr/game/index.html;
-  sed -i '' "/PROD/d" statics/guessr/game/index.html;
-  sed -i '' "/dev-script/d" statics/guessr/createRoom/index.html;
-  sed -i '' "/PROD/d" statics/guessr/createRoom/index.html;
-  sed -i '' "/dev-script/d" statics/guessr/results/index.html;
-  sed -i '' "/PROD/d" statics/guessr/results/index.html;
-else
-  cp -R src/web/js/ statics/js/
-fi
+babel src/web/js/* --presets minify > statics/guessr/js/georgguessr.js;
 
 echo "------------------------"
 echo "Done!"
 echo ""
 
-if [[ $2 = "frontend" ]]; then
+if [[ $1 = "frontend" ]]; then
     exit 0
 fi
 
 
-if [[ $2 = "update" ]]; then
+if [[ $1 = "update" ]]; then
     exit 0
 fi
 
