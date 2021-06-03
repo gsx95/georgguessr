@@ -11,6 +11,7 @@ Also:
 ### Build
 For your first deployment, do `./make.sh guided` so that your AWS SAM configuration can be saved to disk.
 
+After that:
 
 Build and deploy all:  `./make.sh`
 * Uses AWS SAM to create complete backend infrastructure in your AWS Account. Displays Changeset before deploying anything.
