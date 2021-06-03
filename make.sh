@@ -41,44 +41,15 @@ build_frontend() {
     API_ID=$(echo ${RES} | jq -r '.StackResources[]  | select(.ResourceType == "AWS::ApiGateway::RestApi") | .PhysicalResourceId')
     API_ENDPOINT="https://$API_ID.execute-api.eu-central-1.amazonaws.com/Prod"
 
-    rm -r statics
-    mkdir -p statics
-    mkdir -p statics/guessr
-    mkdir -p statics/guessr/js
-    mkdir -p statics/guessr/css
-    mkdir -p statics/guessr/img
-    mkdir -p statics/guessr/game
-    mkdir -p statics/guessr/createRoom
-    mkdir -p statics/guessr/results
-
-    cp src/web/css/styles.css statics/guessr/css/styles.css
-    cp src/web/css/gamestyles.css statics/guessr/css/gamestyles.css
-    cp src/web/css/results.css statics/guessr/css/results.css
-    cp -r src/web/img/* statics/guessr/img/
-
-    cp src/web/index.html statics/guessr/index.html;
-    cp src/web/game.html statics/guessr/game/index.html;
-    cp src/web/createRoom.html statics/guessr/createRoom/index.html;
-    cp src/web/results.html statics/guessr/results/index.html;
-
     MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
-    sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/index.html;
-    sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/index.html;
-    sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/index.html;
 
-    sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/game/index.html;
-    sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/game/index.html;
-    sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/game/index.html;
+    echo "---"
+    echo "$API_KEY_VALUE"
+    echo "---"
 
-    sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/createRoom/index.html;
-    sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/createRoom/index.html;
-    sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/createRoom/index.html;
-
-    sed -i '' "s/{{maps-api-key}}/$MAPS_API_KEY/g" statics/guessr/results/index.html;
-    sed -i '' "s,{{api-endpoint}},$API_ENDPOINT,g" statics/guessr/results/index.html;
-    sed -i '' "s/{{api-key}}/$API_KEY_VALUE/g" statics/guessr/results/index.html;
-
-    babel src/web/js/* --presets minify > statics/guessr/js/georgguessr.js;
+    cd src/frontend
+    npx webpack --env apiKey="$API_KEY_VALUE" --env api="$API_ENDPOINT" --env mapsKey="$MAPS_API_KEY"
+    cd ../../
 
     echo "------------------------"
     echo "Done!"
@@ -105,6 +76,7 @@ upload_geo_data_to_dynamodb() {
     echo ""
     echo ""
 }
+
 ###################################
 
 if [[ ${mode} != "frontend" ]]; then
@@ -124,4 +96,4 @@ fi
 
 upload_geo_data_to_dynamodb
 
-echo "Run the frontend local with ' http-server statics/guessr '"
+echo "Run the frontend local with ' http-server dist'"
