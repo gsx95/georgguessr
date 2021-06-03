@@ -5,19 +5,13 @@
     <meta charset="utf-8">
     <title></title>
     <meta content="width=device-width, initial-scale=1" name="viewport">
-
-    <script src="js/georgguessr.js"></script>
-    <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=startHome&libraries=drawing,places"
-            defer></script>
     <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
 
-    <link href="css/styles.css" rel="stylesheet"/>
 </head>
 
-<body>
+<body id="home-body">
 <div id="page-home">
     <div class="center">
         <button id="create-room-btn">Create Room</button>
@@ -34,11 +28,11 @@
                 </h2>
             </header>
             <main class="modal__content" id="modal-2-content">
-                <input type="text" id="enter-room-id" required/>
+                <input id="enter-room-id" required type="text"/>
             </main>
             <footer class="modal__footer">
-                <button id="enter-btn" class="modal__btn modal__btn-primary">Enter</button>
-                <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+                <button class="modal__btn modal__btn-primary" id="enter-btn">Enter</button>
+                <button aria-label="Close this dialog window" class="modal__btn" data-micromodal-close>Close</button>
             </footer>
         </div>
     </div>
@@ -62,7 +56,7 @@
                                 <option value="place-search">Search place</option>
                                 <option value="custom">Draw custom areas</option>
                             </select>
-                            <input id="search-place-input" name="serch-place-input" style="width:200px; display:none" />
+                            <input id="search-place-input" name="serch-place-input" style="width:200px; display:none"/>
 
                             <table id="specific-cities-table" style="display: none; font-size: small">
 
@@ -83,48 +77,46 @@
                             <select id="city-selector" name="city-selector" style="display: none;">
                                 <option value="all">All Cities</option>
                                 <option value="disabled">--- Population greater than ---</option>
-                                <option value="pop_gt_100k">Population > 100.000</option>
-                                <option value="pop_gt_500k">Population > 500.000</option>
-                                <option value="pop_gt_1kk">Population > 1.000.000</option>
-                                <option value="pop_gt_5kk">Population > 5.000.000</option>
+                                <option value="pop_gt_100k">Population over 100.000</option>
+                                <option value="pop_gt_500k">Population over 500.000</option>
+                                <option value="pop_gt_1kk">Population over 1.000.000</option>
+                                <option value="pop_gt_5kk">Population over 5.000.000</option>
                                 <option value="disabled">--- Population lesser than ---</option>
-                                <option value="pop_lt_100k">Population < 100.000</option>
-                                <option value="pop_lt_500k">Population < 500.000</option>
-                                <option value="pop_lt_1kk">Population < 1.000.000</option>
+                                <option value="pop_lt_100k">Population lower 100.000</option>
+                                <option value="pop_lt_500k">Population lower 500.000</option>
+                                <option value="pop_lt_1kk">Population lower 1.000.000</option>
                             </select>
                             <div id="selection-map" style="display: none"></div>
                         </td>
                         <td style="padding-left: 150px">
                             <div>
-                                <label style="display:block" id="maxplayer-label" for="maxplayer">Player: 2</label>
-                                <input style="display:block" id="maxplayer" type="range" min="1" max="10" value="2">
+                                <label for="maxplayer" id="maxplayer-label" style="display:block">Player: 2</label>
+                                <input id="maxplayer" max="10" min="1" style="display:block" type="range" value="2">
                             </div>
                             <div>
-                                <label style="display:block" id="rounds-label" for="rounds">Rounds: 3</label>
-                                <input style="display:block" id="rounds" type="range" min="1" max="10" value="3">
+                                <label for="rounds" id="rounds-label" style="display:block">Rounds: 3</label>
+                                <input id="rounds" max="10" min="1" style="display:block" type="range" value="3">
                             </div>
                             <div>
-                                <label style="display:block" id="timelimit-label" for="timelimit">Time limit: 3m</label>
-                                <input style="display:block" id="timelimit" type="range" min="1" max="25" value="8">
+                                <label for="timelimit" id="timelimit-label" style="display:block">Time limit: 3m</label>
+                                <input id="timelimit" max="25" min="1" style="display:block" type="range" value="8">
                             </div>
                         </td>
                     </tr>
                 </table>
             </main>
             <footer class="modal__footer">
-                <button id="create-and-play-btn" class="modal__btn modal__btn-primary">Create & Play</button>
-                <button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+                <button class="modal__btn modal__btn-primary" id="create-and-play-btn">Create & Play</button>
+                <button aria-label="Close this dialog window" class="modal__btn" data-micromodal-close>Close</button>
             </footer>
+        </div>
     </div>
 </div>
 
-<data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
-<data id="API_KEY" value="{{api-key}}"></data>
+<data id="API_ENDPOINT" value="<%= API_EP %>"></data>
+<data id="API_KEY" value="<%= API_KEY %>"></data>
 
-<script>
-        startHome = function() {
-            GuessrHome.init();
-        }
-</script>
+<script defer
+        src="https://maps.googleapis.com/maps/api/js?key=<%= MAPS_KEY %>&callback=window.startHome&libraries=drawing,places"></script>
 </body>
 </html>

@@ -1,0 +1,593 @@
+/***************************/
+/**         MAIN          **/
+/***************************/
+html{ margin:0; padding:0; height:100%; width:100%; }
+body{ margin:0; padding:0; height:100%; width:100%; }
+
+#home-body {
+    background-color: black;
+}
+
+.full-size{
+    height:100%;
+    width:100%;
+    overflow:hidden;
+}
+
+.center {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+
+select {
+    width: 200px;
+}
+
+.clickable {
+    cursor:pointer;
+}
+
+#specific-cities-table button {
+    background-color: Transparent;
+    background-repeat:no-repeat;
+    border: none;
+    cursor:pointer;
+    overflow: hidden;
+    outline:none;
+}
+
+/***************************/
+/**         Home          **/
+/***************************/
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+#page-home {
+    position: relative;
+    width: 100%;
+    overflow:auto;
+    height: 100%;
+}
+
+#page-home:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .6;
+    z-index: -1;
+    background-image: url(./img/vancouver.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.home-table {
+    float:right;
+    color:white;
+    margin-top:100px;
+    margin-right:40px;
+    letter-spacing: 1px;
+    font-family: sans-serif;
+    font-size: .8rem;
+
+}
+
+.home-join-button {
+    display: inline-block;
+    width:100%;
+    height:30px;
+    cursor:pointer;
+}
+
+.home-table td,
+.home-table th {
+    border: 1px solid rgba(190, 190, 190, 0.31);
+    text-align: center;
+}
+
+.home-table .th-no-border {
+    border: none;
+}
+
+.home-table-name {
+    width:100px;
+}
+.home-table-players{
+    width:30px;
+}
+
+.home-table-state{
+    width:100px;
+}
+.home-table-join{
+    width:60px;
+}
+
+.input-disabled {
+    background-color: grey;
+}
+
+#selection-map {
+    margin-top: 30px;
+    height: 300px;
+    width: 500px;
+}
+
+#area-selector {
+    margin-top: 30px;
+}
+
+/**************************\
+  Basic Modal Styles
+\**************************/
+
+.modal {
+    font-family: -apple-system,BlinkMacSystemFont,avenir next,avenir,helvetica neue,helvetica,ubuntu,roboto,noto,segoe ui,arial,sans-serif;
+}
+
+.modal__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal__container {
+    background-color: #fff;
+    padding: 10px 30px 20px 30px;
+    max-width: 1300px;
+    max-height: 800px;
+    border-radius: 4px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal__title {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.25;
+    color: #00449e;
+    box-sizing: border-box;
+}
+
+.modal__close {
+    background: transparent;
+    border: 0;
+}
+
+.modal__header .modal__close:before { content: "\2715"; }
+
+.modal__content {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+    color: rgba(0,0,0,.8);
+}
+
+.modal__btn {
+    font-size: .875rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: .5rem;
+    padding-bottom: .5rem;
+    background-color: #e6e6e6;
+    color: rgba(0,0,0,.8);
+    border-radius: .25rem;
+    border-style: none;
+    border-width: 0;
+    cursor: pointer;
+    -webkit-appearance: button;
+    text-transform: none;
+    overflow: visible;
+    line-height: 1.15;
+    margin: 0;
+    will-change: transform;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    transition: -webkit-transform .25s ease-out;
+    transition: transform .25s ease-out;
+    transition: transform .25s ease-out,-webkit-transform .25s ease-out;
+}
+
+.modal__btn:focus, .modal__btn:hover {
+    -webkit-transform: scale(1.05);
+    transform: scale(1.05);
+}
+
+.modal__btn-primary {
+    background-color: #00449e;
+    color: #fff;
+}
+
+
+
+/**************************\
+  Demo Animation Style
+\**************************/
+@keyframes mmfadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes mmfadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes mmslideIn {
+    from { transform: translateY(15%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes mmslideOut {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10%); }
+}
+
+.micromodal-slide {
+    display: none;
+}
+
+.micromodal-slide.is-open {
+    display: block;
+}
+
+.micromodal-slide[aria-hidden="false"] .modal__overlay {
+    animation: mmfadeIn .3s cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+
+.micromodal-slide[aria-hidden="false"] .modal__container {
+    animation: mmslideIn .3s cubic-bezier(0, 0, .2, 1);
+}
+
+.micromodal-slide[aria-hidden="true"] .modal__overlay {
+    animation: mmfadeOut .3s cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+
+.micromodal-slide[aria-hidden="true"] .modal__container {
+    animation: mmslideOut .3s cubic-bezier(0, 0, .2, 1);
+}
+
+.micromodal-slide .modal__container,
+.micromodal-slide .modal__overlay {
+    will-change: transform;
+}
+
+/***************************/
+/**         Game          **/
+/***************************/
+
+.clear-btn {
+    background-color: Transparent;
+    background-repeat:no-repeat;
+    border: none;
+    cursor:pointer;
+    overflow: hidden;
+    outline:none;
+}
+
+#pano {
+    width: 100%;
+    height: 100%;
+}
+
+.not-valid {
+    border: 2px solid red;
+}
+
+p {
+    font-family: Roboto, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+}
+
+button {
+    font-family: Roboto, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+}
+
+input {
+    font-family: Roboto, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+}
+
+/***************************/
+/**   Enter player name   **/
+/***************************/
+#insert-player-name-overlay {
+    position: absolute;
+    width:100%;
+    height:100%;
+    background-color: #aaaaaa;
+    opacity: 0.7;
+    z-index: 30;
+}
+
+#insert-player-name-container {
+    border-radius: 20px;
+    position: absolute;
+    width:400px;
+    height:220px;
+    background-color: #ffffff;
+    z-index: 35;
+
+    text-align: center;
+    margin: auto;
+    top: 0; left: 0; bottom: 0; right: 0;
+}
+
+#player-name-input {
+    width: 90%;
+    height: 25px;
+}
+
+#start-game-button {
+    width: 90%;
+    height: 50px;
+    margin-top: 10px;
+
+    background-color: #c0ff7b;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+/***************************/
+/**        Results        **/
+/***************************/
+
+#results-refresh-div {
+    text-align: center;
+    margin-top: 5px;
+}
+
+#stop-overlay {
+    position: absolute;
+    width:100%;
+    height:100%;
+    background-color: #aaaaaa;
+    opacity: 0.7;
+    z-index: 5;
+}
+
+#result-map {
+    width: 90%;
+    height: 240px;
+    margin-left: 5%;
+    margin-top: 5%;
+}
+
+#result-table {
+    font-size:18px;
+    width:80%;
+    margin-left:10%;
+    text-align:center;
+}
+
+#result-btn {
+    width:100%;
+    height: 50px;
+    background-color: #ffbe46;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 0 0 20px 20px;
+}
+
+#stop-popup {
+
+    border-radius: 20px;
+    top: 100px;
+    position: absolute;
+    width:400px;
+    background-color: #ffffff;
+    z-index: 7;
+
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
+.mini-pin {
+    height:20px;
+    width:12px;
+}
+
+
+/***************************/
+/**         STATS         **/
+/***************************/
+#game-stats {
+    position: absolute;
+    margin: auto;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    width: 400px;
+    height: 25px;
+
+    overflow: hidden;
+    background-color: rgb(255, 207, 116);
+    border-radius: 0 0 10px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.33);
+
+    z-index: 10;
+}
+
+.game-stats-content {
+    float:left;
+    height:100%;
+    line-height:25px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.game-stats-content-s {
+    width: 10%;
+}
+
+.game-stats-content-l {
+    width: 40%;
+}
+
+/***************************/
+/**       CONTROLS        **/
+/***************************/
+#game-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 300px;
+    height: 30px;
+    z-index: 10;
+}
+
+#guess-btn-container {
+    float:left;
+    height:100%;
+    width:70%;
+    line-height:30px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#guess-btn {
+    background-color: #c0ff7b;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+.btn-disabled {
+    cursor: auto !important;
+    background-color: rgba(167, 167, 167, 0.46) !important;
+}
+
+#to-start-btn-container {
+    float:left;
+    height:100%;
+    width:30%;
+    line-height:30px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#to-start-btn {
+    background-color: #ffbe46;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+/***************************/
+/**       GUESS MAP       **/
+/***************************/
+#guess-map {
+    width: 94%;
+    height: 94%;
+    margin: 3% auto auto;
+}
+
+#guess-map-container {
+    background-color:white;
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    width:300px;
+    height:200px;
+    border-radius: 0 10px 0 0;
+    opacity: 0.5;
+    z-index: 10;
+
+    /* for resizeable.js */
+    touch-action: none;
+    _box-sizing: border-box;
+}
+
+#guess-map-container:hover {
+    opacity: 1;
+}
+
+/***************************/
+/**     End Results       **/
+/***************************/
+
+#end-result-body {
+    background-color: black;
+}
+
+#page {
+    position: relative;
+    width: 100%;
+    overflow:auto;
+    height: 100%;
+}
+
+#page:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    z-index: -1;
+    background-image: url(img/street.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+#content {
+    width: 60%;
+    margin-left:20%;
+    height: 95%;
+    background-color: rgba(255, 255, 255, 0.75);
+    border-radius: 10px;
+    margin-top: 1%;
+    text-align: center;
+    display: inline-block;
+}
+
+#end-result-table {
+    font-size:18px;
+    width:50%;
+    margin-left:25%;
+    text-align:left;
+    margin-top:30px;
+}
+
+#end-result-map {
+    width: 80%;
+    margin-left: 10%;
+    height: 300px;
+    margin-top:30px;
+}
+
+.inline {
+    display: inline-block;
+}
+
+.results-pin {
+    height:20px;
+    width:12px;
+}
+
+#select-round-btns {
+    width:100px;
+}
