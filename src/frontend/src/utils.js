@@ -105,3 +105,15 @@ function doPostRequest(requestPath, data, callback) {
             console.error('Error:', error);
         });
 }
+export default {
+    initUtils,
+    getRenderedTemplate,
+    byId,
+    addElement,
+    distanceToText,
+    getRequestParameter,
+    doGetRequest,
+    doGetRequestJSON,
+    doPostRequestString,
+    doPostRequest
+}
