@@ -6,37 +6,27 @@
     <title></title>
     <meta content="width=device-width, initial-scale=1" name="viewport">
 
-    <script src="../js/georgguessr.js"></script>
     <script src="https://unpkg.com/mustache@latest"></script>
     <script crossorigin="anonymous" src="https://kit.fontawesome.com/37c0238546.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{maps-api-key}}&callback=initEndResults&libraries=drawing,places,geometry"
-            defer></script>
 
-    <link href="../css/results.css" rel="stylesheet"/>
 </head>
 
-<body>
+<body id="end-result-body">
     <div id="page">
         <div id="content">
             <h2 style="margin-top: 20px;">End Results</h2>
             <h4 id="result-msg"></h4>
-            <table id="result-table"> </table>
-            <div id="result-map"></div>
+            <table id="end-result-table"> </table>
+            <div id="end-result-map"></div>
             <p class="inline">Select Round:</p>
             <select class="inline" id="select-round-btns"></select>
         </div>
     </div>
-    <data id="API_ENDPOINT" value="{{api-endpoint}}"></data>
-    <data id="API_KEY" value="{{api-key}}"></data>
-
-    <script>
-        initEndResults = function() {
-            GuessrResults.initResults();
-        }
-    </script>
+    <data id="API_ENDPOINT" value="<%= API_EP %>"></data>
+    <data id="API_KEY" value="<%= API_KEY %>"></data>
 
     <script id="ResultsTableRows" type="x-tmpl-mustache">
         <tr>
@@ -60,5 +50,8 @@
             <option id="rounds-option-{{.}}">{{.}}</option>
         {{/rounds}}
 </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=<%= MAPS_KEY %>&callback=window.initEndResults&libraries=drawing,places,geometry"
+            defer></script>
 </body>
 </html>
