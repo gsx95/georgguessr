@@ -6,3 +6,4 @@ package-lock.json
 .DS_Store
 statics/*
 config.json
+samconfig.toml
