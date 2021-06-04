@@ -261,30 +261,6 @@ Resources:
       - AttributeName: id
         KeyType: HASH
 
-  GeoContinents:
-    Type: 'AWS::DynamoDB::Table'
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      TableName: GeoContinents
-      AttributeDefinitions:
-      - AttributeName: continent
-        AttributeType: S
-      KeySchema:
-      - AttributeName: continent
-        KeyType: HASH
-
-  GeoCountries:
-    Type: 'AWS::DynamoDB::Table'
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      TableName: GeoCountries
-      AttributeDefinitions:
-      - AttributeName: code
-        AttributeType: S
-      KeySchema:
-      - AttributeName: code
-        KeyType: HASH
-
   GeoCities:
     Type: 'AWS::DynamoDB::Table'
     Properties:

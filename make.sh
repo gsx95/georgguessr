@@ -60,16 +60,10 @@ upload_geo_data_to_dynamodb() {
     echo "------------------------"
     echo "Uploading to DynamoDB..."
     echo "------------------------"
-    aws dynamodb batch-write-item --request-items file://src/resources/continents.json
-
 
     while read l1; do
         aws dynamodb batch-write-item --request-items "$l1";
     done <src/resources/cities.jsonData
-
-    while read l2; do
-        aws dynamodb batch-write-item --request-items "$l2";
-    done <src/resources/countries.jsonData
 
     echo "------------------------"
     echo "Done!"
