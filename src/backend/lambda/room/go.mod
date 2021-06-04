@@ -1,6 +1,6 @@
 module georgguessr.com/lambda-room
 
-go 1.15
+go 1.16
 
 replace georgguessr.com/pkg => ../../pkg
 
