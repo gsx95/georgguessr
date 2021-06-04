@@ -1,4 +1,5 @@
 import u from '../utils.js';
+import {continents, countries} from "countries-list";
 
 export default {
     GuessrHome: {
@@ -6,6 +7,7 @@ export default {
         selectedAreas: [],
         selectedPolygon: null,
         selectionMap: null,
+        countriesByContinent: {},
 
         init: function () {
             u.initUtils();
@@ -16,6 +18,21 @@ export default {
             u.byId("enter-room-btn").onclick = GuessrHome.showEnterRoom;
             u.byId("create-and-play-btn").onclick = GuessrHome.createRoom;
             u.byId("enter-btn").onclick = GuessrHome.enterRoom;
+
+            let continentSelect = u.byId("continent-selector");
+            for (let code in continents) {
+                let option = document.createElement("option");
+                option.value = code;
+                option.innerText = continents[code];
+                continentSelect.appendChild(option);
+                GuessrHome.countriesByContinent[code] = [];
+            }
+
+            for (let code in countries) {
+                let country = countries[code];
+                country["code"] = code;
+                GuessrHome.countriesByContinent[country.continent].push(country);
+            }
 
             GuessrHome.initGoogleMaps();
         },
@@ -272,26 +289,14 @@ export default {
             let continentCode = u.byId("continent-selector").value;
             let countrySelect = u.byId("country-selector");
             countrySelect.innerHTML = "";
+            let countries = GuessrHome.countriesByContinent[continentCode];
+            countries.sort(function (x, y) {
+                return y.name - x.name;
+            });
             u.addElement("option", countrySelect, "All Areas").value = "all";
-            u.doGetRequestJSON("/countries/" + continentCode,
-                (resp) => {
-                    let countries = resp.countries;
-                    if (countries === null || countries === undefined || countries.length === 0) {
-                        console.log("countries empty " + continentCode);
-                        return;
-                    }
-                    countries.sort(function (x, y) {
-                        return y.name - x.name;
-                    });
-
-                    for (let i = 0; i < countries.length; i++) {
-                        u.addElement("option", countrySelect, countries[i].name).value = countries[i].code;
-                    }
-                }, (err) => {
-                    console.log(err);
-                }, () => {
-                }
-            );
+            for (let i = 0; i < countries.length; i++) {
+                u.addElement("option", countrySelect, countries[i].name).value = countries[i].code;
+            }
         },
 
         showEnterRoom: function () {
