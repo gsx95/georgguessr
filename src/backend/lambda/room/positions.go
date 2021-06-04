@@ -41,11 +41,8 @@ func RandomPositionByArea(continent string, country string, cities string) (lat,
 	if country != "all" {
 		countries[strings.ToLower(country)] = true
 	} else if continent != "all" {
-		continentCountries, err := pkg.GetCountries(continent)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, c := range continentCountries.Countries {
+		continentCountries := pkg.GetCountries(continent)
+		for _, c := range continentCountries {
 			countries[strings.ToLower(c.Code)] = true
 		}
 	}

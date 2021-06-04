@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,19 +11,20 @@ import (
 	"strings"
 )
 
+import _ "embed"
+
+// countries from https://github.com/annexare/Countries
+
+//go:embed "countries.json"
+var countriesData string
+
 const (
-	continentsTable = "GeoContinents"
-	citiesTable     = "GeoCities"
-	countriesTable  = "GeoCountries"
+	citiesTable = "GeoCities"
 )
 
 type CountryName struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
-}
-
-type Countries struct {
-	Countries []CountryName `json:"countries"`
 }
 
 type City struct {
@@ -31,34 +33,28 @@ type City struct {
 	Country string
 }
 
-func GetCountries(continent string) (*Countries, error) {
-	returnCountries := &Countries{}
+type CountryData struct {
+	Name      string   `json:"name"`
+	Native    string   `json:"native"`
+	Phone     string   `json:"phone"`
+	Continent string   `json:"continent"`
+	Capital   string   `json:"capital"`
+	Currency  string   `json:"currency"`
+	Languages []string `json:"languages"`
+}
 
-	params := &dynamodb.GetItemInput{
-		TableName: aws.String(continentsTable),
-		Key: map[string]*dynamodb.AttributeValue{
-			"continent": {
-				S: aws.String(continent),
-			},
-		},
-	}
-	res, err := DynamoClient.GetItem(params)
-
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error getting countries for continent: %v", err))
-	}
-
-	for _, countryItem := range res.Item["countries"].L {
-		country := countryItem.M
-		if len(country) == 0 {
-			continue
+func GetCountries(continent string) (countries []*CountryName) {
+	data := map[string]CountryData{}
+	json.Unmarshal([]byte(countriesData), &data)
+	for countryCode, countryData := range data {
+		if countryData.Continent == continent {
+			countries = append(countries, &CountryName{
+				Code: countryCode,
+				Name: countryData.Name,
+			})
 		}
-		returnCountries.Countries = append(returnCountries.Countries, CountryName{
-			Code: aws.StringValue(country["code"].S),
-			Name: aws.StringValue(country["name"].S),
-		})
 	}
-	return returnCountries, nil
+	return
 }
 
 func GetRandomCityName(minPop, maxPop int, countries map[string]bool) (string, string, error) {
@@ -122,10 +118,7 @@ func getCities(biggest, min, max int) ([]City, error) {
 	}
 
 	countryCode := aws.StringValue(res.Item["country"].S)
-	countryName, err := getCountryName(countryCode)
-	if err != nil {
-		return nil, err
-	}
+	countryName := getCountryName(countryCode)
 	citiesAttr := res.Item["cities"].L
 
 	var cities []City
@@ -150,19 +143,8 @@ func getCities(biggest, min, max int) ([]City, error) {
 	return cities, nil
 }
 
-func getCountryName(countryCode string) (string, error) {
-	params := &dynamodb.GetItemInput{
-		TableName: aws.String(countriesTable),
-		Key: map[string]*dynamodb.AttributeValue{
-			"code": {
-				S: aws.String(strings.ToUpper(countryCode)),
-			},
-		},
-	}
-
-	res, err := DynamoClient.GetItem(params)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("Error getting country: %v", err))
-	}
-	return aws.StringValue(res.Item["name"].S), nil
+func getCountryName(countryCode string) string {
+	countries := map[string]CountryData{}
+	json.Unmarshal([]byte(countriesData), &countries)
+	return countries[countryCode].Name
 }
