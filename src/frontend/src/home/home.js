@@ -293,7 +293,7 @@ export default {
             countries.sort(function (x, y) {
                 return y.name - x.name;
             });
-            u.addElement("option", countrySelect, "All Areas").value = "all";
+            u.addElement("option", countrySelect, "All Countries").value = "all";
             for (let i = 0; i < countries.length; i++) {
                 u.addElement("option", countrySelect, countries[i].name).value = countries[i].code;
             }
