@@ -11,6 +11,9 @@ require (
 	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/btree v1.0.1 // indirect
+	github.com/knakk/digest v0.0.0-20160404164910-fd45becddc49 // indirect
+	github.com/knakk/rdf v0.0.0-20190304171630-8521bf4c5042 // indirect
+	github.com/knakk/sparql v0.0.0-20200914044602-05f8b3d450be
 	github.com/mmcloughlin/globe v0.0.0-20200201185603-653bb586373c // indirect
 	github.com/mmcloughlin/spherand v0.0.0-20200201191112-cd5c4c9261aa
 	github.com/paulmach/orb v0.2.1

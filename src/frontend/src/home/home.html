@@ -52,7 +52,7 @@
                         <td style="vertical-align: top;">
                             <select id="set-geo-limits" name="set-geo-limits">
                                 <option value="unlimited">Don't restrict playing area</option>
-                                <option value="list">Use predefined list of areas</option>
+                                <option value="list">Cities by population</option>
                                 <option value="place-search">Search place</option>
                                 <option value="custom">Draw custom areas</option>
                             </select>
@@ -66,19 +66,15 @@
                                 <option value="all">All Continents</option>
                             </select>
                             <select id="country-selector" name="country-selector" style="display: none;">
-                                <option value="all">All Areas</option>
+                                <option value="all">All Countries</option>
                             </select>
                             <select id="city-selector" name="city-selector" style="display: none;">
                                 <option value="all">All Cities</option>
                                 <option value="disabled">--- Population greater than ---</option>
-                                <option value="pop_gt_100k">Population over 100.000</option>
-                                <option value="pop_gt_500k">Population over 500.000</option>
-                                <option value="pop_gt_1kk">Population over 1.000.000</option>
-                                <option value="pop_gt_5kk">Population over 5.000.000</option>
-                                <option value="disabled">--- Population lesser than ---</option>
-                                <option value="pop_lt_100k">Population lower 100.000</option>
-                                <option value="pop_lt_500k">Population lower 500.000</option>
-                                <option value="pop_lt_1kk">Population lower 1.000.000</option>
+                                <option value="pop_gt_100k">Cities with over 100k</option>
+                                <option value="pop_gt_500k">Cities with over 500k</option>
+                                <option value="pop_gt_1kk">Cities with over 1.000k</option>
+                                <option value="pop_gt_5kk">Cities with over 5.000k</option>
                             </select>
                             <div id="selection-map" style="display: none"></div>
                         </td>
