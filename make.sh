@@ -6,8 +6,6 @@ build_and_deploy_backend() {
     echo "------------------------"
     echo "Building Backend..."
     echo "------------------------"
-    echo "Downloading latest countries data..."
-    wget -O src/backend/pkg/countries.json https://raw.githubusercontent.com/annexare/Countries/master/data/countries.json
     if (( $? != 0 )); then
         exit
     fi
@@ -62,38 +60,14 @@ build_frontend() {
     echo ""
 }
 
-upload_geo_data_to_dynamodb() {
-    echo "------------------------"
-    echo "Uploading to DynamoDB..."
-    echo "------------------------"
-
-    while read l1; do
-        aws dynamodb batch-write-item --request-items "$l1";
-    done <src/resources/cities.jsonData
-
-    echo "------------------------"
-    echo "Done!"
-    echo ""
-    echo ""
-}
-
 ###################################
 
 if [[ ${mode} != "frontend" ]]; then
     build_and_deploy_backend
 fi
 
-build_frontend
-
-if [[ ${mode} = "frontend" ]]; then
-    exit 0
+if [[ ${mode} != "backend" ]]; then
+    build_frontend
 fi
-
-
-if [[ ${mode} = "update" ]]; then
-    exit 0
-fi
-
-upload_geo_data_to_dynamodb
 
 echo "Run the frontend local with ' http-server dist'"

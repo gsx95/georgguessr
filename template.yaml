@@ -260,15 +260,3 @@ Resources:
       KeySchema:
       - AttributeName: id
         KeyType: HASH
-
-  GeoCities:
-    Type: 'AWS::DynamoDB::Table'
-    Properties:
-      BillingMode: PAY_PER_REQUEST
-      TableName: GeoCities
-      AttributeDefinitions:
-      - AttributeName: biggest
-        AttributeType: N
-      KeySchema:
-      - AttributeName: biggest
-        KeyType: HASH

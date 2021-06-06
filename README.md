@@ -18,7 +18,7 @@ Build and deploy all:  `./make.sh`
 
 
 Rebuild Frontend: `./make.sh frontend`
-* Only rebuilds the frontend files
+* Only rebuilds the frontend
 
-Rebuild Backend: `./make.sh update`
-* Only rebuilds and deploys backend sources, without uploading initial data to dynamodb again
+Rebuild Backend: `./make.sh backend`
+* Only rebuilds and deploys the backend
