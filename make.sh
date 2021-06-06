@@ -6,6 +6,12 @@ build_and_deploy_backend() {
     echo "------------------------"
     echo "Building Backend..."
     echo "------------------------"
+    echo "Downloading latest countries data..."
+    wget -O src/backend/pkg/countries.json https://raw.githubusercontent.com/annexare/Countries/master/data/countries.json
+    if (( $? != 0 )); then
+        exit
+    fi
+    echo "Build Go Lambdas..."
     sam build
     if (( $? != 0 )); then
         exit
