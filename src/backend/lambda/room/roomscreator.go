@@ -34,17 +34,15 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 	country := room.Country
 	cities := room.City
 
-	for i := 0; i < room.Rounds; i++ {
-		lat, lon, err := RandomPositionByArea(continent, country, cities)
-		if err != nil {
-			i--
-			fmt.Println(err)
-		}
+
+	positions, err := RandomPositionByArea(continent, country, cities, room.Rounds)
+
+	for i, pos := range positions  {
 		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
 			No: i,
 			StartPosition: pkg.GeoPoint{
-				Lat: lat,
-				Lon: lon,
+				Lat: pos.Lat(),
+				Lon: pos.Lon(),
 			},
 			Scores: map[string]pkg.Guess{},
 		})
@@ -88,7 +86,7 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 
 	for i := 0; i < room.Rounds; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
-		lat, lon, err := RandomPosForCity(place.Name, place.Country)
+		point, err := RandomPosForCity(&City{Name: place.Name, Country: place.Country})
 		if err != nil {
 			i--
 			fmt.Println(err)
@@ -96,8 +94,8 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
 			No: i,
 			StartPosition: pkg.GeoPoint{
-				Lat: lat,
-				Lon: lon,
+				Lat: point.Lat(),
+				Lon: point.Lon(),
 			},
 			Scores: map[string]pkg.Guess{},
 		})
