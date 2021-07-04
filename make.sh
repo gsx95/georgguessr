@@ -11,7 +11,7 @@ build_and_deploy_backend() {
     cd src/backend/layer
     zip -r layer.zip bin
     cd $cwd
-    awk -v key=$MAPS_API_KEY '{gsub("<%= MAPS_KEY %>", key, $0); print}' src/backend/lambda/room/res/template.html > src/backend/lambda/room/res/index.html
+    awk -v key=$MAPS_API_KEY '{gsub("<%= MAPS_KEY %>", key, $0); print}' src/backend/layer/bin/template.html > src/backend/layer/bin/index.html
     echo "------------------------"
     echo "Building Backend..."
     echo "------------------------"
