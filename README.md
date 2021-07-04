@@ -9,6 +9,8 @@ Also:
 3. `cd src/frontend; npm install`
 
 ### Build
+##### Has to be deployed in `eu-west-1` for now !
+
 For your first deployment, do `./make.sh guided` so that your AWS SAM configuration can be saved to disk.
 
 After that:

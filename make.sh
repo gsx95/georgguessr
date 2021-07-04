@@ -2,7 +2,16 @@
 
 mode=$1
 
+
+MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
+
 build_and_deploy_backend() {
+
+    cwd=$(pwd)
+    cd src/backend/layer
+    zip -r layer.zip bin
+    cd $cwd
+    awk -v key=$MAPS_API_KEY '{gsub("<%= MAPS_KEY %>", key, $0); print}' src/backend/lambda/room/res/template.html > src/backend/lambda/room/res/index.html
     echo "------------------------"
     echo "Building Backend..."
     echo "------------------------"
@@ -43,15 +52,15 @@ build_frontend() {
     API_KEY_ID=$(echo ${RES} | jq -r '.StackResources[]  | select(.ResourceType == "AWS::ApiGateway::ApiKey") | .PhysicalResourceId')
     API_KEY_VALUE=$(aws apigateway get-api-key --include-value --api-key ${API_KEY_ID} | jq -r '.value')
     API_ID=$(echo ${RES} | jq -r '.StackResources[]  | select(.ResourceType == "AWS::ApiGateway::RestApi") | .PhysicalResourceId')
-    API_ENDPOINT="https://$API_ID.execute-api.eu-central-1.amazonaws.com/Prod"
+    API_ENDPOINT="https://$API_ID.execute-api.eu-west-1.amazonaws.com/Prod"
 
-    MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
 
     echo "---"
     echo "$API_KEY_VALUE"
     echo "---"
 
     cd src/frontend
+    npm install
     npx webpack --env apiKey="$API_KEY_VALUE" --env api="$API_ENDPOINT" --env mapsKey="$MAPS_API_KEY"
     cd ../../
 
