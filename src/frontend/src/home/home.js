@@ -188,12 +188,8 @@ export default {
                     "country": country
                 })
             }
-
             data["places"] = places;
-
-            u.doPostRequest("/rooms?type=places", data, function (response) {
-                window.location.href = "/createRoom?id=" + response;
-            });
+            GuessrHome.createRoomAndRedirect("places", data);
         },
 
         createRoomCustom: function (data) {
@@ -207,9 +203,7 @@ export default {
                 }
             }
             data["areas"] = areasData;
-            u.doPostRequest("/rooms?type=custom", data, function (response) {
-                window.location.href = "/createRoom?id=" + response;
-            });
+            GuessrHome.createRoomAndRedirect("custom", data);
         },
 
         createRoomList: function (data) {
@@ -220,16 +214,16 @@ export default {
             data["continent"] = continent;
             data["country"] = country;
             data["city"] = city;
-
-
-            u.doPostRequest("/rooms?type=list", data, function (response) {
-                window.location.href = "/createRoom?id=" + response;
-            });
+            GuessrHome.createRoomAndRedirect("list", data);
         },
 
         createRoomUnlimited: function (data) {
-            u.doPostRequest("/rooms?type=unlimited", data, function (response) {
-                window.location.href = "/createRoom?id=" + response;
+            GuessrHome.createRoomAndRedirect("unlimited", data)
+        },
+
+        createRoomAndRedirect: function(roomType, data) {
+            u.doPostRequest("/rooms?type=" + roomType, data, function (response) {
+                window.location.href = "/game?id=" + response;
             });
         },
 

@@ -17,16 +17,6 @@ module.exports = env => ({
                  template: './src/home/home.html',
        }),
         new HtmlWebpackPlugin({
-            filename: "createRoom/index.html",
-            title: 'GeorgGuessr',
-            templateParameters: {
-                'API_EP': env.api,
-                'API_KEY': env.apiKey,
-                'MAPS_KEY': env.mapsKey,
-            },
-            template: './src/createRoom/createRoom.html',
-        }),
-        new HtmlWebpackPlugin({
             filename: "game/index.html",
             title: 'GeorgGuessr',
             templateParameters: {

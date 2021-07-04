@@ -34,19 +34,16 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 	country := room.Country
 	cities := room.City
 
+	positions := Positions{}
 
-	positions, err := RandomPositionByArea(continent, country, cities, room.Rounds)
+	randomPositions, err := RandomPositionByArea(continent, country, cities, room.Rounds)
 
-	for i, pos := range positions  {
-		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
-			No: i,
-			StartPosition: pkg.GeoPoint{
-				Lat: pos.Lat(),
-				Lon: pos.Lon(),
-			},
-			Scores: map[string]pkg.Guess{},
-		})
+	for i, pos := range randomPositions  {
+		positions.Pos = append(positions.Pos, NewRoundPos(i, pos.Lat(), pos.Lon()))
 	}
+
+	streetViews := GetStreetviewPositions(positions)
+	addStreetViewToRoom(&room.Room, streetViews)
 
 	return createRoom(&room.Room)
 }
@@ -58,22 +55,22 @@ func CreateRoomWithCustomAreas(reqBody string) (string, error) {
 		return "", err
 	}
 
+	positions := Positions{}
+
 	for i := 0; i < room.Rounds; i++ {
 		area := room.Areas[rand.Intn(len(room.Areas))]
 		lat, lon, err := RandomPositionInArea(area)
 		if err != nil {
 			i--
 			fmt.Println(err)
+			continue
 		}
-		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
-			No: i,
-			StartPosition: pkg.GeoPoint{
-				Lat: lat,
-				Lon: lon,
-			},
-			Scores: map[string]pkg.Guess{},
-		})
+		positions.Pos = append(positions.Pos, NewRoundPos(i, lat, lon))
 	}
+
+	streetViews := GetStreetviewPositions(positions)
+	addStreetViewToRoom(&room, streetViews)
+
 	return createRoom(&room)
 }
 
@@ -84,22 +81,21 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 		return "", err
 	}
 
+	positions := Positions{}
+
 	for i := 0; i < room.Rounds; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
 		point, err := RandomPosForCity(&City{Name: place.Name, Country: place.Country})
 		if err != nil {
 			i--
 			fmt.Println(err)
+			continue
 		}
-		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
-			No: i,
-			StartPosition: pkg.GeoPoint{
-				Lat: point.Lat(),
-				Lon: point.Lon(),
-			},
-			Scores: map[string]pkg.Guess{},
-		})
+		positions.Pos = append(positions.Pos, NewRoundPos(i, point.Lat(), point.Lon()))
 	}
+
+	streetViews := GetStreetviewPositions(positions)
+	addStreetViewToRoom(&room.Room, streetViews)
 	return createRoom(&room.Room)
 }
 
@@ -110,18 +106,31 @@ func CreateRoomUnlimited(reqBody string) (string, error) {
 		return "", err
 	}
 
+	positions := Positions{}
+
 	for i := 0; i < room.Rounds; i++ {
 		lat, lon := RandomPosition()
+		positions.Pos = append(positions.Pos, NewRoundPos(i, lat, lon))
+	}
+
+	streetViews := GetStreetviewPositions(positions)
+	addStreetViewToRoom(&room, streetViews)
+
+	return createRoom(&room)
+}
+
+func addStreetViewToRoom(room *pkg.Room, streetViews StreetViewIDs) {
+	for _, streetView := range streetViews.Panos {
 		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
-			No: i,
+			No: streetView.Round,
 			StartPosition: pkg.GeoPoint{
-				Lat: lat,
-				Lon: lon,
+				Lat: streetView.Pos.Lat,
+				Lon: streetView.Pos.Lng,
 			},
+			PanoID: streetView.PanoID,
 			Scores: map[string]pkg.Guess{},
 		})
 	}
-	return createRoom(&room)
 }
 
 func createRoom(room *pkg.Room) (string, error) {
