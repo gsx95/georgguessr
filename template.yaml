@@ -33,13 +33,26 @@ Resources:
             BurstLimit: 30
             RateLimit: 30
 
+  PhantomJSLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: PhantomJSLayer
+      Description: Includes phantomjs executable and custom script to run with
+      ContentUri: './src/backend/layer/layer.zip'
+      CompatibleRuntimes:
+        - go1.x
+        - python3.8
+      RetentionPolicy: Retain
+
   GuessrRoomsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/backend/lambda/room/
       Handler: handler
+      Layers:
+        - !Ref PhantomJSLayer
       Runtime: go1.x
-      Timeout: 20
+      Timeout: 40
       Events:
         GetRoom:
           Type: Api
