@@ -4,13 +4,8 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os/exec"
 )
-
-
-//go:embed res/index.html
-var streetviewGenHTML string
 
 type Positions struct {
 	Pos []RoundPosition `json:"pos"`
@@ -45,26 +40,11 @@ type StreetViewIDs struct {
 }
 
 func GetStreetviewPositions(positions Positions) StreetViewIDs {
-
-	http.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(streetviewGenHTML))
-	})
-	
-	go func() {
-		err := http.ListenAndServe(":8080", nil)
-		fmt.Println(err)
-	}()
-	return getData(positions)
-}
-
-func getData(positions Positions) StreetViewIDs {
-
 	posJson, err := json.Marshal(positions)
 	if err != nil {
 		panic(err)
 	}
-	url := fmt.Sprintf(`http://localhost:8080/create?pos=%s`, string(posJson))
+	url := fmt.Sprintf(`file:///opt/bin/index.html?pos=%s`, string(posJson))
 
 	app := "/opt/bin/phantomjs"
 	arg0 := "/opt/bin/script.js"

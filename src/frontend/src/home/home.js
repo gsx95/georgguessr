@@ -222,6 +222,8 @@ export default {
         },
 
         createRoomAndRedirect: function(roomType, data) {
+            MicroModal.close('modal-1');
+            MicroModal.show('loading-modal');
             u.doPostRequest("/rooms?type=" + roomType, data, function (response) {
                 window.location.href = "/game?id=" + response;
             });
