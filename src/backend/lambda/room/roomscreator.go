@@ -10,7 +10,6 @@ import (
 
 type RoomWithPredefinedArea struct {
 	pkg.Room
-	Continent string `json:"continent"`
 	Country   string `json:"country"`
 	City      string `json:"city"`
 }
@@ -30,13 +29,12 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 		return "", err
 	}
 
-	continent := room.Continent
 	country := room.Country
 	cities := room.City
 
 	positions := Positions{}
 
-	randomPositions, err := RandomPositionByArea(continent, country, cities, room.Rounds)
+	randomPositions, err := RandomPositionByArea(country, cities, room.Rounds)
 
 	for i, pos := range randomPositions  {
 		positions.Pos = append(positions.Pos, NewRoundPos(i, pos.Lat(), pos.Lon()))

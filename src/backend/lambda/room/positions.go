@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	_ "embed"
 )
 
 const getCityBoundariesUrl = "https://nominatim.openstreetmap.org/search.php?q=%s+%s&polygon_geojson=1&format=geojson"
@@ -27,16 +28,6 @@ var minPopulation = map[string]int{
 	"pop_gt_5kk": 5000000,
 }
 
-var continentIDs = map[string] string {
-	"AF": "Q15",
-	"AN": "Q51",
-	"AS": "Q48",
-	"EU": "Q46",
-	"NA": "Q49",
-	"OC": "Q538",
-	"SA": "Q18",
-}
-
 type CountryName struct {
 	Name string `json:"name"`
 	Code string `json:"code"`
@@ -47,6 +38,13 @@ type City struct {
 	Pop     int
 	Country string
 }
+
+//go:embed sparql/getCountryByCode.query
+var getCountryByCode string
+//go:embed sparql/getCitiesByCountryAndPop.query
+var getCityByCountryAndPop string
+//go:embed sparql/getRandomCityForPop.query
+var getRandomCityForPop string
 
 
 func RandomPosition() (lat, lon float64) {
@@ -68,13 +66,10 @@ func RandomPositionInArea(area []pkg.GeoPoint) (lat, lon float64, err error) {
 	return point.Lat(), point.Lon(), nil
 }
 
-func RandomPositionByArea(continent string, country string, cities string, count int) (positions []*orb.Point, err error) {
+func RandomPositionByArea(country string, cities string, count int) (positions []*orb.Point, err error) {
 
 	if country != "all" {
 		return getRandomPosByCountryAndPop(minPopulation[cities], country, count)
-	}
-	if continent != "all" {
-		return getRandomPosByContinentAndPop(minPopulation[cities], continent, count)
 	}
 	return getRandomPosByPop(minPopulation[cities], count)
 }
@@ -178,36 +173,18 @@ func pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
 	return []orb.Ring{ring}
 }
 
+
 func getRandomPosByCountryAndPop(minPop int, country string, count int) (positions []*orb.Point, err error) {
 	fmt.Printf("get by country and pop: %s, %d\n", country, minPop)
-	getCountryIDQuery := fmt.Sprintf(`SELECT ?country WHERE {
-	  ?country wdt:P31 wd:Q3624078;
-	    wdt:P297 ?code.
-	  FILTER(?code = "%s")
-	  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-	}
-	GROUP BY ?country`, strings.ToUpper(country))
-	results := queryWikiData(getCountryIDQuery)
-	countryEntity := results.Results.Bindings[0]["country"].Value
+
+	countryData := queryWikiData(fmt.Sprintf(getCountryByCode, strings.ToUpper(country)))
+	countryEntity := countryData.Results.Bindings[0]["country"].Value
 	entityParts := strings.Split(countryEntity, "/")
 	countryID := entityParts[len(entityParts)-1]
 
-	query := fmt.Sprintf(`SELECT ?cityLabel ?countryLabel (MAX(?population) AS ?maxPopulation) 
-	WHERE
-	{
-	  ?city wdt:P31/wdt:P279* wd:Q515;
-	        wdt:P17 wd:%s;
-	        wdt:P1082 ?population;
-	        wdt:P17 ?country.
-	  FILTER(?population>%d)
-	  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-	}
-	GROUP BY ?cityLabel ?countryLabel
-	ORDER BY uuid() #%s
-	Limit 100`,
-		countryID, minPop, time.Now().String())
+	query := fmt.Sprintf(getCityByCountryAndPop, countryID, minPop, time.Now().String())
 
-	results = queryWikiData(query)
+	results := queryWikiData(query)
 	var cities []*City
 	bindings := results.Results.Bindings
 	for _, b := range bindings {
@@ -226,54 +203,8 @@ func getRandomPosByCountryAndPop(minPop int, country string, count int) (positio
 	return randomPosForCities(cities, count)
 }
 
-func getRandomPosByContinentAndPop(minPop int, continent string, count int) (positions []*orb.Point, err error) {
-	query := fmt.Sprintf(`SELECT ?code (MAX(?population) AS ?maxPopulation) WHERE {
-	  ?city (wdt:P31/(wdt:P279*)) wd:Q515;
-	    wdt:P17 ?country;
-	    wdt:P1082 ?population.
-	  ?country wdt:P31 wd:Q3624078;
-	    wdt:P297 ?code;
-	    wdt:P30 ?continent.
-	  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-	  FILTER(?continent = wd:%s)
-	  FILTER(?population > %d)
-	}
-	GROUP BY ?code`, continentIDs[strings.ToUpper(continent)], minPop)
-	results := queryWikiData(query)
-	var countries []string
-	bindings := results.Results.Bindings
-	for _, b := range bindings {
-		countryMaxCityPop, err := strconv.Atoi(b["maxPopulation"].Value)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if countryMaxCityPop > minPop {
-			countries = append(countries, b["code"].Value)
-		}
-	}
-	for i := 0;i < count; i++ {
-		randomCountry := countries[pkg.GetRandom(0, len(countries) - 1)]
-		pos, err := getRandomPosByCountryAndPop(minPop, randomCountry, 1)
-		if err != nil {
-			fmt.Println(err)
-			i--
-			continue
-		}
-		positions = append(positions, pos[0])
-	}
-	return positions, nil
-}
-
 func getRandomPosByPop(minPop int, count int) (positions []*orb.Point, err error) {
-	query := fmt.Sprintf(`SELECT ?cityLabel ?countryLabel ?population WHERE {
-	  ?city (wdt:P31/(wdt:P279*)) wd:Q515;
-	    wdt:P17 ?country;
-	    wdt:P1082 ?population.
-	  FILTER(?population > %d)
-	  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-	}
-	ORDER BY UUID()#%s
-	Limit 100`,
+	query := fmt.Sprintf(getRandomCityForPop,
 	minPop, time.Now().String())
 
 	results := queryWikiData(query)

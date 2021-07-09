@@ -1,5 +1,5 @@
 import u from '../utils.js';
-import {continents, countries} from "countries-list";
+import {countries} from "countries-list";
 
 export default {
     GuessrHome: {
@@ -7,7 +7,6 @@ export default {
         selectedAreas: [],
         selectedPolygon: null,
         selectionMap: null,
-        countriesByContinent: {},
 
         init: function () {
             u.initUtils();
@@ -18,21 +17,6 @@ export default {
             u.byId("enter-room-btn").onclick = GuessrHome.showEnterRoom;
             u.byId("create-and-play-btn").onclick = GuessrHome.createRoom;
             u.byId("enter-btn").onclick = GuessrHome.enterRoom;
-
-            let continentSelect = u.byId("continent-selector");
-            for (let code in continents) {
-                let option = document.createElement("option");
-                option.value = code;
-                option.innerText = continents[code];
-                continentSelect.appendChild(option);
-                GuessrHome.countriesByContinent[code] = [];
-            }
-
-            for (let code in countries) {
-                let country = countries[code];
-                country["code"] = code;
-                GuessrHome.countriesByContinent[country.continent].push(country);
-            }
 
             GuessrHome.initGoogleMaps();
         },
@@ -207,11 +191,9 @@ export default {
         },
 
         createRoomList: function (data) {
-            let continent = u.byId("continent-selector").value;
             let country = u.byId("country-selector").value;
             let city = u.byId("city-selector").value;
 
-            data["continent"] = continent;
             data["country"] = country;
             data["city"] = city;
             GuessrHome.createRoomAndRedirect("list", data);
@@ -281,20 +263,6 @@ export default {
             u.byId("specific-cities-table").removeChild(tr);
         },
 
-        continentSelected: function () {
-            let continentCode = u.byId("continent-selector").value;
-            let countrySelect = u.byId("country-selector");
-            countrySelect.innerHTML = "";
-            let countries = GuessrHome.countriesByContinent[continentCode];
-            countries.sort(function (x, y) {
-                return y.name - x.name;
-            });
-            u.addElement("option", countrySelect, "All Countries").value = "all";
-            for (let i = 0; i < countries.length; i++) {
-                u.addElement("option", countrySelect, countries[i].name).value = countries[i].code;
-            }
-        },
-
         showEnterRoom: function () {
             MicroModal.show('modal-2');
         },
@@ -312,19 +280,23 @@ export default {
             let timeLimitLabel = u.byId("timelimit-label");
             let secondLimits = ["10s", "20s", "30s", "40s", "50s"];
 
-            let continentSelect = u.byId("continent-selector");
             let countrySelect = u.byId("country-selector");
             let citySelect = u.byId("city-selector");
 
             let citySearchInput = u.byId("search-place-input");
             let citySearchTable = u.byId("specific-cities-table");
 
-            continentSelect.onchange = GuessrHome.continentSelected;
+            u.addElement("option", countrySelect, "All Countries").value = "all";
+            for (let code in countries) {
+                let country = countries[code];
+                country["code"] = code;
+                u.addElement("option", countrySelect, country.name).value = country.code;
+            }
+
 
             geoDropDown.onchange = function () {
                 geoMap.style.display = geoDropDown.value === "custom" ? "block" : "none";
 
-                continentSelect.style.display = geoDropDown.value === "list" ? "block" : "none";
                 countrySelect.style.display = geoDropDown.value === "list" ? "block" : "none";
                 citySelect.style.display = geoDropDown.value === "list" ? "block" : "none";
                 citySearchInput.style.display = geoDropDown.value === "place-search" ? "block" : "none";
