@@ -1,0 +1,9 @@
+SELECT ?cityLabel ?countryLabel ?population WHERE {
+	  ?city (wdt:P31/(wdt:P279*)) wd:Q515;
+	    wdt:P17 ?country;
+	    wdt:P1082 ?population.
+	  FILTER(?population > %d)
+	  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+	}
+	ORDER BY UUID()#%s
+	Limit 100

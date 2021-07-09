@@ -79,4 +79,4 @@ if [[ ${mode} != "backend" ]]; then
     build_frontend
 fi
 
-echo "Run the frontend local with ' http-server dist'"
+echo "Run the frontend local with ' http-server dist '"

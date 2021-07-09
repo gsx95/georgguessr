@@ -1,0 +1,5 @@
+SELECT ?country WHERE {
+	  ?country wdt:P31 wd:Q3624078;
+	    wdt:P297 "%s".
+	}
+GROUP BY ?country
