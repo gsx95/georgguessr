@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
@@ -15,7 +16,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	_ "embed"
 )
 
 const getCityBoundariesUrl = "https://nominatim.openstreetmap.org/search.php?q=%s+%s&polygon_geojson=1&format=geojson"
@@ -24,8 +24,8 @@ const wikiDataUrl = "https://query.wikidata.org/sparql"
 var minPopulation = map[string]int{
 	"pop_gt_100k": 100000,
 	"pop_gt_500k": 500000,
-	"pop_gt_1kk": 1000000,
-	"pop_gt_5kk": 5000000,
+	"pop_gt_1kk":  1000000,
+	"pop_gt_5kk":  5000000,
 }
 
 type CountryName struct {
@@ -45,7 +45,6 @@ var getCountryByCode string
 var getCityByCountryAndPop string
 //go:embed sparql/getRandomCityForPop.query
 var getRandomCityForPop string
-
 
 func RandomPosition() (lat, lon float64) {
 	lat, lon = spherand.Geographical()
@@ -173,7 +172,6 @@ func pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
 	return []orb.Ring{ring}
 }
 
-
 func getRandomPosByCountryAndPop(minPop int, country string, count int) (positions []*orb.Point, err error) {
 	fmt.Printf("get by country and pop: %s, %d\n", country, minPop)
 
@@ -194,7 +192,7 @@ func getRandomPosByCountryAndPop(minPop int, country string, count int) (positio
 		}
 		if countryMaxCityPop > minPop {
 			cities = append(cities, &City{
-				Name: b["cityLabel"].Value,
+				Name:    b["cityLabel"].Value,
 				Country: country,
 			})
 		}
@@ -205,7 +203,7 @@ func getRandomPosByCountryAndPop(minPop int, country string, count int) (positio
 
 func getRandomPosByPop(minPop int, count int) (positions []*orb.Point, err error) {
 	query := fmt.Sprintf(getRandomCityForPop,
-	minPop, time.Now().String())
+		minPop, time.Now().String())
 
 	results := queryWikiData(query)
 
@@ -215,16 +213,16 @@ func getRandomPosByPop(minPop int, count int) (positions []*orb.Point, err error
 		cityName := result["cityLabel"].Value
 		countryName := result["countryLabel"].Value
 		possibleCities = append(possibleCities, &City{
-			Name: cityName,
+			Name:    cityName,
 			Country: countryName,
 		})
 	}
 	return randomPosForCities(possibleCities, count)
 }
 
-func randomPosForCities(possibleCities []*City, count int) (positions []*orb.Point, err error){
-	for i := 0;i < count; i++ {
-		randomCity := possibleCities[pkg.GetRandom(0, len(possibleCities) - 1)]
+func randomPosForCities(possibleCities []*City, count int) (positions []*orb.Point, err error) {
+	for i := 0; i < count; i++ {
+		randomCity := possibleCities[pkg.GetRandom(0, len(possibleCities)-1)]
 		point, err := RandomPosForCity(randomCity)
 		if err != nil {
 			fmt.Println(err)
