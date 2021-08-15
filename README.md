@@ -16,7 +16,7 @@
   <a href="#license">License</a>
 </p>
 <p align="center">
-<img src="./doc/demo.gif" alt="Demo" width="600"/>
+<img src="./doc/demo.gif" alt="Demo" width="600" style="border-radius:5px"/>
 </p>
 
 ## Key Features
@@ -31,16 +31,16 @@
   - just play randomly in the whole world
 
 <p align="middle">
-<img src="./doc/places.gif" width="40%" />
-<img src="./doc/areas.gif" width="40%" /> 
+<img src="./doc/places.gif" width="40%" style="border-radius:5px" />
+<img src="./doc/areas.gif" width="40%" style="border-radius:5px"/> 
 </p>
 
 * Overview of all player's picks after each round
   - see which locations your friends picked and how far they were off
 
 <p align="middle">
-<img src="./doc/summary1.png" width="40%" />
-<img src="./doc/summary2.png" width="40%" /> 
+<img src="./doc/summary1.png" width="40%" style="border-radius:5px"/>
+<img src="./doc/summary2.png" width="40%" style="border-radius:5px"/> 
 </p>
 
 * Various options for streetview
