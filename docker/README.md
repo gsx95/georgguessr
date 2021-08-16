@@ -1,4 +1,4 @@
-## Docker image to build, deploy and potentially test current master revision
+## Docker image to build, deploy and potentially test current revision
 
-build docker image within this directory, run container with config.env <i>incl. aws credentials</i> with `docker run --env-file config.env guessr`. 
+Build docker image within this directory, run container with `docker run -v $PWD/georgguessr:/workdir/georgguessr guessr-test`. 
 
