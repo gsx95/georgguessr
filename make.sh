@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 mode=$1
-export $(cat config.env)
-
+if [[ -f config.env ]]
+then
+    export $(cat config.env)
+fi
 
 build_and_deploy_backend() {
 
