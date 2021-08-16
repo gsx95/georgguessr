@@ -3,7 +3,7 @@
 mode=$1
 if [[ -f config.env ]]
 then
-    export $(cat config.env)
+    export $(cat config.env | sed 's/#.*//g' | xargs)
 fi
 
 build_and_deploy_backend() {
