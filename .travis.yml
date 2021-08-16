@@ -1,0 +1,8 @@
+language: minimal
+
+services:
+  - docker
+
+docker pull gsx95/guessr-test:latest
+
+docker run gsx95/guessr-test
