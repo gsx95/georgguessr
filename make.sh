@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 
 mode=$1
 if [[ -f config.env ]]

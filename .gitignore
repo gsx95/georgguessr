@@ -10,3 +10,4 @@ src/frontend/node_modules
 dist
 src/backend/layer/layer.zip
 src/backend/layer/bin/index.html
+src/backend/layer/bin/phantomjs
