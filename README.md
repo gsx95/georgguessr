@@ -56,7 +56,7 @@
 
 ## How to build
 
-To clone and run this application, you'll need [npm](https://www.npmjs.com), [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html) and [GoLang >1.16](https://golang.org) installed on your computer. From your command line:
+To clone and run this application, you'll need [npm](https://www.npmjs.com), [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), [zip](https://formulae.brew.sh/formula/zip) and [GoLang >1.16](https://golang.org) installed on your computer. From your command line:
 
 ```bash
 # Clone this repository
