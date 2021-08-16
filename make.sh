@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
 mode=$1
+export $(cat config.env)
 
-
-MAPS_API_KEY=$(cat config.json| jq -r ".maps_api_key");
 
 build_and_deploy_backend() {
 
@@ -11,7 +10,7 @@ build_and_deploy_backend() {
     cd src/backend/layer
     zip -r layer.zip bin
     cd $cwd
-    awk -v key=$MAPS_API_KEY '{gsub("<%= MAPS_KEY %>", key, $0); print}' src/backend/layer/bin/template.html > src/backend/layer/bin/index.html
+    awk -v key=$GUESSR_MAPS_API_KEY '{gsub("<%= MAPS_KEY %>", key, $0); print}' src/backend/layer/bin/template.html > src/backend/layer/bin/index.html
     echo "------------------------"
     echo "Building Backend..."
     echo "------------------------"
@@ -61,7 +60,7 @@ build_frontend() {
 
     cd src/frontend
     npm install
-    npx webpack --env apiKey="$API_KEY_VALUE" --env api="$API_ENDPOINT" --env mapsKey="$MAPS_API_KEY"
+    npx webpack --env apiKey="$API_KEY_VALUE" --env api="$API_ENDPOINT" --env mapsKey="$GUESSR_MAPS_API_KEY"
     cd ../../
 
     echo "------------------------"

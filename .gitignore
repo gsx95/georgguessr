@@ -5,7 +5,7 @@ package-lock.json
 .idea
 .DS_Store
 statics/*
-config.json
+config.env
 samconfig.toml
 src/backend/pkg/countries.json
 src/frontend/node_modules
