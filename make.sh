@@ -31,6 +31,7 @@ build_and_deploy_backend() {
     echo "Deploying Backend..."
     echo "------------------------"
     if [[ ${mode} = "guided" ]]; then
+        rm samconfig.toml
         sam deploy --guided
     else
         sam deploy

@@ -1,12 +1,10 @@
 .aws-sam
 .aws
 node_modules
-package-lock.json
 .idea
 .DS_Store
 statics/*
 config.env
-samconfig.toml
 src/backend/pkg/countries.json
 src/frontend/node_modules
 dist
