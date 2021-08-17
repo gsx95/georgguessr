@@ -5,7 +5,7 @@
     width="30%"
     :before-close="handleClose"
   >
-    <span>{{ $t("message.greeting", {}, { locale: "de" }) }}</span>
+    <span>{{ $t("welcome.title") }}</span>
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="dialogVisible = false">Cancel</el-button>
@@ -23,10 +23,12 @@ export default {
   data() {
     return {
       dialogVisible: true,
+      label: "foo",
     };
   },
   methods: {
     handleClose(done) {
+      this.label = this.$t("welcome.title");
       this.$confirm("Are you sure to close this dialog?")
         .then(() => {
           done();
