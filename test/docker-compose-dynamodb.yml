@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    hostname: dynamodb
+    networks:
+      - backend
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    command: -jar DynamoDBLocal.jar -sharedDb
+
+networks:
+  backend:
+    name: sam-local-network

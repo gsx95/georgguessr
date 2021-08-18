@@ -2,10 +2,38 @@ language: minimal
 services:
 - docker
 before_install:
-- docker pull gsx95/guessr-test:latest
-- ls
+- sudo apt-get update
+# install node
+- curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+- sudo apt install nodejs
+# install docker compose
+- sudo rm /usr/local/bin/docker-compose
+- curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` > docker-compose
+- chmod +x docker-compose
+- sudo mv docker-compose /usr/local/bin
+# install aws cli
+- curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+- unzip -qq awscliv2.zip
+- sudo ./aws/install
+# install aws sam cli
+- curl -L https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip > sam.zip
+- unzip -qq sam.zip -d sam-installation
+- sudo ./sam-installation/install
+# install go
+- sudo rm -rf /home/travis/.gimme/versions/go*
+- sudo rm -rf /usr/local/go
+- curl -L https://golang.org/dl/go1.17.linux-amd64.tar.gz > golang.tar.gz
+- sudo tar -C /usr/local -xzf golang.tar.gz
+- export PATH=$PATH:/usr/local/go/bin 
+- unset GOROOT
+- source ~/.bashrc
+
 script:
-- docker run -v $PWD:/workdir/georgguessr -e GUESSR_MAPS_API_KEY="$GUESSR_MAPS_API_KEY" -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" -e AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION" gsx95/guessr-test
+- docker-compose -f ./test/docker-compose-dynamodb.yml up -d
+- chmod +x make.sh
+- ./make.sh local &
+- go run test/test.go
+
 env:
   global:
   - secure: IaQS7SQKJGCVMVs39rKMCW7etEZZdTU/cBu7jIsFKjq8dvH4uEEasHkdVeNbMfviBQr0jLdhCGsJtgq5n9YMJLIt2wA9S6QpZ9AAfLgL7Sr3qZ+l5paABMTwN9j7Mw+OBVZU0ScKlmro2idXB1GDCSX2lxuP9gz9XMNKzRts5xlu0atSp5a4WcKb3Rz0U6yjQ3ZD2dXhpSsSbUo7jqWumE/gAYWPF5MsMmcZ43200wkc8HDTxn+M7wfTxEj/CinuFT2nZ5AgWMzs3wkFN/2mXolCLeQWe2vthyam8+lp7aT9biAxa0oAm9/J9/ZqvMY3qigDMDJQceR4ZsIput/Yebr2a9Xn87Ni5D8MbytbYp7myJ8jX0vThaJ1uJa6U+N7UfJle1ikVjSC1mvbox1VZa2HFZY7vK9UdchSZErUhZz3+GJLtsovCLlyQFljBaMIE/8/DH974DzHe/JY2EOz8nDtvYKOmm4F7xRx5567hVNT1RcPhhpbTQHiM/XR8IT8O3QsW+9pnLsELaLvMDKumjwkNJ8MVa80BYQ/LY/BLFXdKv7kCA9dh+WBpRTKkCcMVCMSYPBiVCD8OFwPWy4XaKNOhODeOu+Fut8gzS7/8AgVwGQyW38F8E/kiA/wwn3jULJXUw8SC1z4SR7duO8itgznDepvjpnhGNFLioUWSSU=

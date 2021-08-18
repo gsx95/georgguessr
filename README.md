@@ -56,7 +56,11 @@
 
 ## How to build
 
-To clone and run this application, you'll need [npm](https://www.npmjs.com), [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), [zip](https://formulae.brew.sh/formula/zip) and [GoLang >1.16](https://golang.org) installed on your computer. From your command line:
+To clone and run this application, you'll need [npm](https://www.npmjs.com), [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html), [zip](https://formulae.brew.sh/formula/zip) and [GoLang >1.16](https://golang.org) installed on your computer. 
+
+### Deploy to AWS
+
+From your command line:
 
 ```bash
 # Clone this repository
@@ -65,17 +69,27 @@ $ git clone git@github.com:gsx95/georgguessr.git
 # Go into the repository
 $ cd georgguessr
 
-# Build and deploy to your AWS account. Displays changeset before deploying anything
-$ ./make.sh guided
+# Build and deploy to your AWS account. Use 'guided' option the first time to configure your deployment options.
+# If you opted to save your config to a file, just use './make.sh deploy' in the future.
+$ ./make.sh deploy guided
 
-# On your first deployment with `./make.sh guided`, you can choose to save your AWS account information in a local file. If you do so, you can just use './make.sh' in the future
 ```
 
-## Development
+### Deploy locally
 
-When developing, I tend to deploy the backend to my AWS account and use node's http-server to quickly spin up the frontend locally.
+For developing and debugging purposes, you can spin up the full stack locally.
 
-Sometimes, you only want to update the backend / the frontend. Use `./make.sh frontend` to only rebuild the frontend and `./make.sh backend` to only update the backend. 
+```bash
+# run a local dynamodb
+$ docker-compose -f test/docker-compose-dynamodb.yml up -d
+
+# run the backend locally and build frontend
+$ ./make.sh local
+
+# run frontend server
+$ http-server dist
+
+```
 ## License
 
 MIT
