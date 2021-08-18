@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,7 +37,17 @@ func StartLambda(methods MethodHandlers) {
 	if err != nil {
 		return
 	}
-	DynamoClient = dynamodb.New(awsSession)
+
+	_, isLocal := os.LookupEnv("AWS_SAM_LOCAL")
+
+	config := aws.NewConfig().WithRegion("eu-central-1")
+
+	if isLocal {
+		config.Endpoint = aws.String("http://dynamodb:8000")
+	}
+	fmt.Println("test this prints")
+	DynamoClient = dynamodb.New(awsSession, config)
+
 	lambda.Start(handler)
 }
 
