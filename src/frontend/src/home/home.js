@@ -206,9 +206,21 @@ export default {
         createRoomAndRedirect: function(roomType, data) {
             MicroModal.close('modal-1');
             MicroModal.show('loading-modal');
-            u.doPostRequest("/rooms?type=" + roomType, data, function (response) {
-                window.location.href = "/game?id=" + response;
-            });
+            u.doPostRequest("/rooms?type=" + roomType, data, function (text) {
+                window.location.href = "/game?id=" + text;
+            }, function(errorText) {
+                console.log(errorText);
+                GuessrHome.showCreateErrorMsg({"text": errorText})
+            }, 200);
+        },
+
+        showCreateErrorMsg: function (error) {
+            let text = error["text"];
+            console.log("Got error");
+            console.log(error);
+            MicroModal.close('loading-modal');
+            MicroModal.show('error-modal');
+            u.byId("create-game-error-text").innerText = text;
         },
 
         initSearch: function () {

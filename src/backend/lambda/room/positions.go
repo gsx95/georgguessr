@@ -133,6 +133,10 @@ func getAdminFeatureForCity(city, country string) (*geojson.Feature, error) {
 		}
 	}
 
+	if adminFeature == nil {
+		return nil, errors.New("could not get boundary of place " + city + " - " + country)
+	}
+
 	return adminFeature, nil
 }
 

@@ -207,7 +207,9 @@ export default {
                             "lng": GuessrGame.guessPos.lng()
                         }
                     }, function (resp) {
-                    });
+                    }, function (error) {
+                        console.log("Got error " + error)
+                    }, 200);
                 }
                 distances = [{"name": "You", "distance": meters}];
             }
@@ -406,7 +408,10 @@ export default {
         startGame: function () {
             GuessrGame.checkName(function () {
                 GuessrGame.playerName = u.byId("player-name-input").value;
-                u.doPostRequest("/game/players/" + GuessrGame.gameID + "/" + GuessrGame.playerName);
+                u.doPostRequest("/game/players/" + GuessrGame.gameID + "/" + GuessrGame.playerName, null,
+                    function (resp) { }, function (err) {
+                        console.log("Got error " + err)
+                    }, 200);
                 u.byId("insert-player-name-overlay").style.display = "none";
                 u.byId("insert-player-name-container").style.display = "none";
                 GuessrGame.timerStopped = false;

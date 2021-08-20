@@ -22,11 +22,11 @@ type RoomWithPlaces struct {
 	} `json:"places"`
 }
 
-func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
+func CreateRoomWithPredefinedArea(reqBody string) (string, error, int) {
 	room := RoomWithPredefinedArea{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err
+		return "", err, 400
 	}
 
 	country := room.Country
@@ -46,11 +46,11 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 	return createRoom(&room.Room)
 }
 
-func CreateRoomWithCustomAreas(reqBody string) (string, error) {
+func CreateRoomWithCustomAreas(reqBody string) (string, error, int) {
 	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err
+		return "", err, 400
 	}
 
 	positions := Positions{}
@@ -72,24 +72,34 @@ func CreateRoomWithCustomAreas(reqBody string) (string, error) {
 	return createRoom(&room)
 }
 
-func CreateRoomWithPlaces(reqBody string) (string, error) {
+func CreateRoomWithPlaces(reqBody string) (string, error, int) {
 	room := RoomWithPlaces{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err
+		return "", err, 400
 	}
 
 	positions := Positions{}
+
+	createErrors := map[string]bool{}
 
 	for i := 0; i < room.Rounds + 10; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
 		point, err := RandomPosForCity(&City{Name: place.Name, Country: place.Country})
 		if err != nil {
-			i--
 			fmt.Println(err)
+			createErrors[err.Error()] = true
 			continue
 		}
 		positions.Pos = append(positions.Pos, NewRoundPos(i, point.Lat(), point.Lon()))
+	}
+
+	if len(positions.Pos) < room.Rounds {
+		msgs := ""
+		for errMsg := range createErrors {
+			msgs += errMsg + ";"
+		}
+		return "", errors.New("Got errors while creating room: " + msgs), 500
 	}
 
 	streetViews := GetStreetviewPositions(positions, room.Rounds)
@@ -97,11 +107,11 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 	return createRoom(&room.Room)
 }
 
-func CreateRoomUnlimited(reqBody string) (string, error) {
+func CreateRoomUnlimited(reqBody string) (string, error, int) {
 	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err
+		return "", err, 400
 	}
 
 	positions := Positions{}
@@ -131,21 +141,21 @@ func addStreetViewToRoom(room *pkg.Room, streetViews StreetViewIDs) {
 	}
 }
 
-func createRoom(room *pkg.Room) (string, error) {
-	room, err := checkRoomAttributes(room)
+func createRoom(room *pkg.Room) (string, error, int) {
+	room, err, status := checkRoomAttributes(room)
 	if err != nil {
-		return "", err
+		return "", err, status
 	}
 	err = writeRoomToDB(*room)
 	if err != nil {
-		return "", err
+		return "", err, 500
 	}
-	return room.ID, nil
+	return room.ID, nil, 200
 }
 
-func checkRoomAttributes(room *pkg.Room) (*pkg.Room, error) {
+func checkRoomAttributes(room *pkg.Room) (*pkg.Room, error, int) {
 	if room.MaxPlayers == 0 {
-		return nil, errors.New("zero players not possible")
+		return nil, errors.New("zero players not possible"), 400
 	}
 
 	id := pkg.RandomRoomID()
@@ -156,5 +166,5 @@ func checkRoomAttributes(room *pkg.Room) (*pkg.Room, error) {
 	room.Players = []string{}
 	room.Status = "waiting"
 
-	return room, nil
+	return room, nil, 200
 }

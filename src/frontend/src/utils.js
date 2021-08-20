@@ -75,22 +75,7 @@ function doGetRequestJSON(requestPath, onload, onerror, always) {
         .finally(always);
 }
 
-function doPostRequestString(requestPath, data, callback) {
-    fetch(API_ENDPOINT + requestPath, {
-        method: 'POST',
-        headers: {
-            'x-api-key': API_KEY,
-        },
-        body: data,
-    })
-        .then((resp) => resp.text())
-        .then(callback)
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-}
-
-function doPostRequest(requestPath, data, callback) {
+function doPostRequest(requestPath, data, callback, errorCallback, expectedStatus) {
     fetch(API_ENDPOINT + requestPath, {
         method: 'POST',
         headers: {
@@ -99,10 +84,17 @@ function doPostRequest(requestPath, data, callback) {
         },
         body: JSON.stringify(data),
     })
-        .then((resp) => resp.text())
-        .then(callback)
+        .then((resp) => {
+            console.log("check if " + resp.status + " is equal to " + expectedStatus)
+            if(resp.status !== expectedStatus) {
+                resp.text().then(errorCallback)
+            }else {
+                resp.text().then(callback)
+            }
+        })
         .catch((error) => {
-            console.error('Error:', error);
+            console.log('Error:', error);
+            errorCallback("Connection error " + error)
         });
 }
 export default {
@@ -114,6 +106,5 @@ export default {
     getRequestParameter,
     doGetRequest,
     doGetRequestJSON,
-    doPostRequestString,
     doPostRequest
 }

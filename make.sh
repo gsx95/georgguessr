@@ -95,8 +95,12 @@ build_frontend() {
 ###################################
 if [[ ${local} != "local" ]]; then
     echo "deploying remote"
-    build_and_deploy_backend
-    build_frontend
+    if [[ ${mode} != "frontend" ]]; then
+        build_and_deploy_backend
+    fi
+    if [[ ${mode} != "backend" ]]; then
+        build_frontend
+    fi
 else
     echo "running locally"
     build_frontend "$local"
