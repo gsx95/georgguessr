@@ -18,9 +18,15 @@
             var round = roundPos.r;
             var pos = roundPos.p;
             getStreetViewForPos(svService, round, pos.lat, pos.lng, 0, function (round, panoId, latLng) {
-                console.log("got pano id for " + round + " --> " + panoId);
-                document.getElementById("streetview-data").innerText += "," + JSON.stringify({r: round, id: panoId, location: latLng});
-                readyCount++;
+                if(panoId == null) {
+                    console.log("got no pano id for " + round)
+                    document.getElementById("streetview-data").innerText += "," + JSON.stringify({r: round});
+                    readyCount++;
+                } else {
+                    console.log("got pano id for " + round + " --> " + panoId);
+                    document.getElementById("streetview-data").innerText += "," + JSON.stringify({r: round, id: panoId, location: latLng});
+                    readyCount++;
+                }
             });
         }
         function waitForProcessToFinish() {
@@ -36,11 +42,13 @@
         var searchRad = [50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000];
         svService.getPanorama({
             location: {"lat": lat, "lng": lon},
-            "radius": searchRad[count]
+            "radius": searchRad[count],
+            "source": "outdoor"
         }, function (data, status) {
-            if (status !== "OK") {
+            console.log(data);
+            if (status !== "OK" || data.links.length != 2) {
                 if (count + 1 === searchRad.length) {
-                    return null;
+                    return callback(round, null, null);
                 }
                 return getStreetViewForPos(svService, round, lat, lon, count + 1, callback)
             }

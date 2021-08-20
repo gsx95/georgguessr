@@ -34,13 +34,13 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error) {
 
 	positions := Positions{}
 
-	randomPositions, err := RandomPositionByArea(country, cities, room.Rounds)
+	randomPositions, err := RandomPositionByArea(country, cities, room.Rounds + 10)
 
 	for i, pos := range randomPositions  {
 		positions.Pos = append(positions.Pos, NewRoundPos(i, pos.Lat(), pos.Lon()))
 	}
 
-	streetViews := GetStreetviewPositions(positions)
+	streetViews := GetStreetviewPositions(positions, room.Rounds)
 	addStreetViewToRoom(&room.Room, streetViews)
 
 	return createRoom(&room.Room)
@@ -55,7 +55,7 @@ func CreateRoomWithCustomAreas(reqBody string) (string, error) {
 
 	positions := Positions{}
 
-	for i := 0; i < room.Rounds; i++ {
+	for i := 0; i < room.Rounds + 10; i++ {
 		area := room.Areas[rand.Intn(len(room.Areas))]
 		lat, lon, err := RandomPositionInArea(area)
 		if err != nil {
@@ -66,7 +66,7 @@ func CreateRoomWithCustomAreas(reqBody string) (string, error) {
 		positions.Pos = append(positions.Pos, NewRoundPos(i, lat, lon))
 	}
 
-	streetViews := GetStreetviewPositions(positions)
+	streetViews := GetStreetviewPositions(positions, room.Rounds)
 	addStreetViewToRoom(&room, streetViews)
 
 	return createRoom(&room)
@@ -81,7 +81,7 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 
 	positions := Positions{}
 
-	for i := 0; i < room.Rounds; i++ {
+	for i := 0; i < room.Rounds + 10; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
 		point, err := RandomPosForCity(&City{Name: place.Name, Country: place.Country})
 		if err != nil {
@@ -92,7 +92,7 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 		positions.Pos = append(positions.Pos, NewRoundPos(i, point.Lat(), point.Lon()))
 	}
 
-	streetViews := GetStreetviewPositions(positions)
+	streetViews := GetStreetviewPositions(positions, room.Rounds)
 	addStreetViewToRoom(&room.Room, streetViews)
 	return createRoom(&room.Room)
 }
@@ -106,12 +106,12 @@ func CreateRoomUnlimited(reqBody string) (string, error) {
 
 	positions := Positions{}
 
-	for i := 0; i < room.Rounds; i++ {
+	for i := 0; i < room.Rounds + 10; i++ {
 		lat, lon := RandomPosition()
 		positions.Pos = append(positions.Pos, NewRoundPos(i, lat, lon))
 	}
 
-	streetViews := GetStreetviewPositions(positions)
+	streetViews := GetStreetviewPositions(positions, room.Rounds)
 	addStreetViewToRoom(&room, streetViews)
 
 	return createRoom(&room)

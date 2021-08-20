@@ -31,19 +31,26 @@ type Position struct {
 	Lng float64 `json:"lng"`
 }
 
-type StreetViewIDs struct {
-	Panos []struct {
-		Round  int    `json:"r"`
-		PanoID string `json:"id"`
-		Pos Position `json:"location"`
-	} `json:"panos"`
+type pano struct {
+	Round  int    `json:"r"`
+	PanoID string `json:"id"`
+	Pos Position `json:"location"`
+
 }
 
-func GetStreetviewPositions(positions Positions) StreetViewIDs {
+type StreetViewIDs struct {
+	Panos []pano `json:"panos"`
+}
+
+
+func GetStreetviewPositions(positions Positions, num int) StreetViewIDs {
 	posJson, err := json.Marshal(positions)
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println(string(posJson))
+
 	url := fmt.Sprintf(`file:///opt/bin/index.html?pos=%s`, string(posJson))
 
 	app := "/opt/bin/phantomjs"
@@ -56,7 +63,26 @@ func GetStreetviewPositions(positions Positions) StreetViewIDs {
 		panic(err)
 	}
 
-	data := StreetViewIDs{}
-	json.Unmarshal(stdout, &data)
-	return data
+	allStreetViews := StreetViewIDs{}
+	json.Unmarshal(stdout, &allStreetViews)
+	okStreetViews := StreetViewIDs{
+		Panos: []pano{},
+	}
+
+	count := 0
+
+	for _, generatedSV := range allStreetViews.Panos {
+		if generatedSV.PanoID != "" {
+			okStreetViews.Panos = append(okStreetViews.Panos, pano{
+				Round: generatedSV.Round,
+				Pos: generatedSV.Pos,
+				PanoID: generatedSV.PanoID,
+			})
+			count++
+		}
+		if count == num {
+			break
+		}
+	}
+	return okStreetViews
 }
