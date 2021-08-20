@@ -21,7 +21,7 @@
 
 ## Disclaimer
 
-This project is work in progress, many things are not working in some circumstances and some features are broken completely. See <a ref="https://github.com/gsx95/georgguessr/issues">Issues.</a>
+This project is work in progress, many things are not working in some circumstances and some features are broken completely. See <a href="https://github.com/gsx95/georgguessr/issues">Issues.</a>
 
 ## Key Features
 
