@@ -19,6 +19,10 @@
 <img src="./doc/demo.gif" alt="Demo" width="600" style="border-radius:5px"/>
 </p>
 
+## Disclaimer
+
+This project is work in progress, many things are not working in some circumstances and some features are broken completely. See <a ref="https://github.com/gsx95/georgguessr/issues">Issues.</a>
+
 ## Key Features
 
 * Play Alone or with friends
