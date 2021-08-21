@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
+	"github.com/paulmach/orb/geojson"
 	"math/rand"
 )
 
@@ -16,10 +17,13 @@ type RoomWithPredefinedArea struct {
 
 type RoomWithPlaces struct {
 	pkg.Room
-	Places [] struct {
-		Name    string `json:"name"`
-		Country string `json:"country"`
-	} `json:"places"`
+	Places []Place `json:"places"`
+}
+
+type Place struct {
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	Id		int
 }
 
 func CreateRoomWithPredefinedArea(reqBody string) (string, error, int) {
@@ -83,9 +87,20 @@ func CreateRoomWithPlaces(reqBody string) (string, error, int) {
 
 	createErrors := map[string]bool{}
 
+	placeFeatures := make(map[int]*geojson.Feature, len(room.Places))
+
+	for i, place := range room.Places {
+		feature, err := getBestFittingGeoJSONFeature(place.Name, place.Country)
+		if err != nil {
+			return "", err, 500
+		}
+		place.Id = i
+		placeFeatures[place.Id] = feature
+	}
+
 	for i := 0; i < room.Rounds + 10; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
-		point, err := RandomPosForCity(&City{Name: place.Name, Country: place.Country})
+		point, err := RandomPosForCity(placeFeatures[place.Id])
 		if err != nil {
 			fmt.Println(err)
 			createErrors[err.Error()] = true

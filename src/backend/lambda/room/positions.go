@@ -8,9 +8,9 @@ import (
 	"github.com/knakk/sparql"
 	"github.com/mmcloughlin/spherand"
 	"github.com/paulmach/orb"
+	"github.com/paulmach/orb/geo"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/planar"
-	"github.com/paulmach/orb/geo"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -36,9 +36,19 @@ type CountryName struct {
 }
 
 type City struct {
+	ID      string
 	Name    string
 	Pop     int
 	Country string
+}
+
+func NewCity(name, country string, pop int) *City {
+	return &City{
+		Pop: pop,
+		Name: name,
+		Country: country,
+		ID: fmt.Sprintf("%s_%s_%d", name, country, pop),
+	}
 }
 
 //go:embed sparql/getCountryByCode.query
@@ -75,19 +85,14 @@ func RandomPositionByArea(country string, cities string, count int) (positions [
 	return getRandomPosByPop(minPopulation[cities], count)
 }
 
-func RandomPosForCity(city *City) (point *orb.Point, err error) {
-	feature, err := getBestFittingGeoJSONFeature(city.Name, city.Country)
-	if err != nil {
-		return nil, err
-	}
-
-	bbound := feature.BBox.Bound()
+func RandomPosForCity(feature *geojson.Feature) (point *orb.Point, err error) {
 
 	pointValid := false
+	box := feature.BBox.Bound()
 
 	for !pointValid {
-		lat := pkg.GetRandomFloat(bbound.Min.Lat(), bbound.Max.Lat())
-		lon := pkg.GetRandomFloat(bbound.Min.Lon(), bbound.Max.Lon())
+		lat := pkg.GetRandomFloat(box.Min.Lat(), box.Max.Lat())
+		lon := pkg.GetRandomFloat(box.Min.Lon(), box.Max.Lon())
 		point = &orb.Point{lon, lat}
 		pointValid = isPointInsidePolygon(feature, point)
 	}
@@ -196,15 +201,12 @@ func getRandomPosByCountryAndPop(minPop int, country string, count int) (positio
 	var cities []*City
 	bindings := results.Results.Bindings
 	for _, b := range bindings {
-		countryMaxCityPop, err := strconv.Atoi(b["maxPopulation"].Value)
+		cityPop, err := strconv.Atoi(b["maxPopulation"].Value)
 		if err != nil {
 			log.Fatal(err)
 		}
-		if countryMaxCityPop > minPop {
-			cities = append(cities, &City{
-				Name:    b["cityLabel"].Value,
-				Country: country,
-			})
+		if cityPop > minPop {
+			cities = append(cities, NewCity(b["cityLabel"].Value, country, cityPop))
 		}
 	}
 
@@ -222,24 +224,44 @@ func getRandomPosByPop(minPop int, count int) (positions []*orb.Point, err error
 	for _, result := range res {
 		cityName := result["cityLabel"].Value
 		countryName := result["countryLabel"].Value
-		possibleCities = append(possibleCities, &City{
-			Name:    cityName,
-			Country: countryName,
-		})
+		pop, err := strconv.Atoi(result["population"].Value)
+		if err != nil {
+			log.Fatal(err)
+		}
+		possibleCities = append(possibleCities, NewCity(cityName, countryName, pop))
 	}
 	return randomPosForCities(possibleCities, count)
 }
 
 func randomPosForCities(possibleCities []*City, count int) (positions []*orb.Point, err error) {
+
+	var cities []*City
+	cityFeatures := make(map[string]*geojson.Feature, 0)
+
 	for i := 0; i < count; i++ {
 		randomCity := possibleCities[pkg.GetRandom(0, len(possibleCities)-1)]
-		point, err := RandomPosForCity(randomCity)
+		cities = append(cities, randomCity)
+	}
+
+	for _, city := range cities {
+		if _, exists := cityFeatures[city.ID]; !exists {
+			feature, err := getBestFittingGeoJSONFeature(city.Name, city.Country)
+			if err != nil {
+				return nil, err
+			}
+			cityFeatures[city.ID] = feature
+		}
+	}
+
+	for i := range cities {
+		point, err := RandomPosForCity(cityFeatures[cities[i].ID])
 		if err != nil {
 			fmt.Println(err)
 			i--
 		}
 		positions = append(positions, point)
 	}
+
 	if len(positions) != count {
 		return nil, errors.New(fmt.Sprintf("could not create %d rounds, created %d", count, len(positions)))
 	}
