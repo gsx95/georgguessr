@@ -10,9 +10,11 @@ import (
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/planar"
+	"github.com/paulmach/orb/geo"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -74,7 +76,7 @@ func RandomPositionByArea(country string, cities string, count int) (positions [
 }
 
 func RandomPosForCity(city *City) (point *orb.Point, err error) {
-	feature, err := getAdminFeatureForCity(city.Name, city.Country)
+	feature, err := getBestFittingGeoJSONFeature(city.Name, city.Country)
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +95,7 @@ func RandomPosForCity(city *City) (point *orb.Point, err error) {
 	return point, nil
 }
 
-// TODO: this fails for places that are not "administrative" features, e.g. the village 'Afrikaskop'
-// include all valid feature types of openstreetmaps, see branch "single-point-places"
-func getAdminFeatureForCity(city, country string) (*geojson.Feature, error) {
+func getBestFittingGeoJSONFeature(city, country string) (*geojson.Feature, error) {
 	fmt.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
 	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)
 	if err != nil {
@@ -119,49 +119,55 @@ func getAdminFeatureForCity(city, country string) (*geojson.Feature, error) {
 		return nil, err
 	}
 
-	var adminFeature *geojson.Feature
-	adminImportance := 0.0
+	var placeFeatures []*geojson.Feature
 
 	for _, feature := range featureCollection.Features {
-		featureType := strings.ToLower(feature.Properties.MustString("type"))
-		if featureType == "administrative" {
-			importance := feature.Properties.MustFloat64("importance", 0)
-			if importance >= adminImportance {
-				adminFeature = feature
-				adminImportance = importance
-			}
+		featureCategory := strings.ToLower(feature.Properties.MustString("category"))
+		if featureCategory == "place" {
+			placeFeatures = append(placeFeatures, feature)
 		}
 	}
 
-	if adminFeature == nil {
-		return nil, errors.New("could not get boundary of place " + city + " - " + country)
+	// if there is no "place", use all types of nodes as fallback
+	if len(placeFeatures) == 0 {
+		placeFeatures = featureCollection.Features
 	}
 
-	return adminFeature, nil
+	sort.Slice(placeFeatures, func(f1, f2 int) bool {
+		imp1 := placeFeatures[f1].Properties.MustFloat64("importance", 0)
+		imp2 := placeFeatures[f2].Properties.MustFloat64("importance", 0)
+		return imp1 > imp2
+	})
+
+	return placeFeatures[0], nil
 }
 
 func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point) bool {
 
-	var polygon orb.Polygon
-
 	// if its a polygon, we only care for the polygon with more boundary nodes
-	multiPoly, isMulti := feature.Geometry.(orb.MultiPolygon)
-	if isMulti {
+	if multiPoly, isMulti := feature.Geometry.(orb.MultiPolygon); isMulti {
 		polyLen := 0
+		var polygon orb.Polygon
 		for _, pol := range multiPoly {
 			if len(pol[0]) >= polyLen {
 				polyLen = len(pol[0])
 				polygon = pol
 			}
 		}
-	} else {
-		polygon, _ = feature.Geometry.(orb.Polygon)
+		return planar.PolygonContains(polygon, *point)
 	}
 
-	if planar.PolygonContains(polygon, *point) {
-		return true
+	// if its one polygon, check if the generated point is inside of it
+	if polygon, isPolygon := feature.Geometry.(orb.Polygon); isPolygon {
+		return planar.PolygonContains(polygon, *point)
 	}
-	return false
+
+	// if its a point, check if the generated point lies within 5.000 meters
+	if p, isPoint := feature.Geometry.(orb.Point); isPoint {
+		return geo.Distance(p, *point) < 5000
+	}
+
+	panic("geometry of feature is neither multipolygon nor polygon nor point")
 }
 
 func pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
