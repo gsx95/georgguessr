@@ -166,14 +166,6 @@ Resources:
             RestApiId: !Ref GuessrAPI
             Auth:
               ApiKeyRequired: true
-        PostPanoID:
-          Type: Api
-          Properties:
-            Path: /game/pano/{gameID}/{round}
-            Method: POST
-            RestApiId: !Ref GuessrAPI
-            Auth:
-              ApiKeyRequired: true
         PostPlayer:
           Type: Api
           Properties:

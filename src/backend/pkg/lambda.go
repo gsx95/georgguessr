@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"errors"
+	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,7 +13,7 @@ import (
 	"time"
 )
 
-type HandlerFunc func(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse
+type HandlerFunc func(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse
 
 type MethodHandler struct {
 	GET  HandlerFunc
@@ -34,7 +36,7 @@ func StartLambda(methods MethodHandlers) {
 		Region: aws.String(region)},
 	)
 	if err != nil {
-		return
+		panic(fmt.Sprintf("Error creating aws session: %v", err))
 	}
 
 	_, isLocal := os.LookupEnv("AWS_SAM_LOCAL")
@@ -49,37 +51,28 @@ func StartLambda(methods MethodHandlers) {
 	lambda.Start(handler)
 }
 
-func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	handler, validPath := methodHandlers[request.Resource]
+func handler(request events.APIGatewayProxyRequest) (response events.APIGatewayProxyResponse, execError error) {
+	handler, _ := methodHandlers[request.Resource]
 
-	if !validPath {
-		return GenerateResponse("operation not supported", 400), nil
-	}
+	defer func() {
+		if r := recover(); r != nil {
+			switch err := r.(type) {
+			case error:
+				response = *internalErrorResponse(err)
+			case string:
+				response = *internalErrorResponse(errors.New(err))
+			default:
+				response = *internalErrorResponse(errors.New(fmt.Sprintf("%v", err)))
+			}
+		}
+	}()
 
 	if request.HTTPMethod == "GET" {
-		if handler.GET == nil {
-			return GenerateResponse("GET method not supported", 400), nil
-		}
-		return handler.GET(request), nil
+		response = *handler.GET(request)
+	}else if request.HTTPMethod == "POST" {
+		response = *handler.POST(request)
+	} else {
+		response = *notFoundResponse("method not supported.")
 	}
-
-	if request.HTTPMethod == "POST" {
-		if handler.POST == nil {
-			return GenerateResponse("POST method not supported", 400), nil
-		}
-		return handler.POST(request), nil
-	}
-
-	return GenerateResponse("method not supported", 400), nil
-}
-
-func GenerateResponse(body string, status int) events.APIGatewayProxyResponse {
-	return events.APIGatewayProxyResponse{
-		Body:       body,
-		StatusCode: status,
-		Headers: map[string]string{
-			"Access-Control-Allow-Origin":      "*",
-			"Access-Control-Allow-Credentials": "true",
-		},
-	}
+	return
 }

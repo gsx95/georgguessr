@@ -2,7 +2,6 @@ package main
 
 import (
 	_ "embed"
-	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/knakk/sparql"
@@ -35,15 +34,19 @@ type CountryName struct {
 	Code string `json:"code"`
 }
 
-type City struct {
+type Place struct {
+	Name    string `json:"name"`
+	Country string `json:"country"`
 	ID      string
-	Name    string
 	Pop     int
-	Country string
 }
 
-func NewCity(name, country string, pop int) *City {
-	return &City{
+func (p *Place) getID() string {
+	return fmt.Sprintf("%s_%s_%d", p.Name, p.Country, p.Pop)
+}
+
+func NewCity(name, country string, pop int) *Place {
+	return &Place{
 		Pop: pop,
 		Name: name,
 		Country: country,
@@ -63,7 +66,8 @@ func RandomPosition() (lat, lon float64) {
 	return
 }
 
-func RandomPositionInArea(area []pkg.GeoPoint) (lat, lon float64, err error) {
+
+func RandomPositionInArea(area []pkg.GeoPoint) (lat, lon float64) {
 	polygon := pointsToPolygon(area)
 	pointValid := false
 	var point orb.Point
@@ -74,17 +78,62 @@ func RandomPositionInArea(area []pkg.GeoPoint) (lat, lon float64, err error) {
 		point = orb.Point{lon, lat}
 		pointValid = planar.PolygonContains(polygon, point)
 	}
-	return point.Lat(), point.Lon(), nil
+	return point.Lat(), point.Lon()
 }
 
+// Returns error if no valid point could be generated
 func RandomPositionByArea(country string, cities string, count int) (positions []*orb.Point, err error) {
 
+	minPop := minPopulation[cities]
 	if country != "all" {
-		return getRandomPosByCountryAndPop(minPopulation[cities], country, count)
+		countryData, err := queryWikiData(fmt.Sprintf(getCountryByCode, strings.ToUpper(country)))
+		if err != nil {
+			return nil, err
+		}
+		countryEntity := countryData.Results.Bindings[0]["country"].Value
+		entityParts := strings.Split(countryEntity, "/")
+		countryID := entityParts[len(entityParts)-1]
+
+		query := fmt.Sprintf(getCityByCountryAndPop, countryID, minPop, time.Now().String())
+
+		results, err := queryWikiData(query)
+		if err != nil {
+			return nil, err
+		}
+		var citiesSlice []*Place
+		bindings := results.Results.Bindings
+		for _, b := range bindings {
+			cityPop, err := strconv.Atoi(b["maxPopulation"].Value)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if cityPop > minPop {
+				citiesSlice = append(citiesSlice, NewCity(b["cityLabel"].Value, country, cityPop))
+			}
+		}
+		return randomPosForCities(citiesSlice, count)
 	}
-	return getRandomPosByPop(minPopulation[cities], count)
+
+	query := fmt.Sprintf(getRandomCityForPop, minPop, time.Now().String())
+	results, err := queryWikiData(query)
+	if err != nil {
+		return nil, err
+	}
+	res := results.Results.Bindings
+	var possibleCities []*Place
+	for _, result := range res {
+		cityName := result["cityLabel"].Value
+		countryName := result["countryLabel"].Value
+		pop, err := strconv.Atoi(result["population"].Value)
+		if err != nil {
+			continue
+		}
+		possibleCities = append(possibleCities, NewCity(cityName, countryName, pop))
+	}
+	return randomPosForCities(possibleCities, count)
 }
 
+// Returns error if no valid point could be generated
 func RandomPosForCity(feature *geojson.Feature) (point *orb.Point, err error) {
 
 	pointValid := false
@@ -94,7 +143,10 @@ func RandomPosForCity(feature *geojson.Feature) (point *orb.Point, err error) {
 		lat := pkg.GetRandomFloat(box.Min.Lat(), box.Max.Lat())
 		lon := pkg.GetRandomFloat(box.Min.Lon(), box.Max.Lon())
 		point = &orb.Point{lon, lat}
-		pointValid = isPointInsidePolygon(feature, point)
+		pointValid, err = isPointInsidePolygon(feature, point)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	return point, nil
@@ -104,24 +156,24 @@ func getBestFittingGeoJSONFeature(city, country string) (*geojson.Feature, error
 	fmt.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
 	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalErr(fmt.Sprintf("Error getting geojson featuers from openstreemmaps: %v", err))
 	}
 
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalErr(fmt.Sprintf("Error getting geojson featuers from openstreemmaps: %v", err))
 	}
 
 	defer resp.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalErr(fmt.Sprintf("Error reading geojson response from openstreemmaps: %v", err))
 	}
 
 	featureCollection, err := geojson.UnmarshalFeatureCollection(bodyBytes)
 	if err != nil {
-		return nil, err
+		return nil, pkg.InternalErr(fmt.Sprintf("Error unmarshalling geojson response from openstreemmaps: %v %v", string(bodyBytes), err))
 	}
 
 	var placeFeatures []*geojson.Feature
@@ -147,7 +199,7 @@ func getBestFittingGeoJSONFeature(city, country string) (*geojson.Feature, error
 	return placeFeatures[0], nil
 }
 
-func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point) bool {
+func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point) (bool, error) {
 
 	// if its a polygon, we only care for the polygon with more boundary nodes
 	if multiPoly, isMulti := feature.Geometry.(orb.MultiPolygon); isMulti {
@@ -159,20 +211,20 @@ func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point) bool {
 				polygon = pol
 			}
 		}
-		return planar.PolygonContains(polygon, *point)
+		return planar.PolygonContains(polygon, *point), nil
 	}
 
 	// if its one polygon, check if the generated point is inside of it
 	if polygon, isPolygon := feature.Geometry.(orb.Polygon); isPolygon {
-		return planar.PolygonContains(polygon, *point)
+		return planar.PolygonContains(polygon, *point), nil
 	}
 
 	// if its a point, check if the generated point lies within 5.000 meters
 	if p, isPoint := feature.Geometry.(orb.Point); isPoint {
-		return geo.Distance(p, *point) < 5000
+		return geo.Distance(p, *point) < 5000, nil
 	}
 
-	panic("geometry of feature is neither multipolygon nor polygon nor point")
+	return false, pkg.InternalErr("geometry of feature is neither multipolygon nor polygon nor point")
 }
 
 func pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
@@ -187,55 +239,9 @@ func pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
 	return []orb.Ring{ring}
 }
 
-func getRandomPosByCountryAndPop(minPop int, country string, count int) (positions []*orb.Point, err error) {
-	fmt.Printf("get by country and pop: %s, %d\n", country, minPop)
+func randomPosForCities(possibleCities []*Place, count int) (positions []*orb.Point, err error) {
 
-	countryData := queryWikiData(fmt.Sprintf(getCountryByCode, strings.ToUpper(country)))
-	countryEntity := countryData.Results.Bindings[0]["country"].Value
-	entityParts := strings.Split(countryEntity, "/")
-	countryID := entityParts[len(entityParts)-1]
-
-	query := fmt.Sprintf(getCityByCountryAndPop, countryID, minPop, time.Now().String())
-
-	results := queryWikiData(query)
-	var cities []*City
-	bindings := results.Results.Bindings
-	for _, b := range bindings {
-		cityPop, err := strconv.Atoi(b["maxPopulation"].Value)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if cityPop > minPop {
-			cities = append(cities, NewCity(b["cityLabel"].Value, country, cityPop))
-		}
-	}
-
-	return randomPosForCities(cities, count)
-}
-
-func getRandomPosByPop(minPop int, count int) (positions []*orb.Point, err error) {
-	query := fmt.Sprintf(getRandomCityForPop,
-		minPop, time.Now().String())
-
-	results := queryWikiData(query)
-
-	res := results.Results.Bindings
-	var possibleCities []*City
-	for _, result := range res {
-		cityName := result["cityLabel"].Value
-		countryName := result["countryLabel"].Value
-		pop, err := strconv.Atoi(result["population"].Value)
-		if err != nil {
-			log.Fatal(err)
-		}
-		possibleCities = append(possibleCities, NewCity(cityName, countryName, pop))
-	}
-	return randomPosForCities(possibleCities, count)
-}
-
-func randomPosForCities(possibleCities []*City, count int) (positions []*orb.Point, err error) {
-
-	var cities []*City
+	var cities []*Place
 	cityFeatures := make(map[string]*geojson.Feature, 0)
 
 	for i := 0; i < count; i++ {
@@ -247,10 +253,15 @@ func randomPosForCities(possibleCities []*City, count int) (positions []*orb.Poi
 		if _, exists := cityFeatures[city.ID]; !exists {
 			feature, err := getBestFittingGeoJSONFeature(city.Name, city.Country)
 			if err != nil {
-				return nil, err
+				fmt.Println(err)
+				continue
 			}
 			cityFeatures[city.ID] = feature
 		}
+	}
+
+	if len(cityFeatures) == 0 {
+		return nil, pkg.InternalErr(fmt.Sprintf("Could not get feature for any provided place %v", cities))
 	}
 
 	for i := range cities {
@@ -263,21 +274,21 @@ func randomPosForCities(possibleCities []*City, count int) (positions []*orb.Poi
 	}
 
 	if len(positions) != count {
-		return nil, errors.New(fmt.Sprintf("could not create %d rounds, created %d", count, len(positions)))
+		return nil, pkg.InternalErr(fmt.Sprintf("could not create %d rounds, created %d", count, len(positions)))
 	}
 	return
 }
 
-func queryWikiData(query string) *sparql.Results {
+func queryWikiData(query string) (*sparql.Results, error) {
 	fmt.Println("Wikidata query: " + query)
 	repo, err := sparql.NewRepo(wikiDataUrl)
 	if err != nil {
-		log.Fatal(err)
+		return nil, pkg.InternalErr(err.Error())
 	}
 	results, err := repo.Query(query)
 	if err != nil {
-		log.Fatal(err)
+		return nil, pkg.InternalErr(err.Error())
 	}
 	fmt.Printf("Wikidata results: %v\n", results.Results.Bindings)
-	return results
+	return results, nil
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,7 +29,7 @@ func writeRoomToDB(room pkg.Room) error {
 
 	av, err := pkg.Encoder.Encode(room)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error marshalling room: %v", err))
+		return pkg.InternalErr(fmt.Sprintf("Error marshalling room: %v", err))
 	}
 
 	input := &dynamodb.PutItemInput{
@@ -40,7 +39,7 @@ func writeRoomToDB(room pkg.Room) error {
 
 	_, err = pkg.DynamoClient.PutItem(input)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error putting room: %v", err))
+		pkg.InternalErr(fmt.Sprintf("Error putting room: %v", err))
 	}
 	return nil
 }

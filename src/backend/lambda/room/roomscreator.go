@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/paulmach/orb/geojson"
@@ -20,17 +19,11 @@ type RoomWithPlaces struct {
 	Places []Place `json:"places"`
 }
 
-type Place struct {
-	Name    string `json:"name"`
-	Country string `json:"country"`
-	Id		int
-}
-
-func CreateRoomWithPredefinedArea(reqBody string) (string, error, int) {
+func CreateRoomWithPredefinedArea(reqBody string) (string, error){
 	room := RoomWithPredefinedArea{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err, 400
+		return "", pkg.InternalErr(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
 	country := room.Country
@@ -39,68 +32,75 @@ func CreateRoomWithPredefinedArea(reqBody string) (string, error, int) {
 	positions := Positions{}
 
 	randomPositions, err := RandomPositionByArea(country, cities, room.Rounds + 10)
+	if err != nil {
+		return "", pkg.InternalErr(fmt.Sprintf("No point could be generated: %v", err))
+	}
 
 	for i, pos := range randomPositions  {
 		positions.Pos = append(positions.Pos, NewRoundPos(i, pos.Lat(), pos.Lon()))
 	}
 
-	streetViews := GetStreetviewPositions(positions, room.Rounds)
-	addStreetViewToRoom(&room.Room, streetViews)
+	streetViews, err := GetStreetviewPositions(positions, room.Rounds)
+	if err != nil {
+		return "", err
+	}
+	addStreetViewToRoom(&room.Room, *streetViews)
 
 	return createRoom(&room.Room)
 }
 
-func CreateRoomWithCustomAreas(reqBody string) (string, error, int) {
+func CreateRoomWithCustomAreas(reqBody string) (string, error) {
 	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err, 400
+		panic(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
 	positions := Positions{}
 
 	for i := 0; i < room.Rounds + 10; i++ {
 		area := room.Areas[rand.Intn(len(room.Areas))]
-		lat, lon, err := RandomPositionInArea(area)
-		if err != nil {
-			i--
-			fmt.Println(err)
-			continue
-		}
+		lat, lon := RandomPositionInArea(area)
 		positions.Pos = append(positions.Pos, NewRoundPos(i, lat, lon))
 	}
 
-	streetViews := GetStreetviewPositions(positions, room.Rounds)
-	addStreetViewToRoom(&room, streetViews)
+	streetViews, err := GetStreetviewPositions(positions, room.Rounds)
+	if err != nil {
+		return "", err
+	}
+	addStreetViewToRoom(&room, *streetViews)
 
 	return createRoom(&room)
 }
 
-func CreateRoomWithPlaces(reqBody string) (string, error, int) {
+func CreateRoomWithPlaces(reqBody string) (string, error) {
 	room := RoomWithPlaces{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err, 400
+		panic(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
 	positions := Positions{}
 
 	createErrors := map[string]bool{}
 
-	placeFeatures := make(map[int]*geojson.Feature, len(room.Places))
+	placeFeatures := make(map[string]*geojson.Feature, len(room.Places))
 
-	for i, place := range room.Places {
+	for _, place := range room.Places {
 		feature, err := getBestFittingGeoJSONFeature(place.Name, place.Country)
 		if err != nil {
-			return "", err, 500
+			fmt.Println(err)
 		}
-		place.Id = i
-		placeFeatures[place.Id] = feature
+		placeFeatures[place.getID()] = feature
+	}
+
+	if len(placeFeatures) == 0{
+		return "", pkg.InternalErr(fmt.Sprintf("could not generate features for places %v", room.Places))
 	}
 
 	for i := 0; i < room.Rounds + 10; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
-		point, err := RandomPosForCity(placeFeatures[place.Id])
+		point, err := RandomPosForCity(placeFeatures[place.getID()])
 		if err != nil {
 			fmt.Println(err)
 			createErrors[err.Error()] = true
@@ -114,19 +114,22 @@ func CreateRoomWithPlaces(reqBody string) (string, error, int) {
 		for errMsg := range createErrors {
 			msgs += errMsg + ";"
 		}
-		return "", errors.New("Got errors while creating room: " + msgs), 500
+		return "", pkg.InternalErr(fmt.Sprintf("Got errors while creating room: %s", msgs))
 	}
 
-	streetViews := GetStreetviewPositions(positions, room.Rounds)
-	addStreetViewToRoom(&room.Room, streetViews)
+	streetViews, err := GetStreetviewPositions(positions, room.Rounds)
+	if err != nil {
+		return "", err
+	}
+	addStreetViewToRoom(&room.Room, *streetViews)
 	return createRoom(&room.Room)
 }
 
-func CreateRoomUnlimited(reqBody string) (string, error, int) {
+func CreateRoomUnlimited(reqBody string) (string, error) {
 	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", err, 400
+		return "", pkg.InternalErr(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
 	positions := Positions{}
@@ -136,8 +139,11 @@ func CreateRoomUnlimited(reqBody string) (string, error, int) {
 		positions.Pos = append(positions.Pos, NewRoundPos(i, lat, lon))
 	}
 
-	streetViews := GetStreetviewPositions(positions, room.Rounds)
-	addStreetViewToRoom(&room, streetViews)
+	streetViews, err := GetStreetviewPositions(positions, room.Rounds)
+	if err != nil {
+		return "", err
+	}
+	addStreetViewToRoom(&room, *streetViews)
 
 	return createRoom(&room)
 }
@@ -156,21 +162,18 @@ func addStreetViewToRoom(room *pkg.Room, streetViews StreetViewIDs) {
 	}
 }
 
-func createRoom(room *pkg.Room) (string, error, int) {
-	room, err, status := checkRoomAttributes(room)
+func createRoom(room *pkg.Room) (string, error) {
+	room, err := checkRoomAttributes(room)
 	if err != nil {
-		return "", err, status
+		return "", err
 	}
-	err = writeRoomToDB(*room)
-	if err != nil {
-		return "", err, 500
-	}
-	return room.ID, nil, 200
+	writeRoomToDB(*room)
+	return room.ID, nil
 }
 
-func checkRoomAttributes(room *pkg.Room) (*pkg.Room, error, int) {
+func checkRoomAttributes(room *pkg.Room) (*pkg.Room, error) {
 	if room.MaxPlayers == 0 {
-		return nil, errors.New("zero players not possible"), 400
+		return nil, pkg.BadRequestErr("zero players not possible")
 	}
 
 	id := pkg.RandomRoomID()
@@ -181,5 +184,5 @@ func checkRoomAttributes(room *pkg.Room) (*pkg.Room, error, int) {
 	room.Players = []string{}
 	room.Status = "waiting"
 
-	return room, nil, 200
+	return room, nil
 }

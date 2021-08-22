@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"georgguessr.com/pkg"
 	"os/exec"
 )
 
@@ -43,10 +44,10 @@ type StreetViewIDs struct {
 }
 
 
-func GetStreetviewPositions(positions Positions, num int) StreetViewIDs {
+func GetStreetviewPositions(positions Positions, num int) (*StreetViewIDs, error) {
 	posJson, err := json.Marshal(positions)
 	if err != nil {
-		panic(err)
+		return nil, pkg.InternalErr(fmt.Sprintf("Error marshalling position: %v", err))
 	}
 
 	fmt.Println(string(posJson))
@@ -60,12 +61,12 @@ func GetStreetviewPositions(positions Positions, num int) StreetViewIDs {
 	cmd := exec.Command(app, arg0, arg1)
 	stdout, err := cmd.Output()
 	if err != nil {
-		panic(err)
+		return nil, pkg.InternalErr(fmt.Sprintf("Error executing phantomjs: %v %v %v ", cmd, stdout, err))
 	}
 
 	allStreetViews := StreetViewIDs{}
 	json.Unmarshal(stdout, &allStreetViews)
-	okStreetViews := StreetViewIDs{
+	okStreetViews := &StreetViewIDs{
 		Panos: []pano{},
 	}
 
@@ -84,5 +85,5 @@ func GetStreetviewPositions(positions Positions, num int) StreetViewIDs {
 			break
 		}
 	}
-	return okStreetViews
+	return okStreetViews, nil
 }

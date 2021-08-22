@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -61,13 +60,16 @@ func GetRoom(roomID string) (*Room, error) {
 
 	result, err := DynamoClient.GetItem(input)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error getting room item: %v", err))
+		return nil, InternalErr(fmt.Sprintf("Error trying to get room from dynamodb: %v", err))
+	}
+	if result == nil || result.Item == nil {
+		return nil, NotFoundErr(fmt.Sprintf("No room found for given id %v", roomID))
 	}
 
 	item := new(Room)
 	err = dynamodbattribute.UnmarshalMap(result.Item, item)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error unmarhsalling room item: %v", err))
+		return nil, InternalErr(fmt.Sprintf("Error trying to unmarshal room from dynamodb: %v %v", result, err))
 	}
 	item.PlayersCount = len(item.Players)
 	return item, nil

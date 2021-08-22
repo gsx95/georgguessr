@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +11,7 @@ func PutGuess(gameID, username string, round int, guess pkg.Guess) error {
 
 	guessMap, err := pkg.Encoder.Encode(guess)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error marshalling guess: %v", err))
+		return pkg.InternalErr(fmt.Sprintf("Error marshalling guess: %v", err))
 	}
 
 	input := &dynamodb.UpdateItemInput{
@@ -33,7 +32,7 @@ func PutGuess(gameID, username string, round int, guess pkg.Guess) error {
 
 	_, err = pkg.DynamoClient.UpdateItem(input)
 	if err != nil {
-		return errors.New(fmt.Sprintf("error putting guess: %v username: %s", err, username))
+		return pkg.InternalErr(fmt.Sprintf("error putting guess: %v username: %s", err, username))
 	}
 	return nil
 }
@@ -64,32 +63,7 @@ func PutUsername(gameID, username string) error {
 
 	_, err := pkg.DynamoClient.UpdateItem(input)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error putting username: %v", err))
-	}
-	return nil
-}
-
-func PutPanoID(roomID string, round int, panoID string) error {
-
-	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(pkg.RoomsTable),
-		Key: map[string]*dynamodb.AttributeValue{
-			"id": {
-				S: aws.String(roomID),
-			},
-		},
-		UpdateExpression:    aws.String(fmt.Sprintf("set gameRounds[%d].panoID = :item", round-1)),
-		ConditionExpression: aws.String(fmt.Sprintf("attribute_not_exists(gameRounds[%d].panoID)", round-1)),
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":item": {
-				S: aws.String(panoID),
-			},
-		},
-	}
-
-	_, err := pkg.DynamoClient.UpdateItem(input)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Error putting panorama ID: %v", err))
+		return pkg.InternalErr(fmt.Sprintf("Error putting username: %v", err))
 	}
 	return nil
 }

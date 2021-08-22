@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/aws/aws-lambda-go/events"
@@ -25,56 +23,61 @@ func main() {
 	pkg.StartLambda(methods)
 }
 
-func HandleRoomExists(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	roomID := request.PathParameters["roomID"]
-	if roomID == "" {
-		return pkg.GenerateResponse("no room id given", 400)
+func HandleRoomExists(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	roomID := getRoomIdFromRequest(request)
+	if RoomExists(roomID) {
+		return pkg.GenerateResponse(ExistsResponse{true}, 200)
 	}
-	exists := RoomExists(roomID)
-	if exists {
-		return pkg.GenerateResponse("{\"exists\": true}", 200)
-	}
-	return pkg.GenerateResponse("{\"exists\": false}", 404)
+	return pkg.GenerateResponse(ExistsResponse{false}, 404)
 }
 
-func HandleGetRoom(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	roomID := request.PathParameters["roomID"]
-	if roomID == "" {
-		return pkg.GenerateResponse("no room id given", 400)
-	}
+func HandleGetRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	roomID := getRoomIdFromRequest(request)
 	room, err := pkg.GetRoom(roomID)
 	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
+		return pkg.ErrorResponse(err)
 	}
-	bytes, err := json.Marshal(room)
-	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 500)
-	}
-	return pkg.GenerateResponse(string(bytes), 200)
+	return pkg.GenerateResponse(room, 200)
 }
 
-func HandlePostRoom(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
+func HandlePostRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 
-	geoType := request.QueryStringParameters["type"]
-	var id string
-	var err error
-	var status int
-	switch geoType {
+	createType := request.QueryStringParameters["type"]
+	switch createType {
 	case "list":
-		id, err, status = CreateRoomWithPredefinedArea(request.Body)
+		resp, err := CreateRoomWithPredefinedArea(request.Body)
+		if err != nil {
+			return pkg.ErrorResponse(err)
+		}
+		return pkg.StringResponse(resp, 200)
 	case "unlimited":
-		id, err, status = CreateRoomUnlimited(request.Body)
+		resp, err := CreateRoomUnlimited(request.Body)
+		if err != nil {
+			return pkg.ErrorResponse(err)
+		}
+		return pkg.StringResponse(resp, 200)
 	case "places":
-		id, err, status = CreateRoomWithPlaces(request.Body)
+		resp, err := CreateRoomWithPlaces(request.Body)
+		if err != nil {
+			return pkg.ErrorResponse(err)
+		}
+		return pkg.StringResponse(resp, 200)
 	case "custom":
-		id, err, status = CreateRoomWithCustomAreas(request.Body)
+		resp, err := CreateRoomWithCustomAreas(request.Body)
+		if err != nil {
+			return pkg.ErrorResponse(err)
+		}
+		return pkg.StringResponse(resp, 200)
 	default:
-		err = errors.New("geo type was " + geoType)
+		pkg.PanicBadRequest(fmt.Sprintf("Creation type %s not recognized", createType))
 	}
+	panic(fmt.Sprintf("Unknown error, creation type was %v", createType))
+}
 
-	if err != nil {
-		return pkg.GenerateResponse(err.Error(), status)
+func getRoomIdFromRequest(request events.APIGatewayProxyRequest) string {
+	roomID := request.PathParameters["roomID"]
+	if roomID == "" {
+		pkg.PanicBadRequest("no room id given")
 	}
-	return pkg.GenerateResponse(id, status)
-
+	return roomID
 }

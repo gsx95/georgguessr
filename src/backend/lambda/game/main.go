@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/aws/aws-lambda-go/events"
@@ -12,7 +11,7 @@ import (
 
 func main() {
 
-	methods := pkg.MethodHandlers{
+	methods := pkg.MethodHandlers {
 		"/game/pos/{gameID}/{round}": {
 			GET: HandleGetGamePosition,
 		},
@@ -24,9 +23,6 @@ func main() {
 		},
 		"/game/players/{gameID}/{username}": {
 			POST: HandlePostPlayers,
-		},
-		"/game/pano/{gameID}/{round}": {
-			POST: HandlePostPanoIDs,
 		},
 		"/game/guess/{gameID}/{round}/{username}": {
 			POST: HandlePostGuess,
@@ -42,193 +38,153 @@ func main() {
 	pkg.StartLambda(methods)
 }
 
-func HandlePostPanoIDs(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	round, err := strconv.Atoi(request.PathParameters["round"])
+
+func HandleGetGuess(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	round, err := getRoundFromRequest(request)
 	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
+		return pkg.ErrorResponse(err)
 	}
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
-	}
-
-	panoId := request.Body
-
-	err = PutPanoID(game.ID, round, panoId)
+	game, err := getGame(request)
 	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
+		return pkg.ErrorResponse(err)
 	}
-	return pkg.GenerateResponse("ok", 200)
-}
-
-func HandleGetGuess(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	round, err := strconv.Atoi(request.PathParameters["round"])
-	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
-	}
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
-	}
-
 	scores := game.GamesRounds[round-1].Scores
-
-	bytes, err := json.Marshal(scores)
-	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
-	}
-	return pkg.GenerateResponse(string(bytes), 200)
+	return pkg.GenerateResponse(scores, 200)
 }
 
-func HandlePostGuess(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	username := request.PathParameters["username"]
-	round, err := strconv.Atoi(request.PathParameters["round"])
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
-	}
-
+func HandlePostGuess(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	username, err := getStringFromRequest("username", request)
 	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
+		return pkg.ErrorResponse(err)
+	}
+	round, err := getRoundFromRequest(request)
+	if err != nil {
+		return pkg.ErrorResponse(err)
+	}
+	game, err := getGame(request)
+	if err != nil {
+		return pkg.ErrorResponse(err)
 	}
 	var guess pkg.Guess
 
 	if err := json.Unmarshal([]byte(request.Body), &guess); err != nil {
-		return pkg.GenerateResponse("Invalid guess body: "+err.Error(), 400)
+		fmt.Println(err)
+		return pkg.ErrorResponse(pkg.BadRequestErr("invalid guess body"))
 	}
+
 	scores := game.GamesRounds[round-1].Scores
 	if _, alreadyExists := scores[username]; alreadyExists {
-		return pkg.GenerateResponse("Already posted score for this round", 400)
+		return pkg.ErrorResponse(pkg.BadRequestErr("Already posted score for this round"))
 	}
 
-	err = PutGuess(game.ID, username, round-1, guess)
-	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 400)
-	}
+	PutGuess(game.ID, username, round-1, guess)
 
-	return pkg.GenerateResponse("ok", 200)
+	return pkg.StringResponse("ok", 200)
 }
 
-func HandlePostPlayers(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	username := request.PathParameters["username"]
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
+func HandlePostPlayers(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	username, err := getStringFromRequest("username", request)
+	if err != nil {
+		return pkg.ErrorResponse(err)
 	}
-
+	game, err := getGame(request)
+	if err != nil {
+		return pkg.ErrorResponse(err)
+	}
 	for _, user := range game.Players {
 		if strings.ToLower(user) == strings.ToLower(username) {
-			return pkg.GenerateResponse("Username already in use", 400)
+			return pkg.ErrorResponse(pkg.BadRequestErr("username already in use"))
 		}
 	}
-
-	err := PutUsername(game.ID, username)
-	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
-	}
-	return pkg.GenerateResponse("ok", 200)
+	PutUsername(game.ID, username)
+	return pkg.StringResponse("ok", 200)
 }
 
-func HandleGetPlayers(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
+func HandleGetPlayers(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	game, err := getGame(request)
+	if err != nil {
+		return pkg.ErrorResponse(err)
 	}
-	bytes, err := json.Marshal(struct {
-		Players []string `json:"players"`
-	}{
+	resp := playersResponse{
 		game.Players,
-	})
-	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 500)
 	}
-	return pkg.GenerateResponse(string(bytes), 200)
+	return pkg.GenerateResponse(resp, 200)
 }
 
-func HandleGetGameEndResults(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
+func HandleGetGameEndResults(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	game, err := getGame(request)
+	if err != nil {
+		return pkg.ErrorResponse(err)
 	}
-	bytes, err := json.Marshal(pkg.Room{
+	resp := pkg.Room{
 		Rounds:      game.Rounds,
 		Players:     game.Players,
 		Areas:       game.Areas,
 		GamesRounds: game.GamesRounds,
-	})
-	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 500)
 	}
-	return pkg.GenerateResponse(string(bytes), 200)
+
+	return pkg.GenerateResponse(resp, 200)
 }
 
-type PositionResponse struct {
-	Areas  [][]pkg.GeoPoint `json:"areas,omitempty"`
-	PanoID string           `json:"panoId"`
-	Lat    float64          `json:"lat"`
-	Lon    float64          `json:"lon"`
-}
-
-func HandleGetGamePosition(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	round, err := strconv.Atoi(request.PathParameters["round"])
+func HandleGetGamePosition(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	round, err := getRoundFromRequest(request)
 	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 404)
+		return pkg.ErrorResponse(err)
 	}
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
+	game, err := getGame(request)
+	if err != nil {
+		return pkg.ErrorResponse(err)
 	}
-
 	rounds := game.GamesRounds
 	if len(rounds) < round {
-		return pkg.GenerateResponse("no more rounds", 400)
+		return pkg.ErrorResponse(pkg.BadRequestErr("Round %d not found for this game"))
 	}
 	r := rounds[round-1]
-
-	bytes, err := json.Marshal(PositionResponse{
+	resp := positionResponse{
 		Areas:  game.Areas,
 		PanoID: r.PanoID,
 		Lat:    r.StartPosition.Lat,
 		Lon:    r.StartPosition.Lon,
-	})
+	}
+	return pkg.GenerateResponse(resp, 200)
+}
+
+func HandleGetGameStats(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	game, err := getGame(request)
 	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 500)
+		return pkg.ErrorResponse(err)
 	}
-	return pkg.GenerateResponse(string(bytes), 200)
+	return pkg.GenerateResponse(game, 200)
 }
 
-func HandleGetGameStats(request events.APIGatewayProxyRequest) events.APIGatewayProxyResponse {
-	game, getGameError := getGame(request)
-	if getGameError != nil {
-		return getGameError.response
-	}
-	bytes, err := json.Marshal(game)
+func getGame(request events.APIGatewayProxyRequest) (*pkg.Room, error) {
+	gameID, err := getStringFromRequest("gameID", request)
 	if err != nil {
-		return pkg.GenerateResponse(fmt.Sprintf("%v", err), 500)
-	}
-	return pkg.GenerateResponse(string(bytes), 200)
-}
-
-type GetGameError struct {
-	error
-	response events.APIGatewayProxyResponse
-}
-
-func getGame(request events.APIGatewayProxyRequest) (*pkg.Room, *GetGameError) {
-	gameID := request.PathParameters["gameID"]
-
-	if gameID == "" {
-		return nil, &GetGameError{
-			error:    errors.New("no game id given"),
-			response: pkg.GenerateResponse("no game id given", 400),
-		}
+		return nil, err
 	}
 	game, err := pkg.GetRoom(gameID)
 	if err != nil {
-		return nil, &GetGameError{
-			error:    err,
-			response: pkg.GenerateResponse(fmt.Sprintf("%v", err), 404),
-		}
+		return nil, err
 	}
 	return game, nil
+}
+
+func getStringFromRequest(key string, request events.APIGatewayProxyRequest) (string, error) {
+	value := request.PathParameters[key]
+	if value == "" {
+		return "", pkg.BadRequestErr(fmt.Sprintf("No %s given in request", key))
+	}
+	return value, nil
+}
+
+func getRoundFromRequest(request events.APIGatewayProxyRequest) (int, error) {
+	roundString := request.PathParameters["round"]
+	if roundString == "" {
+		return 0, pkg.BadRequestErr("No round given in request")
+	}
+	round, err := strconv.Atoi(roundString)
+	if err != nil {
+		return 0, pkg.BadRequestErr(fmt.Sprintf("Round must be a number: %s", roundString))
+	}
+	return round, nil
 }
