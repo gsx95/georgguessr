@@ -180,7 +180,7 @@ func getBestFittingGeoJSONFeature(city, country string) (*geojson.Feature, error
 
 	for _, feature := range featureCollection.Features {
 		featureCategory := strings.ToLower(feature.Properties.MustString("category"))
-		if featureCategory == "place" {
+		if featureCategory == "place" || featureCategory == "boundary" {
 			placeFeatures = append(placeFeatures, feature)
 		}
 	}
