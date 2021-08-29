@@ -81,13 +81,11 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 	}
 
 	positions := Positions{}
-
 	createErrors := map[string]bool{}
-
 	placeFeatures := make(map[string]*geojson.Feature, len(room.Places))
 
 	for _, place := range room.Places {
-		feature, err := getBestFittingGeoJSONFeature(place.Name, place.Country)
+		feature, err := getBestFittingGeoJSONFeature(place.Name, place.Country, place.Pos)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -100,7 +98,7 @@ func CreateRoomWithPlaces(reqBody string) (string, error) {
 
 	for i := 0; i < room.Rounds + 10; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
-		point, err := RandomPosForCity(placeFeatures[place.getID()])
+		point, err := RandomPosForCity(placeFeatures[place.getID()], place.Pos)
 		if err != nil {
 			fmt.Println(err)
 			createErrors[err.Error()] = true

@@ -125,7 +125,6 @@ export default {
         },
 
         showRoomIDInvalid: function () {
-            console.log("invalid");
             u.byId("enter-room-id").setCustomValidity("No room found with this id.");
             u.byId("enter-room-id").reportValidity();
         },
@@ -167,9 +166,11 @@ export default {
                 let placeElement = placesElements[i];
                 let place = placeElement.getAttribute("place");
                 let country = placeElement.getAttribute("country");
+                let location = JSON.parse(placeElement.getAttribute("location"));
                 places.push({
                     "name": place,
-                    "country": country
+                    "country": country,
+                    "location": location
                 })
             }
             data["places"] = places;
@@ -226,7 +227,7 @@ export default {
         initSearch: function () {
             const input = u.byId("search-place-input");
             const options = {
-                fields: ["address_components", "name"],
+                fields: ["address_components", "name", "geometry"],
                 types: ["(cities)"],
             };
             const autocomplete = new google.maps.places.Autocomplete(input, options);
@@ -234,6 +235,7 @@ export default {
                 let selectedCity = autocomplete.getPlace();
                 let name = selectedCity.name;
                 let addrComponents = selectedCity.address_components;
+                let latLng = selectedCity["geometry"]["location"].toJSON();
                 let countryCode = "";
                 for (let i = 0; i < addrComponents.length; i++) {
                     let addr = addrComponents[i];
@@ -241,7 +243,7 @@ export default {
                         countryCode = addr["short_name"];
                     }
                 }
-                GuessrHome.addSpecificCityToList(name, countryCode);
+                GuessrHome.addSpecificCityToList(name, countryCode, latLng);
                 input.value = "";
 
             });
@@ -249,7 +251,7 @@ export default {
 
         selectedSpecificCities: [],
 
-        addSpecificCityToList: function (name, country) {
+        addSpecificCityToList: function (name, country, location) {
             let table = u.byId("specific-cities-table");
             let tr = u.addElement("tr", table, "");
             let td = u.addElement("td", tr, name + ", " + country);
@@ -267,6 +269,7 @@ export default {
 
             td.setAttribute("country", country);
             td.setAttribute("place", name);
+            td.setAttribute("location", JSON.stringify(location));
             td.setAttribute("name", "selected-places-item");
         },
 

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"math/rand"
 	"os"
+	"runtime/debug"
 	"time"
 )
 
@@ -56,6 +57,7 @@ func handler(request events.APIGatewayProxyRequest) (response events.APIGatewayP
 
 	defer func() {
 		if r := recover(); r != nil {
+			fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
 			switch err := r.(type) {
 			case error:
 				response = *internalErrorResponse(err)

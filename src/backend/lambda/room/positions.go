@@ -39,18 +39,20 @@ type Place struct {
 	Country string `json:"country"`
 	ID      string
 	Pop     int
+	Pos Position `json:"location"`
 }
 
 func (p *Place) getID() string {
 	return fmt.Sprintf("%s_%s_%d", p.Name, p.Country, p.Pop)
 }
 
-func NewCity(name, country string, pop int) *Place {
+func NewCity(name, country string, pop int, pos Position) *Place {
 	return &Place{
 		Pop: pop,
 		Name: name,
 		Country: country,
 		ID: fmt.Sprintf("%s_%s_%d", name, country, pop),
+		Pos: pos,
 	}
 }
 
@@ -104,11 +106,18 @@ func RandomPositionByArea(country string, cities string, count int) (positions [
 		bindings := results.Results.Bindings
 		for _, b := range bindings {
 			cityPop, err := strconv.Atoi(b["maxPopulation"].Value)
+			cityName := b["cityLabel"].Value
+			locationString := b["location"].Value
 			if err != nil {
 				log.Fatal(err)
 			}
 			if cityPop > minPop {
-				citiesSlice = append(citiesSlice, NewCity(b["cityLabel"].Value, country, cityPop))
+				pos, err := wikiDataStringToPos(locationString)
+				if err != nil {
+					return nil, err
+				}
+				newCity := NewCity(cityName, country, cityPop, *pos)
+				citiesSlice = append(citiesSlice, newCity)
 			}
 		}
 		return randomPosForCities(citiesSlice, count)
@@ -124,17 +133,24 @@ func RandomPositionByArea(country string, cities string, count int) (positions [
 	for _, result := range res {
 		cityName := result["cityLabel"].Value
 		countryName := result["countryLabel"].Value
+		locationString := result["location"].Value
 		pop, err := strconv.Atoi(result["population"].Value)
 		if err != nil {
+			fmt.Printf("error while trying to convert wikiData pop %s to int\n", result["population"].Value)
 			continue
 		}
-		possibleCities = append(possibleCities, NewCity(cityName, countryName, pop))
+		pos, err := wikiDataStringToPos(locationString)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		possibleCities = append(possibleCities, NewCity(cityName, countryName, pop, *pos))
 	}
 	return randomPosForCities(possibleCities, count)
 }
 
 // Returns error if no valid point could be generated
-func RandomPosForCity(feature *geojson.Feature) (point *orb.Point, err error) {
+func RandomPosForCity(feature *geojson.Feature, originalPlace Position) (point *orb.Point, err error) {
 
 	pointValid := false
 	box := feature.BBox.Bound()
@@ -143,7 +159,7 @@ func RandomPosForCity(feature *geojson.Feature) (point *orb.Point, err error) {
 		lat := pkg.GetRandomFloat(box.Min.Lat(), box.Max.Lat())
 		lon := pkg.GetRandomFloat(box.Min.Lon(), box.Max.Lon())
 		point = &orb.Point{lon, lat}
-		pointValid, err = isPointInsidePolygon(feature, point)
+		pointValid, err = isPointInsidePolygon(feature, point, &originalPlace)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -152,7 +168,7 @@ func RandomPosForCity(feature *geojson.Feature) (point *orb.Point, err error) {
 	return point, nil
 }
 
-func getBestFittingGeoJSONFeature(city, country string) (*geojson.Feature, error) {
+func getBestFittingGeoJSONFeature(city, country string, position Position) (*geojson.Feature, error) {
 	fmt.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
 	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)
 	if err != nil {
@@ -176,33 +192,61 @@ func getBestFittingGeoJSONFeature(city, country string) (*geojson.Feature, error
 		return nil, pkg.InternalErr(fmt.Sprintf("Error unmarshalling geojson response from openstreemmaps: %v %v", string(bodyBytes), err))
 	}
 
-	var placeFeatures []*geojson.Feature
 
+	var filteredPlaces []*geojson.Feature
+
+	// get all features where the place lies within its boundaries
 	for _, feature := range featureCollection.Features {
-		featureCategory := strings.ToLower(feature.Properties.MustString("category"))
-		if featureCategory == "place" || featureCategory == "boundary" {
-			placeFeatures = append(placeFeatures, feature)
+		if ok, _ := isPointInsidePolygon(feature, orbPoint(position.Lat, position.Lng), nil); ok {
+			filteredPlaces = append(filteredPlaces, feature)
 		}
 	}
 
-	// if there is no "place", use all types of nodes as fallback
-	if len(placeFeatures) == 0 {
-		placeFeatures = featureCollection.Features
+	if len(filteredPlaces) == 0 {
+		fmt.Println("No feature has polygon in which the place lies")
+		filteredPlaces = featureCollection.Features
 	}
 
-	sort.Slice(placeFeatures, func(f1, f2 int) bool {
-		imp1 := placeFeatures[f1].Properties.MustFloat64("importance", 0)
-		imp2 := placeFeatures[f2].Properties.MustFloat64("importance", 0)
+	filteredPlacesCopy := filteredPlaces
+	filteredPlaces = []*geojson.Feature{}
+
+	for _, feature := range filteredPlacesCopy {
+		featureCategory := strings.ToLower(feature.Properties.MustString("category"))
+		if featureCategory == "place" || featureCategory == "boundary" {
+			filteredPlaces = append(filteredPlaces, feature)
+		}
+	}
+
+	// if there is no "place", use previous filtered places
+	if len(filteredPlaces) == 0 {
+		filteredPlaces = filteredPlacesCopy
+	}
+
+	sort.Slice(filteredPlaces, func(f1, f2 int) bool {
+		imp1 := filteredPlaces[f1].Properties.MustFloat64("importance", 0)
+		imp2 := filteredPlaces[f2].Properties.MustFloat64("importance", 0)
 		return imp1 > imp2
 	})
 
-	return placeFeatures[0], nil
+	return filteredPlaces[0], nil
 }
 
-func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point) (bool, error) {
 
-	// if its a polygon, we only care for the polygon with more boundary nodes
+func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point, originalPlace *Position) (bool, error) {
 	if multiPoly, isMulti := feature.Geometry.(orb.MultiPolygon); isMulti {
+		// if its a multipolygon, we only care for the polygon in which the originalPlace lies
+		if originalPlace != nil {
+			orig := *orbPoint(originalPlace.Lat, originalPlace.Lng)
+			for _, pol := range multiPoly {
+				if planar.PolygonContains(pol, orig) && planar.PolygonContains(pol, *point) {
+					feature.Geometry = pol
+					return true, nil
+				}
+			}
+			return false, nil
+		}
+
+		// no polygon contains the original place (or no original place given) - just use the bigger polygon
 		polyLen := 0
 		var polygon orb.Polygon
 		for _, pol := range multiPoly {
@@ -211,6 +255,7 @@ func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point) (bool, err
 				polygon = pol
 			}
 		}
+		feature.Geometry = polygon
 		return planar.PolygonContains(polygon, *point), nil
 	}
 
@@ -231,10 +276,7 @@ func pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
 	var ring orb.Ring
 	ring = []orb.Point{}
 	for _, point := range points {
-		p := orb.Point{}
-		p[0] = point.Lon
-		p[1] = point.Lat
-		ring = append(ring, p)
+		ring = append(ring, *orbPoint(point.Lat, point.Lon))
 	}
 	return []orb.Ring{ring}
 }
@@ -251,7 +293,7 @@ func randomPosForCities(possibleCities []*Place, count int) (positions []*orb.Po
 
 	for _, city := range cities {
 		if _, exists := cityFeatures[city.ID]; !exists {
-			feature, err := getBestFittingGeoJSONFeature(city.Name, city.Country)
+			feature, err := getBestFittingGeoJSONFeature(city.Name, city.Country, city.Pos)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -265,7 +307,7 @@ func randomPosForCities(possibleCities []*Place, count int) (positions []*orb.Po
 	}
 
 	for i := range cities {
-		point, err := RandomPosForCity(cityFeatures[cities[i].ID])
+		point, err := RandomPosForCity(cityFeatures[cities[i].ID], cities[i].Pos)
 		if err != nil {
 			fmt.Println(err)
 			i--
@@ -291,4 +333,31 @@ func queryWikiData(query string) (*sparql.Results, error) {
 	}
 	fmt.Printf("Wikidata results: %v\n", results.Results.Bindings)
 	return results, nil
+}
+
+func orbPoint(Lat, Lng float64) *orb.Point {
+	p := &orb.Point{}
+	p[0] = Lng
+	p[1] = Lat
+	return p
+}
+
+func wikiDataStringToPos(queryResult string) (*Position, error) {      // e.g.  Point(7.099722222 50.733888888)
+	coordsTxt := strings.Trim(queryResult, "Point()")
+	coords := strings.Split(coordsTxt, " ")
+
+	lng, err := strconv.ParseFloat(coords[0], 64)
+	if err != nil {
+		return nil, pkg.InternalErr(fmt.Sprintf("Could not parse longitude %s from position %s", lng, coordsTxt))
+	}
+	lat, err := strconv.ParseFloat(coords[1], 64)
+	if err != nil {
+		return nil, pkg.InternalErr(fmt.Sprintf("Could not parse longitude %s from position %s", lng, coordsTxt))
+	}
+
+	return &Position{
+		Lng: lng,
+		Lat: lat,
+	}, nil
+
 }

@@ -1,13 +1,14 @@
-SELECT ?cityLabel ?countryLabel (MAX(?population) AS ?maxPopulation)
+SELECT ?cityLabel ?countryLabel ?location (MAX(?population) AS ?maxPopulation)
 	WHERE
 	{
 	  ?city wdt:P31/wdt:P279* wd:Q515;
 	        wdt:P17 wd:%s;
 	        wdt:P1082 ?population;
+            wdt:P625 ?location;
 	        wdt:P17 ?country.
 	  FILTER(?population>%d)
 	  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 	}
-	GROUP BY ?cityLabel ?countryLabel
+	GROUP BY ?cityLabel ?countryLabel ?location
 	ORDER BY uuid() #%s
 	Limit 100
