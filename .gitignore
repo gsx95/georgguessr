@@ -7,6 +7,7 @@ config.env
 backend/pkg/countries.json
 frontend/node_modules
 dist
+backend/pkg/build.version
 backend/layer/layer.zip
 backend/layer/bin/index.html
 backend/layer/bin/phantomjs
