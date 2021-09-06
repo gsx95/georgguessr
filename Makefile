@@ -1,4 +1,4 @@
-include config.env
+-include config.env
 export
 
 local:

@@ -30,6 +30,8 @@ before_install:
 
 script:
 - docker-compose -f ./test/docker-compose-dynamodb.yml up -d
+- chmod +x backend/make.sh
+- chmod +x frontend/make.sh
 - make local &
 - go run test/test.go
 
