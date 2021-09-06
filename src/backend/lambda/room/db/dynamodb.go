@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ func RoomExists(roomID string) bool {
 	return true
 }
 
-func writeRoomToDB(room pkg.Room) error {
+func WriteRoomToDB(room pkg.Room) error {
 
 	av, err := pkg.Encoder.Encode(room)
 	if err != nil {

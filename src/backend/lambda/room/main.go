@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"georgguessr.com/lambda-room/creation"
+	"georgguessr.com/lambda-room/db"
 	"georgguessr.com/pkg"
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -25,7 +26,7 @@ func main() {
 
 func HandleRoomExists(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	roomID := getRoomIdFromRequest(request)
-	if RoomExists(roomID) {
+	if db.RoomExists(roomID) {
 		return pkg.GenerateResponse(ExistsResponse{true}, 200)
 	}
 	return pkg.GenerateResponse(ExistsResponse{false}, 404)
@@ -41,37 +42,19 @@ func HandleGetRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProx
 }
 
 func HandlePostRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
-
 	createType := request.QueryStringParameters["type"]
-	switch createType {
-	case "list":
-		resp, err := CreateRoomWithPredefinedArea(request.Body)
-		if err != nil {
-			return pkg.ErrorResponse(err)
-		}
-		return pkg.StringResponse(resp, 200)
-	case "unlimited":
-		resp, err := CreateRoomUnlimited(request.Body)
-		if err != nil {
-			return pkg.ErrorResponse(err)
-		}
-		return pkg.StringResponse(resp, 200)
-	case "places":
-		resp, err := CreateRoomWithPlaces(request.Body)
-		if err != nil {
-			return pkg.ErrorResponse(err)
-		}
-		return pkg.StringResponse(resp, 200)
-	case "custom":
-		resp, err := CreateRoomWithCustomAreas(request.Body)
-		if err != nil {
-			return pkg.ErrorResponse(err)
-		}
-		return pkg.StringResponse(resp, 200)
-	default:
-		pkg.PanicBadRequest(fmt.Sprintf("Creation type %s not recognized", createType))
+	defer pkg.Duration(pkg.Track("HandlePostRoom [" + createType + "]"))
+
+	creator, err := creation.NewCreator(createType)
+	if err != nil {
+		return pkg.ErrorResponse(err)
 	}
-	panic(fmt.Sprintf("Unknown error, creation type was %v", createType))
+	response, err := creator.CreateRoom(request.Body)
+	if err != nil {
+		return pkg.ErrorResponse(err)
+	}
+	return pkg.StringResponse(response, 200)
+
 }
 
 func getRoomIdFromRequest(request events.APIGatewayProxyRequest) string {

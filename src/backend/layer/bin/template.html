@@ -4,9 +4,7 @@
 <body>
 <data id="streetview-data"></data>
 <script>
-    function andGO() {
-        processRooms()
-    }
+
     function processRooms() {
         document.getElementById("streetview-data").setAttribute("status", "processing");
         var svService = new google.maps.StreetViewService();
@@ -19,7 +17,7 @@
             var pos = roundPos.p;
             getStreetViewForPos(svService, round, pos.lat, pos.lng, 0, function (round, panoId, latLng) {
                 if(panoId == null) {
-                    console.log("got no pano id for " + round)
+                    console.log("got no pano id for " + round);
                     document.getElementById("streetview-data").innerText += "," + JSON.stringify({r: round});
                     readyCount++;
                 } else {
@@ -45,15 +43,16 @@
             "radius": searchRad[count],
             "source": "outdoor"
         }, function (data, status) {
-            console.log(data);
-            if (status !== "OK" || data.links.length != 2) {
+            checkStreetView(data, status, function(data) {
+                callback(round, data.location.pano, data.location.latLng.toJSON());
+            }, function(errorMsg) {
+                console.log("[" + round + "] failed on count " + count + " with msg " + errorMsg);
                 if (count + 1 === searchRad.length) {
-                    return callback(round, null, null);
+                    callback(round, null, null);
+                } else {
+                    getStreetViewForPos(svService, round, lat, lon, count + 1, callback);
                 }
-                return getStreetViewForPos(svService, round, lat, lon, count + 1, callback)
-            }
-            var location = data.location;
-            callback(round, location.pano, location.latLng.toJSON());
+            });
         });
     }
     function getRequestParameter(parameterName) {
@@ -65,7 +64,42 @@
         }
         return result;
     }
+
+    function checkStreetView(data, status, okCallback, errorCallback) {
+        if (status !== "OK" || data.links.length !== 2) {
+            errorCallback("status or links wrong");
+            return;
+        }
+
+        var latLng = data.location.latLng;
+        var lat = latLng.lat();
+        var lng = latLng.lng();
+        var endpoint = "https://roads.googleapis.com/v1/snapToRoads?key=AIzaSyCGxNkbZJlq1H2onKSxmfb2XSJNvWw_Gj4&path=" + lat + "," + lng;
+
+
+            // TODO: the following commented code checks if there is a nearby street within ~20m
+            // enable this after implementing a logic to generate new random searching points after no fitting streetview could be found
+
+         // fetchAsync(endpoint).then(function(response) {
+         //   if(!response.hasOwnProperty('snappedPoints')) {
+         //       errorCallback("did not snap to near street")
+         //   } else {
+         //       let streetLoc = response["snappedPoints"][0]["location"];
+         //       let streetLat = streetLoc["latitude"];
+         //       let streetLng = streetLoc["longitude"];
+
+         //       let p1 = new google.maps.LatLng(lat, lng);
+         //       let p2 = new google.maps.LatLng(streetLat, streetLng);
+
+         //       let distance = google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
+
+         //       if(distance < 20){
+         //           okCallback(data);
+         //       }
+
+    }
+
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=<%= MAPS_KEY %>&callback=andGO&libraries=drawing,places" defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=<%= MAPS_KEY %>&callback=processRooms&libraries=drawing,places" defer></script>
 </body>
 </html>
