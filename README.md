@@ -73,9 +73,9 @@ $ git clone git@github.com:gsx95/georgguessr.git
 # Go into the repository
 $ cd georgguessr
 
-# Build and deploy to your AWS account. Use 'guided' option the first time to configure your deployment options.
-# If you opted to save your config to a file, just use './make.sh deploy' in the future.
-$ ./make.sh deploy guided
+# Build and deploy to your AWS account. Use 'guided' target the first time to configure your deployment options.
+# If you opted to save your config to a file, just use 'make remote' in the future.
+$ make guided
 
 ```
 
@@ -88,7 +88,7 @@ For developing and debugging purposes, you can spin up the full stack locally.
 $ docker-compose -f test/docker-compose-dynamodb.yml up -d
 
 # run the backend locally and build frontend
-$ ./make.sh local
+$ make local
 
 # run frontend server
 $ http-server dist

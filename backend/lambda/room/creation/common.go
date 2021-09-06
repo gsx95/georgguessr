@@ -1,6 +1,7 @@
 package creation
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"georgguessr.com/lambda-room/db"
@@ -14,6 +15,7 @@ import (
 	"os/exec"
 	"sort"
 	"strings"
+	"time"
 )
 
 type positions struct {
@@ -241,13 +243,16 @@ func getStreetviewPositions(positions positions, num int) (*streetViewIDs, error
 	arg0 := "/opt/bin/script.js"
 	arg1 := url
 
-	cmd := exec.Command(app, arg0, arg1)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, app, arg0, arg1)
 	stdout, err := cmd.Output()
 	if err != nil {
 		return nil, pkg.InternalErr(fmt.Sprintf("Error executing phantomjs: %v %v %v ", cmd, stdout, err))
 	}
 
-	fmt.Printf("stdout phantomJS %v\n", stdout)
+	fmt.Printf("stdout phantomJS %v\n", string(stdout))
 
 	allStreetViews := streetViewIDs{}
 	err = json.Unmarshal(stdout, &allStreetViews)

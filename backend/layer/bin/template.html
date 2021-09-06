@@ -70,6 +70,7 @@
             errorCallback("status or links wrong");
             return;
         }
+        return okCallback(data);
 
         var latLng = data.location.latLng;
         var lat = latLng.lat();

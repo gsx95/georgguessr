@@ -38,7 +38,7 @@ Resources:
     Properties:
       LayerName: PhantomJSLayer
       Description: Includes phantomjs executable and custom script to run with
-      ContentUri: './src/backend/layer/layer.zip'
+      ContentUri: layer/layer.zip
       CompatibleRuntimes:
         - go1.x
         - python3.8
@@ -47,7 +47,7 @@ Resources:
   GuessrRoomsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/backend/lambda/room/
+      CodeUri: lambda/room/
       Handler: handler
       Layers:
         - !Ref PhantomJSLayer
@@ -137,7 +137,7 @@ Resources:
   GuessrGamesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/backend/lambda/game/
+      CodeUri: lambda/game/
       Handler: handler
       Runtime: go1.x
       Timeout: 20

@@ -3,11 +3,10 @@
 node_modules
 .idea
 .DS_Store
-statics/*
 config.env
-src/backend/pkg/countries.json
-src/frontend/node_modules
+backend/pkg/countries.json
+frontend/node_modules
 dist
-src/backend/layer/layer.zip
-src/backend/layer/bin/index.html
-src/backend/layer/bin/phantomjs
+backend/layer/layer.zip
+backend/layer/bin/index.html
+backend/layer/bin/phantomjs

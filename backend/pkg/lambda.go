@@ -12,7 +12,11 @@ import (
 	"os"
 	"runtime/debug"
 	"time"
+	_ "embed"
 )
+
+//go:embed build.version
+var buildVersion string
 
 type HandlerFunc func(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse
 
@@ -28,7 +32,7 @@ var (
 )
 
 func StartLambda(methods MethodHandlers) {
-
+	fmt.Printf("BUILD: %v\n", buildVersion)
 	methodHandlers = methods
 
 	rand.Seed(time.Now().UnixNano())
