@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"georgguessr.com/lambda-room/creation"
 	"georgguessr.com/lambda-room/db"
 	"georgguessr.com/pkg"
@@ -25,6 +26,7 @@ func main() {
 }
 
 func HandleRoomExists(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	defer pkg.LogDuration(pkg.Track())
 	roomID := getRoomIdFromRequest(request)
 	if db.RoomExists(roomID) {
 		return pkg.GenerateResponse(ExistsResponse{true}, 200)
@@ -33,6 +35,7 @@ func HandleRoomExists(request events.APIGatewayProxyRequest) *events.APIGatewayP
 }
 
 func HandleGetRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	defer pkg.LogDuration(pkg.Track())
 	roomID := getRoomIdFromRequest(request)
 	room, err := pkg.GetRoom(roomID)
 	if err != nil {
@@ -42,9 +45,9 @@ func HandleGetRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProx
 }
 
 func HandlePostRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	defer pkg.LogDuration(pkg.Track())
 	createType := request.QueryStringParameters["type"]
-	defer pkg.Duration(pkg.Track("HandlePostRoom [" + createType + "]"))
-
+	fmt.Println(createType)
 	creator, err := creation.NewCreator(createType)
 	if err != nil {
 		return pkg.ErrorResponse(err)
@@ -58,6 +61,7 @@ func HandlePostRoom(request events.APIGatewayProxyRequest) *events.APIGatewayPro
 }
 
 func getRoomIdFromRequest(request events.APIGatewayProxyRequest) string {
+	defer pkg.LogDuration(pkg.Track())
 	roomID := request.PathParameters["roomID"]
 	if roomID == "" {
 		pkg.PanicBadRequest("no room id given")

@@ -91,7 +91,7 @@ $ docker-compose -f test/docker-compose-dynamodb.yml up -d
 $ make local
 
 # run frontend server
-$ http-server dist
+$ http-server frontend/dist
 
 ```
 ## License

@@ -40,6 +40,7 @@ type CreatorPredefinedCities struct {}
 
 
 func (cr *CreatorPredefinedCities) CreateRoom(reqBody string) (string, error){
+	defer pkg.LogDuration(pkg.Track())
 	room := RoomWithPredefinedArea{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
@@ -72,7 +73,7 @@ func (cr *CreatorPredefinedCities) CreateRoom(reqBody string) (string, error){
 
 // Returns error if no valid point could be generated
 func (cr *CreatorPredefinedCities) randomPositionByArea(country string, cities string, count int) (positions []*orb.Point, err error) {
-
+	defer pkg.LogDuration(pkg.Track())
 	minPop := minPopulation[cities]
 	if country != "all" {
 		countryData, err := cr.queryWikiData(fmt.Sprintf(getCountryByCode, strings.ToUpper(country)))
@@ -137,7 +138,7 @@ func (cr *CreatorPredefinedCities) randomPositionByArea(country string, cities s
 }
 
 func (cr *CreatorPredefinedCities) randomPosForCities(possibleCities []*place, count int) (positions []*orb.Point, err error) {
-
+	defer pkg.LogDuration(pkg.Track())
 	var cities []*place
 	cityFeatures := make(map[string]*geojson.Feature, 0)
 
@@ -187,6 +188,7 @@ func (cr *CreatorPredefinedCities) newCity(name, country string, pop int, pos po
 }
 
 func (cr *CreatorPredefinedCities) queryWikiData(query string) (*sparql.Results, error) {
+	defer pkg.LogDuration(pkg.Track())
 	fmt.Println("Wikidata query: " + query)
 	repo, err := sparql.NewRepo(wikiDataUrl)
 	if err != nil {
@@ -201,6 +203,7 @@ func (cr *CreatorPredefinedCities) queryWikiData(query string) (*sparql.Results,
 }
 
 func (cr *CreatorPredefinedCities) wikiDataStringToPos(queryResult string) (*position, error) { // e.g.  Point(7.099722222 50.733888888)
+	defer pkg.LogDuration(pkg.Track())
 	coordinatesTxt := strings.Trim(queryResult, "Point()")
 	coordinates := strings.Split(coordinatesTxt, " ")
 

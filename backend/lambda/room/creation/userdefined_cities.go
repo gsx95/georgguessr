@@ -16,6 +16,7 @@ type RoomWithPlaces struct {
 }
 
 func (cr *CreatorUserdefinedCities) CreateRoom(reqBody string) (string, error) {
+	defer pkg.LogDuration(pkg.Track())
 	room := RoomWithPlaces{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {

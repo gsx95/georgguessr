@@ -10,6 +10,7 @@ import (
 type CreatorUnrestricted struct {}
 
 func (cr *CreatorUnrestricted) CreateRoom(reqBody string) (string, error) {
+	defer pkg.LogDuration(pkg.Track())
 	fmt.Printf("create unrestricted room %v\n", reqBody)
 	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)

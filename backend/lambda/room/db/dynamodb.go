@@ -8,7 +8,7 @@ import (
 )
 
 func RoomExists(roomID string) bool {
-
+	defer pkg.LogDuration(pkg.Track())
 	input := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"id": {
@@ -26,7 +26,7 @@ func RoomExists(roomID string) bool {
 }
 
 func WriteRoomToDB(room pkg.Room) error {
-
+	defer pkg.LogDuration(pkg.Track())
 	av, err := pkg.Encoder.Encode(room)
 	if err != nil {
 		return pkg.InternalErr(fmt.Sprintf("Error marshalling room: %v", err))

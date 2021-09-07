@@ -67,6 +67,7 @@ func newRoundPos(round int, lat, lng float64) roundPosition {
 }
 
 func addStreetViewToRoom(room *pkg.Room, streetViews streetViewIDs) {
+	defer pkg.LogDuration(pkg.Track())
 	for _, streetView := range streetViews.Panos {
 		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
 			No: streetView.Round,
@@ -81,6 +82,7 @@ func addStreetViewToRoom(room *pkg.Room, streetViews streetViewIDs) {
 }
 
 func createRoom(room *pkg.Room) (string, error) {
+	defer pkg.LogDuration(pkg.Track())
 	if room.MaxPlayers == 0 {
 		return "", pkg.BadRequestErr("zero players not possible")
 	}
@@ -107,7 +109,7 @@ func orbPoint(Lat, Lng float64) *orb.Point {
 
 // Returns error if no valid point could be generated
 func randomPosForCity(feature *geojson.Feature, originalPlace position) (point *orb.Point, err error) {
-
+	defer pkg.LogDuration(pkg.Track())
 	pointValid := false
 	box := feature.BBox.Bound()
 
@@ -126,6 +128,7 @@ func randomPosForCity(feature *geojson.Feature, originalPlace position) (point *
 
 
 func getBestFittingGeoJSONFeature(city, country string, position position) (*geojson.Feature, error) {
+	defer pkg.LogDuration(pkg.Track())
 	fmt.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
 	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)
 	if err != nil {
@@ -190,6 +193,7 @@ func getBestFittingGeoJSONFeature(city, country string, position position) (*geo
 
 
 func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point, originalPlace *position) (bool, error) {
+	defer pkg.LogDuration(pkg.Track())
 	if multiPoly, isMulti := feature.Geometry.(orb.MultiPolygon); isMulti {
 		// if its a multipolygon, we only care for the polygon in which the originalPlace lies
 		if originalPlace != nil {
@@ -230,6 +234,7 @@ func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point, originalPl
 }
 
 func getStreetviewPositions(positions positions, num int) (*streetViewIDs, error) {
+	defer pkg.LogDuration(pkg.Track())
 	fmt.Printf("generate streetview for positions: %v\n", positions)
 	posJson, err := json.Marshal(positions)
 	if err != nil {

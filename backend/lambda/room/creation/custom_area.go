@@ -12,6 +12,7 @@ import (
 type CreatorCustomArea struct{}
 
 func (cr *CreatorCustomArea) CreateRoom(reqBody string) (string, error) {
+	defer pkg.LogDuration(pkg.Track())
 	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
@@ -36,6 +37,7 @@ func (cr *CreatorCustomArea) CreateRoom(reqBody string) (string, error) {
 }
 
 func (cr *CreatorCustomArea) randomPositionInArea(area []pkg.GeoPoint) (lat, lon float64) {
+	defer pkg.LogDuration(pkg.Track())
 	polygon := cr.pointsToPolygon(area)
 	pointValid := false
 	var point orb.Point
@@ -50,6 +52,7 @@ func (cr *CreatorCustomArea) randomPositionInArea(area []pkg.GeoPoint) (lat, lon
 }
 
 func (cr *CreatorCustomArea) pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
+	defer pkg.LogDuration(pkg.Track())
 	var ring orb.Ring
 	ring = []orb.Point{}
 	for _, point := range points {
