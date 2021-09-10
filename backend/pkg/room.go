@@ -28,6 +28,7 @@ type Room struct {
 	Areas        [][]GeoPoint `json:"areas,omitempty"`
 	GamesRounds  []GameRound  `json:"gameRounds"`
 	PlayersCount int          `json:"playersCount,omitempty"`
+	TTL          int64        `json:"ttl"`
 }
 
 type GeoPoint struct {

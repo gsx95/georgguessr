@@ -7,7 +7,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 30
   Api:
     Cors:
       AllowMethods: "'GET,PUT,POST,DELETE,OPTIONS'"
@@ -48,11 +48,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/room/
+      FunctionName: GuessrRoomsFunction
       Handler: handler
       Layers:
         - !Ref PhantomJSLayer
       Runtime: go1.x
-      Timeout: 40
+      MemorySize: 512
       Events:
         GetRoom:
           Type: Api
@@ -96,51 +97,14 @@ Resources:
               - ':'
               - Ref: 'AWS::AccountId'
               - ':table/GeorgGuessrRooms'
-        - Effect: Allow
-          Action:
-          - 'dynamodb:GetItem'
-          Resource:
-            'Fn::Join':
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - Ref: 'AWS::Region'
-              - ':'
-              - Ref: 'AWS::AccountId'
-              - ':table/GeoContinents'
-        - Effect: Allow
-          Action:
-          - 'dynamodb:QueryItem'
-          - 'dynamodb:GetItem'
-          - 'dynamodb:Scan'
-          Resource:
-            'Fn::Join':
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - Ref: 'AWS::Region'
-              - ':'
-              - Ref: 'AWS::AccountId'
-              - ':table/GeoCities'
-        - Effect: Allow
-          Action:
-          - 'dynamodb:QueryItem'
-          - 'dynamodb:GetItem'
-          - 'dynamodb:Scan'
-          Resource:
-            'Fn::Join':
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - Ref: 'AWS::Region'
-              - ':'
-              - Ref: 'AWS::AccountId'
-              - ':table/GeoCountries'
 
   GuessrGamesFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: lambda/game/
+      FunctionName: GuessrGamesFunction
       Handler: handler
       Runtime: go1.x
-      Timeout: 20
       Events:
         GetGamePos:
           Type: Api
@@ -216,43 +180,6 @@ Resources:
               - ':'
               - Ref: 'AWS::AccountId'
               - ':table/GeorgGuessrRooms'
-        - Effect: Allow
-          Action:
-          - 'dynamodb:GetItem'
-          Resource:
-            'Fn::Join':
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - Ref: 'AWS::Region'
-              - ':'
-              - Ref: 'AWS::AccountId'
-              - ':table/GeoContinents'
-        - Effect: Allow
-          Action:
-          - 'dynamodb:QueryItem'
-          - 'dynamodb:GetItem'
-          - 'dynamodb:Scan'
-          Resource:
-            'Fn::Join':
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - Ref: 'AWS::Region'
-              - ':'
-              - Ref: 'AWS::AccountId'
-              - ':table/GeoCities'
-        - Effect: Allow
-          Action:
-          - 'dynamodb:QueryItem'
-          - 'dynamodb:GetItem'
-          - 'dynamodb:Scan'
-          Resource:
-            'Fn::Join':
-            - ''
-            - - 'arn:aws:dynamodb:'
-              - Ref: 'AWS::Region'
-              - ':'
-              - Ref: 'AWS::AccountId'
-              - ':table/GeoCountries'
 
   GeorgGuessrRooms:
     Type: 'AWS::DynamoDB::Table'
@@ -265,3 +192,6 @@ Resources:
       KeySchema:
       - AttributeName: id
         KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true

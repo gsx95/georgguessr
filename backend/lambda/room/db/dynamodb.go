@@ -5,6 +5,7 @@ import (
 	"georgguessr.com/pkg"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"time"
 )
 
 func RoomExists(roomID string) bool {
@@ -26,6 +27,7 @@ func RoomExists(roomID string) bool {
 }
 
 func WriteRoomToDB(room pkg.Room) error {
+	room.TTL = time.Now().Unix() + (60 * 60 * 2)
 	defer pkg.LogDuration(pkg.Track())
 	av, err := pkg.Encoder.Encode(room)
 	if err != nil {

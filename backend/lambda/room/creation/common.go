@@ -94,7 +94,6 @@ func createRoom(room *pkg.Room) (string, error) {
 	}
 	room.ID = id
 	room.Players = []string{}
-	room.Status = "waiting"
 
 	db.WriteRoomToDB(*room)
 	return room.ID, nil
