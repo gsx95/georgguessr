@@ -11,6 +11,7 @@ import (
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/planar"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os/exec"
 	"sort"
@@ -119,7 +120,7 @@ func randomPosForCity(feature *geojson.Feature, originalPlace position) (point *
 		point = &orb.Point{lon, lat}
 		pointValid, err = isPointInsidePolygon(feature, point, &originalPlace)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}
 
@@ -129,7 +130,7 @@ func randomPosForCity(feature *geojson.Feature, originalPlace position) (point *
 
 func getBestFittingGeoJSONFeature(city, country string, position position) (*geojson.Feature, error) {
 	defer pkg.LogDuration(pkg.Track())
-	fmt.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
+	log.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
 	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)
 	if err != nil {
 		return nil, pkg.InternalErr(fmt.Sprintf("Error getting geojson featuers from openstreemmaps: %v", err))
@@ -163,7 +164,7 @@ func getBestFittingGeoJSONFeature(city, country string, position position) (*geo
 	}
 
 	if len(filteredPlaces) == 0 {
-		fmt.Println("No feature has polygon in which the place lies")
+		log.Println("No feature has polygon in which the place lies")
 		filteredPlaces = featureCollection.Features
 	}
 
@@ -235,14 +236,14 @@ func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point, originalPl
 
 func getStreetviewPositions(positions positions, num int) (*streetViewIDs, error) {
 	defer pkg.LogDuration(pkg.Track())
-	fmt.Printf("generate streetview for positions: %v\n", positions)
+	log.Printf("generate streetview for positions: %v\n", positions)
 	posJson, err := json.Marshal(positions)
 	if err != nil {
 		return nil, pkg.InternalErr(fmt.Sprintf("Error marshalling position: %v", err))
 	}
 
 	url := fmt.Sprintf(`file:///opt/bin/index.html?pos=%s`, string(posJson))
-	fmt.Printf("call phantomJS with url %v\n", url)
+	log.Printf("call phantomJS with url %v\n", url)
 
 	app := "/opt/bin/phantomjs"
 	arg0 := "/opt/bin/script.js"
@@ -257,7 +258,8 @@ func getStreetviewPositions(positions positions, num int) (*streetViewIDs, error
 		return nil, pkg.InternalErr(fmt.Sprintf("Error executing phantomjs: %v %v %v ", cmd, stdout, err))
 	}
 
-	fmt.Printf("stdout phantomJS %v\n", string(stdout))
+	log.Printf("stdout phantomJS %v\n", string(stdout))
+	log.Println("filter streetview results")
 
 	allStreetViews := streetViewIDs{}
 	err = json.Unmarshal(stdout, &allStreetViews)

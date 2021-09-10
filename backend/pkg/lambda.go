@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"log"
 	"math/rand"
 	"os"
 	"runtime/debug"
@@ -32,7 +33,7 @@ var (
 )
 
 func StartLambda(methods MethodHandlers) {
-	fmt.Printf("BUILD: %v\n", buildVersion)
+	log.Printf("BUILD: %v\n", buildVersion)
 	methodHandlers = methods
 
 	rand.Seed(time.Now().UnixNano())
@@ -61,7 +62,7 @@ func handler(request events.APIGatewayProxyRequest) (response events.APIGatewayP
 
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("stacktrace from panic: \n" + string(debug.Stack()))
+			log.Println("stacktrace from panic: \n" + string(debug.Stack()))
 			switch err := r.(type) {
 			case error:
 				response = *internalErrorResponse(err)

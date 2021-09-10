@@ -1,6 +1,7 @@
 package creation
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"georgguessr.com/pkg"
@@ -11,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	_ "embed"
 )
 
 var minPopulation = map[string]int{
@@ -32,14 +32,13 @@ const wikiDataUrl = "https://query.wikidata.org/sparql"
 
 type RoomWithPredefinedArea struct {
 	pkg.Room
-	Country   string `json:"country"`
-	City      string `json:"city"`
+	Country string `json:"country"`
+	City    string `json:"city"`
 }
 
-type CreatorPredefinedCities struct {}
+type CreatorPredefinedCities struct{}
 
-
-func (cr *CreatorPredefinedCities) CreateRoom(reqBody string) (string, error){
+func (cr *CreatorPredefinedCities) CreateRoom(reqBody string) (string, error) {
 	defer pkg.LogDuration(pkg.Track())
 	room := RoomWithPredefinedArea{}
 	err := json.Unmarshal([]byte(reqBody), &room)
@@ -52,12 +51,12 @@ func (cr *CreatorPredefinedCities) CreateRoom(reqBody string) (string, error){
 
 	positions := positions{}
 
-	randomPositions, err := cr.randomPositionByArea(country, cities, room.Rounds +additionalCreationTries)
+	randomPositions, err := cr.randomPositionByArea(country, cities, room.Rounds+additionalCreationTries)
 	if err != nil {
 		return "", pkg.InternalErr(fmt.Sprintf("No point could be generated: %v", err))
 	}
 
-	for i, pos := range randomPositions  {
+	for i, pos := range randomPositions {
 		positions.Pos = append(positions.Pos, newRoundPos(i, pos.Lat(), pos.Lon()))
 	}
 
@@ -69,7 +68,6 @@ func (cr *CreatorPredefinedCities) CreateRoom(reqBody string) (string, error){
 
 	return createRoom(&room.Room)
 }
-
 
 // Returns error if no valid point could be generated
 func (cr *CreatorPredefinedCities) randomPositionByArea(country string, cities string, count int) (positions []*orb.Point, err error) {
@@ -124,12 +122,12 @@ func (cr *CreatorPredefinedCities) randomPositionByArea(country string, cities s
 		locationString := result["location"].Value
 		pop, err := strconv.Atoi(result["population"].Value)
 		if err != nil {
-			fmt.Printf("error while trying to convert wikiData pop %s to int\n", result["population"].Value)
+			log.Printf("error while trying to convert wikiData pop %s to int\n", result["population"].Value)
 			continue
 		}
 		pos, err := cr.wikiDataStringToPos(locationString)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			continue
 		}
 		possibleCities = append(possibleCities, cr.newCity(cityName, countryName, pop, *pos))
@@ -151,7 +149,7 @@ func (cr *CreatorPredefinedCities) randomPosForCities(possibleCities []*place, c
 		if _, exists := cityFeatures[city.ID]; !exists {
 			feature, err := getBestFittingGeoJSONFeature(city.Name, city.Country, city.Pos)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
 			cityFeatures[city.ID] = feature
@@ -165,7 +163,7 @@ func (cr *CreatorPredefinedCities) randomPosForCities(possibleCities []*place, c
 	for i := range cities {
 		point, err := randomPosForCity(cityFeatures[cities[i].ID], cities[i].Pos)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			i--
 		}
 		positions = append(positions, point)
@@ -179,17 +177,17 @@ func (cr *CreatorPredefinedCities) randomPosForCities(possibleCities []*place, c
 
 func (cr *CreatorPredefinedCities) newCity(name, country string, pop int, pos position) *place {
 	return &place{
-		Pop: pop,
-		Name: name,
+		Pop:     pop,
+		Name:    name,
 		Country: country,
-		ID: fmt.Sprintf("%s_%s_%d", name, country, pop),
-		Pos: pos,
+		ID:      fmt.Sprintf("%s_%s_%d", name, country, pop),
+		Pos:     pos,
 	}
 }
 
 func (cr *CreatorPredefinedCities) queryWikiData(query string) (*sparql.Results, error) {
 	defer pkg.LogDuration(pkg.Track())
-	fmt.Println("Wikidata query: " + query)
+	log.Println("Wikidata query: " + query)
 	repo, err := sparql.NewRepo(wikiDataUrl)
 	if err != nil {
 		return nil, pkg.InternalErr(err.Error())
@@ -198,7 +196,7 @@ func (cr *CreatorPredefinedCities) queryWikiData(query string) (*sparql.Results,
 	if err != nil {
 		return nil, pkg.InternalErr(err.Error())
 	}
-	fmt.Printf("Wikidata results: %v\n", results.Results.Bindings)
+	log.Printf("Wikidata results: %v\n", results.Results.Bindings)
 	return results, nil
 }
 

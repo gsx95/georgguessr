@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"georgguessr.com/lambda-room/creation"
 	"georgguessr.com/lambda-room/db"
 	"georgguessr.com/pkg"
 	"github.com/aws/aws-lambda-go/events"
+	"log"
 )
 
 func main() {
@@ -47,7 +47,7 @@ func HandleGetRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProx
 func HandlePostRoom(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
 	defer pkg.LogDuration(pkg.Track())
 	createType := request.QueryStringParameters["type"]
-	fmt.Println(createType)
+	log.Println(createType)
 	creator, err := creation.NewCreator(createType)
 	if err != nil {
 		return pkg.ErrorResponse(err)

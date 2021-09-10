@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/mmcloughlin/spherand"
+	"log"
 )
 
 type CreatorUnrestricted struct {}
 
 func (cr *CreatorUnrestricted) CreateRoom(reqBody string) (string, error) {
 	defer pkg.LogDuration(pkg.Track())
-	fmt.Printf("create unrestricted room %v\n", reqBody)
+	log.Printf("create unrestricted room %v\n", reqBody)
 	room := pkg.Room{}
 	err := json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
@@ -20,14 +21,14 @@ func (cr *CreatorUnrestricted) CreateRoom(reqBody string) (string, error) {
 
 	positions := positions{}
 
-	fmt.Printf("generate random positions\n")
+	log.Printf("generate random positions\n")
 
 	for i := 0; i < room.Rounds +additionalCreationTries; i++ {
 		lat, lon := spherand.Geographical()
 		positions.Pos = append(positions.Pos, newRoundPos(i, lat, lon))
 	}
 
-	fmt.Printf("created positions: %v\n", positions)
+	log.Printf("created positions: %v\n", positions)
 
 	streetViews, err := getStreetviewPositions(positions, room.Rounds)
 	if err != nil {

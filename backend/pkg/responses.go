@@ -2,8 +2,8 @@ package pkg
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/aws/aws-lambda-go/events"
+	"log"
 )
 
 func notFoundResponse(errorMsg string) *events.APIGatewayProxyResponse {
@@ -15,8 +15,8 @@ func badRequestResponse(errorMsg string) *events.APIGatewayProxyResponse {
 }
 
 func internalErrorResponse(err error) *events.APIGatewayProxyResponse {
-	fmt.Println("Error: ")
-	fmt.Println(err)
+	log.Println("Error: ")
+	log.Println(err)
 	return GenerateResponse(stringToJsonStruct("Internal Server Error"), 500)
 }
 

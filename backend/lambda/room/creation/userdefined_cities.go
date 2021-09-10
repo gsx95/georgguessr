@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"georgguessr.com/pkg"
 	"github.com/paulmach/orb/geojson"
+	"log"
 	"math/rand"
 )
 
@@ -30,7 +31,7 @@ func (cr *CreatorUserdefinedCities) CreateRoom(reqBody string) (string, error) {
 	for _, place := range room.Places {
 		feature, err := getBestFittingGeoJSONFeature(place.Name, place.Country, place.Pos)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		placeFeatures[cr.getPlaceID(place)] = feature
 	}
@@ -43,7 +44,7 @@ func (cr *CreatorUserdefinedCities) CreateRoom(reqBody string) (string, error) {
 		place := room.Places[rand.Intn(len(room.Places))]
 		point, err := randomPosForCity(placeFeatures[cr.getPlaceID(place)], place.Pos)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			createErrors[err.Error()] = true
 			continue
 		}
