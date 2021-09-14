@@ -126,11 +126,9 @@ func randomPosForCity(feature *geojson.Feature, originalPlace position) (point *
 	return point, nil
 }
 
-
-func getBestFittingGeoJSONFeature(city, country string, position position) (*geojson.Feature, error) {
-	defer pkg.LogDuration(pkg.Track())
-	log.Println(fmt.Sprintf(getCityBoundariesUrl, city, country))
-	req, err := http.NewRequest("GET", fmt.Sprintf(getCityBoundariesUrl, city, country), nil)
+func requestGeoJson(url string) (*geojson.FeatureCollection, error) {
+	log.Println("calling " + url)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, pkg.InternalErr(fmt.Sprintf("Error getting geojson featuers from openstreemmaps: %v", err))
 	}
@@ -146,12 +144,22 @@ func getBestFittingGeoJSONFeature(city, country string, position position) (*geo
 	if err != nil {
 		return nil, pkg.InternalErr(fmt.Sprintf("Error reading geojson response from openstreemmaps: %v", err))
 	}
+	log.Println("unmarshal geojson body")
 
 	featureCollection, err := geojson.UnmarshalFeatureCollection(bodyBytes)
 	if err != nil {
 		return nil, pkg.InternalErr(fmt.Sprintf("Error unmarshalling geojson response from openstreemmaps: %v %v", string(bodyBytes), err))
 	}
+	return featureCollection, nil
+}
 
+func getBestFittingGeoJSONFeature(city, country string, position position) (*geojson.Feature, error) {
+	defer pkg.LogDuration(pkg.Track())
+
+	featureCollection, err := requestGeoJson(fmt.Sprintf(getCityBoundariesUrl, city, country))
+	if err != nil {
+		return nil, err
+	}
 
 	var filteredPlaces []*geojson.Feature
 

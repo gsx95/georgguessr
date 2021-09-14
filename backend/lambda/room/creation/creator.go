@@ -12,7 +12,7 @@ type RoomsCreator interface {
 func NewCreator(creatorType string) (RoomsCreator, error) {
 	switch creatorType {
 	case "list":
-		return &CreatorPredefinedCities{}, nil
+		return &CreatorCountryContinent{}, nil
 	case "unlimited":
 		return &CreatorUnrestricted{}, nil
 	case "places":

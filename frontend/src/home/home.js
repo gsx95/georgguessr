@@ -1,5 +1,5 @@
-import u from '../utils.js';
 import {countries} from "countries-list";
+import u from "../utils";
 
 export default {
     GuessrHome: {
@@ -192,11 +192,8 @@ export default {
         },
 
         createRoomList: function (data) {
-            let country = u.byId("country-selector").value;
-            let city = u.byId("city-selector").value;
-
-            data["country"] = country;
-            data["city"] = city;
+            data["country"] = u.byId("country-selector").value;
+            data["continent"] = u.byId("continent-selector").value;
             GuessrHome.createRoomAndRedirect("list", data);
         },
 
@@ -296,24 +293,38 @@ export default {
             let secondLimits = ["10s", "20s", "30s", "40s", "50s"];
 
             let countrySelect = u.byId("country-selector");
-            let citySelect = u.byId("city-selector");
+            let continentSelect = u.byId("continent-selector");
 
             let citySearchInput = u.byId("search-place-input");
             let citySearchTable = u.byId("specific-cities-table");
 
-            u.addElement("option", countrySelect, "All Countries").value = "all";
-            for (let code in countries) {
-                let country = countries[code];
-                country["code"] = code;
-                u.addElement("option", countrySelect, country.name).value = country.code;
-            }
+            let updateCountryList = function() {
+                let selectedContinent = continentSelect.value;
+                countrySelect.innerText = "";
+                u.addElement("option", countrySelect, "All Countries").value = "all";
+                let cList = [];
+                for (let code in countries) {
+                    let country = countries[code];
+                    if (country["continent"] === selectedContinent) {
+                        country["code"] = code;
+                        cList.push(country);
+                    }
+                }
 
+                cList.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+
+                for(let i in cList) {
+                    let country = cList[i];
+                    u.addElement("option", countrySelect, country.name).value = country.code;
+                }
+            };
+            continentSelect.onchange = updateCountryList;
+            updateCountryList();
 
             geoDropDown.onchange = function () {
                 geoMap.style.display = geoDropDown.value === "custom" ? "block" : "none";
-
+                continentSelect.style.display = geoDropDown.value === "list" ? "block" : "none";
                 countrySelect.style.display = geoDropDown.value === "list" ? "block" : "none";
-                citySelect.style.display = geoDropDown.value === "list" ? "block" : "none";
                 citySearchInput.style.display = geoDropDown.value === "place-search" ? "block" : "none";
                 citySearchTable.style.display = geoDropDown.value === "place-search" ? "block" : "none";
             };

@@ -31,7 +31,7 @@ This project is work in progress, many things are not working in some circumstan
 * Play in your favorite places
   - Search for places
   - draw custom play areas
-  - play all big cities in your favorite country
+  - play in your country or continent
   - just play randomly in the whole world
 
 <p align="middle">
