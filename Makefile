@@ -15,3 +15,11 @@ guided:
 	@echo "deploying remote";
 	@cd backend; ./make.sh "remote" "guided";
 	@cd frontend; ./make.sh "remote";
+
+remote_frontend:
+	@echo "deploying remote frontend";
+	@cd frontend; ./make.sh "remote";
+
+remote_backend:
+	@echo "deploying remote backend";
+	@cd backend; ./make.sh "remote";
