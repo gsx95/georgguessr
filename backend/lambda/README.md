@@ -1,4 +1,4 @@
-### Lambdas that form the complete backend. Shared code is inside the "pkg" module.
+### Game logic
  
-*  Game Lambda: to get, write and update information about a specific game
-*  Room Lambda: to get and create rooms
+*  Game Lambda: While playing. To get, write and update information about a specific game.
+*  Room Lambda: While in the lobby. To create rooms and check for existing rooms.

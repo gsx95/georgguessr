@@ -1,4 +1,4 @@
 ### Backend
  
-* Lambda: Lambdas that form the complete backend.
+* Lambda: Backend game logic.
 * Pkg: Shared code.
