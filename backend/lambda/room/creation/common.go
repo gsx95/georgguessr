@@ -1,8 +1,6 @@
 package creation
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"georgguessr.com/lambda-room/db"
 	"georgguessr.com/pkg"
@@ -13,20 +11,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os/exec"
 	"sort"
 	"strings"
-	"time"
 )
 
-type positions struct {
-	Pos []roundPosition `json:"pos"`
-}
-
-type roundPosition struct {
-	Round    int      `json:"r"`
-	Position position `json:"p"`
-}
+type Positions []position
 
 type position struct {
 	Lat float64 `json:"lat"`
@@ -41,48 +30,18 @@ type place struct {
 	Pos     position `json:"location"`
 }
 
-type pano struct {
-	Round  int      `json:"r"`
-	PanoID string   `json:"id"`
-	Pos    position `json:"location"`
-
-}
-
-type streetViewIDs struct {
-	Panos []pano `json:"panos"`
-}
-
-
 const additionalCreationTries = 30
 const getCityBoundariesUrl = "https://nominatim.openstreetmap.org/search.php?q=%s+%s&polygon_geojson=1&format=geojson"
 
 
-func newRoundPos(round int, lat, lng float64) roundPosition {
-	return roundPosition{
-		Round: round,
-		Position: position{
+func newPosition(lat, lng float64) position {
+	return position{
 			Lat: lat,
 			Lng: lng,
-		},
 	}
 }
 
-func addStreetViewToRoom(room *pkg.Room, streetViews streetViewIDs) {
-	defer pkg.LogDuration(pkg.Track())
-	for _, streetView := range streetViews.Panos {
-		room.GamesRounds = append(room.GamesRounds, pkg.GameRound{
-			No: streetView.Round,
-			StartPosition: pkg.GeoPoint{
-				Lat: streetView.Pos.Lat,
-				Lon: streetView.Pos.Lng,
-			},
-			PanoID: streetView.PanoID,
-			Scores: map[string]pkg.Guess{},
-		})
-	}
-}
-
-func createRoom(room *pkg.Room) (string, error) {
+func saveRoom(room *pkg.Room) (string, error) {
 	defer pkg.LogDuration(pkg.Track())
 	if room.MaxPlayers == 0 {
 		return "", pkg.BadRequestErr("zero players not possible")
@@ -239,58 +198,4 @@ func isPointInsidePolygon(feature *geojson.Feature, point *orb.Point, originalPl
 	}
 
 	return false, pkg.InternalErr("geometry of feature is neither multipolygon nor polygon nor point")
-}
-
-func getStreetviewPositions(positions positions, num int) (*streetViewIDs, error) {
-	defer pkg.LogDuration(pkg.Track())
-	log.Printf("generate streetview for positions: %v\n", positions)
-	posJson, err := json.Marshal(positions)
-	if err != nil {
-		return nil, pkg.InternalErr(fmt.Sprintf("Error marshalling position: %v", err))
-	}
-
-	url := fmt.Sprintf(`file:///opt/bin/index.html?pos=%s`, string(posJson))
-	log.Printf("call phantomJS with url %v\n", url)
-
-	app := "/opt/bin/phantomjs"
-	arg0 := "/opt/bin/script.js"
-	arg1 := url
-
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, app, arg0, arg1)
-	stdout, err := cmd.Output()
-	if err != nil {
-		return nil, pkg.InternalErr(fmt.Sprintf("Error executing phantomjs: %v %v %v ", cmd, stdout, err))
-	}
-
-	log.Printf("stdout phantomJS %v\n", string(stdout))
-	log.Println("filter streetview results")
-
-	allStreetViews := streetViewIDs{}
-	err = json.Unmarshal(stdout, &allStreetViews)
-	if err != nil {
-		return nil, pkg.InternalErr(fmt.Sprintf("Error executing phantomjs: %v %v %v ", cmd, stdout, err))
-	}
-	okStreetViews := &streetViewIDs{
-		Panos: []pano{},
-	}
-
-	count := 0
-
-	for _, generatedSV := range allStreetViews.Panos {
-		if generatedSV.PanoID != "" {
-			okStreetViews.Panos = append(okStreetViews.Panos, pano{
-				Round: count,
-				Pos: generatedSV.Pos,
-				PanoID: generatedSV.PanoID,
-			})
-			count++
-		}
-		if count == num {
-			break
-		}
-	}
-	return okStreetViews, nil
 }

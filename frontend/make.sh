@@ -4,7 +4,9 @@ echo "------------------------"
 echo "Building Frontend..."
 echo "------------------------"
 
-if [[ $1 = "remote" ]]
+BUILD_VERSION=$1
+TARGET=$2
+if [[ ${TARGET} = "remote" ]]
 then
     RES=$(aws cloudformation describe-stack-resources --stack-name georgguessr)
     API_KEY_ID=$(echo ${RES} | jq -r '.StackResources[]  | select(.ResourceType == "AWS::ApiGateway::ApiKey") | .PhysicalResourceId')
@@ -17,7 +19,7 @@ else
 fi
 
 npm install
-npx webpack --env apiKey="$API_KEY_VALUE" --env api="$API_ENDPOINT" --env mapsKey="$GUESSR_MAPS_API_KEY"
+npx webpack --env apiKey="$API_KEY_VALUE" --env api="$API_ENDPOINT" --env mapsKey="$GUESSR_MAPS_API_KEY" --env buildVersion="$BUILD_VERSION"
 
 echo "------------------------"
 echo "Done!"

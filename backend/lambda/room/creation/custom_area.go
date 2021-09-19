@@ -11,32 +11,30 @@ import (
 
 type CreatorCustomArea struct{}
 
-func (cr *CreatorCustomArea) CreateRoom(reqBody string) (string, error) {
+func (cr *CreatorCustomArea) CreateRoom(reqBody string) (roomId string, genPos *Positions, err error) {
 	defer pkg.LogDuration(pkg.Track())
 	room := pkg.Room{}
-	err := json.Unmarshal([]byte(reqBody), &room)
+	err = json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
 		panic(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
-	positions := positions{}
+	var positions Positions
 
 	for i := 0; i < room.Rounds + additionalCreationTries; i++ {
 		area := room.Areas[rand.Intn(len(room.Areas))]
-		lat, lon := cr.randomPositionInArea(area)
-		positions.Pos = append(positions.Pos, newRoundPos(i, lat, lon))
+		position := cr.randomPositionInArea(area)
+		positions = append(positions, position)
 	}
 
-	streetViews, err := getStreetviewPositions(positions, room.Rounds)
+	roomId, err = saveRoom(&room)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	addStreetViewToRoom(&room, *streetViews)
-
-	return createRoom(&room)
+	return roomId, &positions, nil
 }
 
-func (cr *CreatorCustomArea) randomPositionInArea(area []pkg.GeoPoint) (lat, lon float64) {
+func (cr *CreatorCustomArea) randomPositionInArea(area []pkg.GeoPoint) position {
 	defer pkg.LogDuration(pkg.Track())
 	polygon := cr.pointsToPolygon(area)
 	pointValid := false
@@ -48,7 +46,7 @@ func (cr *CreatorCustomArea) randomPositionInArea(area []pkg.GeoPoint) (lat, lon
 		point = orb.Point{lon, lat}
 		pointValid = planar.PolygonContains(polygon, point)
 	}
-	return point.Lat(), point.Lon()
+	return newPosition(point.Lat(), point.Lon())
 }
 
 func (cr *CreatorCustomArea) pointsToPolygon(points []pkg.GeoPoint) (polygon orb.Polygon) {
@@ -56,7 +54,7 @@ func (cr *CreatorCustomArea) pointsToPolygon(points []pkg.GeoPoint) (polygon orb
 	var ring orb.Ring
 	ring = []orb.Point{}
 	for _, point := range points {
-		ring = append(ring, *orbPoint(point.Lat, point.Lon))
+		ring = append(ring, *orbPoint(point.Lat, point.Lng))
 	}
 	return []orb.Ring{ring}
 }

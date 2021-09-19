@@ -23,6 +23,7 @@ export default {
 
         initResults: function () {
             let gameID = u.getRequestParameter("id");
+            console.log(document.getElementById("BUILD_VERSION").value);
             u.initUtils();
             GuessrResults.initMaps();
             u.doGetRequestJSON("/game/endresults/" + gameID, function (resp) {

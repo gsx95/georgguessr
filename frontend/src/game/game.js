@@ -40,6 +40,7 @@ export default {
 
         showGame: function () {
             GuessrGame.gameID = u.getRequestParameter("id");
+            console.log(document.getElementById("BUILD_VERSION").value);
             u.byId("share-id").innerText = GuessrGame.gameID;
             console.log(u.byId("share-link"));
             u.byId("share-link").value = window.location.href;

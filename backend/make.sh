@@ -1,23 +1,11 @@
 #!/bin/bash -e
 
-target=$1
-guided=$2
+version=$1
+target=$2
+guided=$3
 
-cwd=$(pwd)
-cd layer
-if [[ ! -f ./bin/phantomjs ]]; then
-    mkdir -p tmp
-    cd tmp
-    wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2
-    tar -xf ./phantomjs-2.1.1-linux-x86_64.tar.bz2 -C ./
-    mv phantomjs-2.1.1-linux-x86_64/bin/phantomjs ../bin/phantomjs
-    cd ..
-    rm -rf tmp
-fi
-zip -r layer.zip bin
-cd $cwd
-date +"%Y%m%d%H%M%S" > pkg/build.version
-awk -v key=$GUESSR_MAPS_API_KEY '{gsub("<%= MAPS_KEY %>", key, $0); print}' layer/bin/template.html > layer/bin/index.html
+echo ${version}
+echo ${version} > pkg/build.version
 echo "------------------------"
 echo "Building Backend..."
 echo "------------------------"

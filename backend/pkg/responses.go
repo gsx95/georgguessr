@@ -30,15 +30,8 @@ func ErrorResponse(err error) *events.APIGatewayProxyResponse {
 	}
 }
 
-func StringResponse(msg string, status int) *events.APIGatewayProxyResponse {
-	return &events.APIGatewayProxyResponse{
-		Body:       msg,
-		StatusCode: status,
-		Headers: map[string]string{
-			"Access-Control-Allow-Origin":      "*",
-			"Access-Control-Allow-Credentials": "true",
-		},
-	}
+func OkResponse() *events.APIGatewayProxyResponse {
+	return GenerateResponse(stringToJsonStruct("ok"), 200)
 }
 
 func GenerateResponse(jsonData interface{}, status int) *events.APIGatewayProxyResponse {
@@ -59,7 +52,7 @@ func GenerateResponse(jsonData interface{}, status int) *events.APIGatewayProxyR
 
 func stringToJsonStruct(msg string) interface{} {
 	return struct {
-		Msg string `json:"message"`
+		Msg string `json:"msg"`
 	}{
 		Msg: msg,
 	}

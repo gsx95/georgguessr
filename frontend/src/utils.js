@@ -85,11 +85,10 @@ function doPostRequest(requestPath, data, callback, errorCallback, expectedStatu
         body: JSON.stringify(data),
     })
         .then((resp) => {
-            console.log("check if " + resp.status + " is equal to " + expectedStatus)
             if(resp.status !== expectedStatus) {
-                resp.text().then(errorCallback)
+                resp.json().then(errorCallback)
             }else {
-                resp.text().then(callback)
+                resp.json().then(callback)
             }
         })
         .catch((error) => {

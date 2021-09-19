@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"georgguessr.com/lambda-room/creation"
 	"georgguessr.com/lambda-room/db"
 	"georgguessr.com/pkg"
@@ -19,6 +20,9 @@ func main() {
 		},
 		"/rooms": {
 			POST: HandlePostRoom,
+		},
+		"/panoramas": {
+			POST: HandlePostPanoramas,
 		},
 	}
 
@@ -52,12 +56,28 @@ func HandlePostRoom(request events.APIGatewayProxyRequest) *events.APIGatewayPro
 	if err != nil {
 		return pkg.ErrorResponse(err)
 	}
-	response, err := creator.CreateRoom(request.Body)
+	roomId, genPositions, err := creator.CreateRoom(request.Body)
 	if err != nil {
 		return pkg.ErrorResponse(err)
 	}
-	return pkg.StringResponse(response, 200)
+	return pkg.GenerateResponse(RoomCreationResponse{
+		RoomId:       roomId,
+		GenPositions: *genPositions,
+	}, 200)
+}
 
+func HandlePostPanoramas(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
+	defer pkg.LogDuration(pkg.Track())
+	var panoramasData db.PanoramaData
+	err := json.Unmarshal([]byte(request.Body), &panoramasData)
+	if err != nil {
+		return pkg.ErrorResponse(err)
+	}
+	err = db.WritePanosToRoom(panoramasData.RoomId, panoramasData)
+	if err != nil {
+		return pkg.ErrorResponse(err)
+	}
+	return pkg.OkResponse()
 }
 
 func getRoomIdFromRequest(request events.APIGatewayProxyRequest) string {

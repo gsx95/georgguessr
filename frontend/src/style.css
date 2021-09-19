@@ -127,14 +127,9 @@ select {
     width: 0px;
     height: 10px;
     border-radius: 15px;
-    animation: progr 10s linear;
     animation-fill-mode: forwards;
 }
 
-@keyframes progr{
-    0%{ width: 0%; }
-    100%{ width: 100%; }
-}
 
 
 .input-disabled {

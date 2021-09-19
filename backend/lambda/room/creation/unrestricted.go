@@ -10,31 +10,29 @@ import (
 
 type CreatorUnrestricted struct {}
 
-func (cr *CreatorUnrestricted) CreateRoom(reqBody string) (string, error) {
+func (cr *CreatorUnrestricted) CreateRoom(reqBody string) (roomId string, genPos *Positions, err error) {
 	defer pkg.LogDuration(pkg.Track())
 	log.Printf("create unrestricted room %v\n", reqBody)
 	room := pkg.Room{}
-	err := json.Unmarshal([]byte(reqBody), &room)
+	err = json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", pkg.InternalErr(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
+		return "", nil, pkg.InternalErr(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
-	positions := positions{}
+	var positions Positions
 
-	log.Printf("generate random positions\n")
+	log.Printf("generate random Positions\n")
 
 	for i := 0; i < room.Rounds + additionalCreationTries; i++ {
 		lat, lon := spherand.Geographical()
-		positions.Pos = append(positions.Pos, newRoundPos(i, lat, lon))
+		positions = append(positions, newPosition(lat, lon))
 	}
 
-	log.Printf("created positions: %v\n", positions)
+	log.Printf("generated Positions: %v\n", positions)
 
-	streetViews, err := getStreetviewPositions(positions, room.Rounds)
+	roomId, err = saveRoom(&room)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	addStreetViewToRoom(&room, *streetViews)
-
-	return createRoom(&room)
+	return roomId, &positions, nil
 }

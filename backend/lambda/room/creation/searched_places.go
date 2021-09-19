@@ -9,22 +9,22 @@ import (
 	"math/rand"
 )
 
-type CreatorUserdefinedCities struct {}
+type CreatorSearchedPlaces struct {}
 
 type RoomWithPlaces struct {
 	pkg.Room
 	Places []place `json:"places"`
 }
 
-func (cr *CreatorUserdefinedCities) CreateRoom(reqBody string) (string, error) {
+func (cr *CreatorSearchedPlaces) CreateRoom(reqBody string) (roomId string, genPos *Positions, err error) {
 	defer pkg.LogDuration(pkg.Track())
 	room := RoomWithPlaces{}
-	err := json.Unmarshal([]byte(reqBody), &room)
+	err = json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
 		panic(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
-	positions := positions{}
+	var positions Positions
 	createErrors := map[string]bool{}
 	placeFeatures := make(map[string]*geojson.Feature, len(room.Places))
 
@@ -37,7 +37,7 @@ func (cr *CreatorUserdefinedCities) CreateRoom(reqBody string) (string, error) {
 	}
 
 	if len(placeFeatures) == 0{
-		return "", pkg.InternalErr(fmt.Sprintf("could not generate features for places %v", room.Places))
+		return "", nil, pkg.InternalErr(fmt.Sprintf("could not generate features for places %v", room.Places))
 	}
 
 	for i := 0; i < room.Rounds + additionalCreationTries; i++ {
@@ -48,25 +48,24 @@ func (cr *CreatorUserdefinedCities) CreateRoom(reqBody string) (string, error) {
 			createErrors[err.Error()] = true
 			continue
 		}
-		positions.Pos = append(positions.Pos, newRoundPos(i, point.Lat(), point.Lon()))
+		positions = append(positions, newPosition(point.Lat(), point.Lon()))
 	}
 
-	if len(positions.Pos) < room.Rounds {
+	if len(positions) < room.Rounds {
 		msgs := ""
 		for errMsg := range createErrors {
 			msgs += errMsg + ";"
 		}
-		return "", pkg.InternalErr(fmt.Sprintf("Got errors while creating room: %s", msgs))
+		return "", nil, pkg.InternalErr(fmt.Sprintf("Got errors while creating room: %s", msgs))
 	}
 
-	streetViews, err := getStreetviewPositions(positions, room.Rounds)
+	roomId, err = saveRoom(&room.Room)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	addStreetViewToRoom(&room.Room, *streetViews)
-	return createRoom(&room.Room)
+	return roomId, &positions, nil
 }
 
-func (cr *CreatorUserdefinedCities) getPlaceID(p place) string {
+func (cr *CreatorSearchedPlaces) getPlaceID(p place) string {
 	return fmt.Sprintf("%s_%s_%d", p.Name, p.Country, p.Pop)
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type RoomsCreator interface {
-	CreateRoom(requestBody string) (roomID string, err error)
+	CreateRoom(requestBody string) (roomID string, genPos *Positions, err error)
 }
 
 func NewCreator(creatorType string) (RoomsCreator, error) {
@@ -16,7 +16,7 @@ func NewCreator(creatorType string) (RoomsCreator, error) {
 	case "unlimited":
 		return &CreatorUnrestricted{}, nil
 	case "places":
-		return &CreatorUserdefinedCities{}, nil
+		return &CreatorSearchedPlaces{}, nil
 	case "custom":
 		return &CreatorCustomArea{}, nil
 	default:

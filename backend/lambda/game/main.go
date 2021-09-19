@@ -79,7 +79,7 @@ func HandlePostGuess(request events.APIGatewayProxyRequest) *events.APIGatewayPr
 
 	PutGuess(game.ID, username, round-1, guess)
 
-	return pkg.StringResponse("ok", 200)
+	return pkg.OkResponse()
 }
 
 func HandlePostPlayers(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
@@ -97,7 +97,7 @@ func HandlePostPlayers(request events.APIGatewayProxyRequest) *events.APIGateway
 		}
 	}
 	PutUsername(game.ID, username)
-	return pkg.StringResponse("ok", 200)
+	return pkg.OkResponse()
 }
 
 func HandleGetPlayers(request events.APIGatewayProxyRequest) *events.APIGatewayProxyResponse {
@@ -144,7 +144,7 @@ func HandleGetGamePosition(request events.APIGatewayProxyRequest) *events.APIGat
 		Areas:  game.Areas,
 		PanoID: r.PanoID,
 		Lat:    r.StartPosition.Lat,
-		Lon:    r.StartPosition.Lon,
+		Lon:    r.StartPosition.Lng,
 	}
 	return pkg.GenerateResponse(resp, 200)
 }

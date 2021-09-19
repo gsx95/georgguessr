@@ -1,5 +1,6 @@
 import {countries} from "countries-list";
 import u from "../utils";
+import ProgressBar from 'progressbar.js';
 
 export default {
     GuessrHome: {
@@ -7,11 +8,21 @@ export default {
         selectedAreas: [],
         selectedPolygon: null,
         selectionMap: null,
+        progress: null,
 
         init: function () {
             u.initUtils();
 
             MicroModal.init();
+            GuessrHome.progress = new ProgressBar.Line('#loading-modal-content', {
+                color: "#00449e",
+                trailColor: '#98add2',
+                strokeWidth: 3,
+                trailWidth: 3,
+            });
+            GuessrHome.progress.set(0);
+
+            console.log(document.getElementById("BUILD_VERSION").value);
 
             u.byId("create-room-btn").onclick = GuessrHome.showCreateRoom;
             u.byId("enter-room-btn").onclick = GuessrHome.showEnterRoom;
@@ -204,16 +215,90 @@ export default {
         createRoomAndRedirect: function(roomType, data) {
             MicroModal.close('modal-1');
             MicroModal.show('loading-modal');
-            u.doPostRequest("/rooms?type=" + roomType, data, function (text) {
-                window.location.href = "/game?id=" + text;
-            }, function(errorText) {
-                console.log(errorText);
-                GuessrHome.showCreateErrorMsg({"text": errorText})
+            u.doPostRequest("/rooms?type=" + roomType, data, function (roomData) {
+                GuessrHome.progress.set(0.05);
+                GuessrHome.generateStreetviews(roomData["roomId"], roomData["generatedPositions"], data["maxRounds"])
+            }, function(errorMsg) {
+                console.log(errorMsg);
+                GuessrHome.showCreateErrorMsg(errorMsg)
             }, 200);
         },
 
+        generateStreetviews: function(roomId, generatedPositions, roundsNum) {
+            let svService = new google.maps.StreetViewService();
+            let panos = [];
+            let successCount = 0;
+            let count = generatedPositions.length;
+
+            for (let i = 0; i < count; i++) {
+                let pos = generatedPositions[i];
+                getStreetViewForPos(svService, i, pos.lat, pos.lng, 0, function (round, dist, panoId, latLng) {
+                    if(panoId == null) {
+                    } else {
+                        panos.push({id: panoId, pos: latLng});
+                        successCount++;
+                        let progr = Math.min(successCount / roundsNum, 0.8);
+                        GuessrHome.progress.set(progr);
+                    }
+                });
+            }
+
+            function getStreetViewForPos(svService, round, lat, lon, count, callback) {
+                let searchRad = [49, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000];
+                svService.getPanorama({
+                    location: {"lat": lat, "lng": lon},
+                    "radius": searchRad[count],
+                    "source": "outdoor"
+                }, function (data, status) {
+                    checkStreetView(data, status, function(data) {
+                        callback(round, searchRad[count], data.location.pano, data.location.latLng.toJSON());
+                    }, function(errorMsg) {
+                        if (count + 1 === searchRad.length) {
+                            callback(round, null, null, null);
+                        } else {
+                            getStreetViewForPos(svService, round, lat, lon, count + 1, callback);
+                        }
+                    });
+                });
+            }
+
+            function checkStreetView(data, status, okCallback, errorCallback) {
+                if (status !== "OK") {
+                    errorCallback("status wrong");
+                    return;
+                }
+                if(data.links.length !== 2) {
+                    errorCallback("not two links");
+                    return;
+                }
+                return okCallback(data);
+            }
+
+            function waitForProcessToFinish() {
+                if (successCount >= roundsNum) {
+                    GuessrHome.progress.set(0.9);
+                    let data = {
+                        "roomId": roomId,
+                        "panoramas": panos.slice(0, roundsNum),
+                    };
+                    u.doPostRequest("/panoramas", data, function () {
+                        GuessrHome.progress.set(1);
+                        window.location.href = "/game?id=" + roomId;
+                    }, function(errorMsg) {
+                        console.log(errorMsg);
+                        GuessrHome.showCreateErrorMsg(errorMsg)
+                    }, 200);
+
+                } else {
+                    setTimeout(waitForProcessToFinish, 100);
+                }
+            }
+            waitForProcessToFinish();
+
+        },
+
         showCreateErrorMsg: function (error) {
-            let text = error["text"];
+            let text = error["msg"];
             console.log("Got error");
             console.log(error);
             MicroModal.close('loading-modal');

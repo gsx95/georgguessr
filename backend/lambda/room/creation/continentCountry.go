@@ -24,12 +24,12 @@ type CreatorCountryContinent struct{}
 
 const countryBoundaryApiEndpoint = "https://nominatim.openstreetmap.org/search.php?country=%s&polygon_geojson=1&format=geojson"
 
-func (cr *CreatorCountryContinent) CreateRoom(reqBody string) (string, error) {
+func (cr *CreatorCountryContinent) CreateRoom(reqBody string) (roomId string, genPos *Positions, err error) {
 	defer pkg.LogDuration(pkg.Track())
 	room := RoomWithPredefinedArea{}
-	err := json.Unmarshal([]byte(reqBody), &room)
+	err = json.Unmarshal([]byte(reqBody), &room)
 	if err != nil {
-		return "", pkg.InternalErr(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
+		return "", nil, pkg.InternalErr(fmt.Sprintf("Error unmarshalling request body: %v %v", reqBody, err))
 	}
 
 	continentCode := room.Continent
@@ -54,19 +54,15 @@ func (cr *CreatorCountryContinent) CreateRoom(reqBody string) (string, error) {
 
 	log.Println("got boundaries, generate random position")
 	randomPositions := cr.randomPositionsInFeature(selectedFeature, room.Rounds + additionalCreationTries)
-	positions := positions{}
-	for i, pos := range randomPositions {
-		positions.Pos = append(positions.Pos, newRoundPos(i, pos.Lat(), pos.Lon()))
+	var positions Positions
+	for _, pos := range randomPositions {
+		positions = append(positions, newPosition(pos.Lat(), pos.Lon()))
 	}
-	log.Println("generate streetviews")
-
-	streetViews, err := getStreetviewPositions(positions, room.Rounds)
+	roomId, err = saveRoom(&room.Room)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	addStreetViewToRoom(&room.Room, *streetViews)
-
-	return createRoom(&room.Room)
+	return roomId, &positions, nil
 }
 
 

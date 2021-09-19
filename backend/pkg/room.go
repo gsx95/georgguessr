@@ -19,28 +19,28 @@ var (
 const RoomsTable = "GeorgGuessrRooms"
 
 type Room struct {
-	ID           string       `json:"id,omitempty"`
+	ID           string       `json:"id"`
 	Players      []string     `json:"players"`
 	MaxPlayers   int          `json:"maxPlayers"`
 	Rounds       int          `json:"maxRounds"`
 	Status       string       `json:"status,omitempty"`
 	TimeLimit    int          `json:"timeLimit"`
 	Areas        [][]GeoPoint `json:"areas,omitempty"`
-	GamesRounds  []GameRound  `json:"gameRounds"`
+	GamesRounds  []GameRound  `json:"gameRounds,omitempty"`
 	PlayersCount int          `json:"playersCount,omitempty"`
 	TTL          int64        `json:"ttl"`
 }
 
 type GeoPoint struct {
 	Lat float64 `json:"lat"`
-	Lon float64 `json:"lng"`
+	Lng float64 `json:"lng"`
 }
 
 type GameRound struct {
 	No            int
 	StartPosition GeoPoint         `json:"startPosition"`
 	Scores        map[string]Guess `json:"scores"`
-	PanoID        string           `json:"panoID,omitempty"`
+	PanoID        string           `json:"panoID"`
 }
 
 type Guess struct {
