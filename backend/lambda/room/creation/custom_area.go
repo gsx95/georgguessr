@@ -21,7 +21,7 @@ func (cr *CreatorCustomArea) CreateRoom(reqBody string) (string, error) {
 
 	positions := positions{}
 
-	for i := 0; i < room.Rounds +additionalCreationTries; i++ {
+	for i := 0; i < room.Rounds + additionalCreationTries; i++ {
 		area := room.Areas[rand.Intn(len(room.Areas))]
 		lat, lon := cr.randomPositionInArea(area)
 		positions.Pos = append(positions.Pos, newRoundPos(i, lat, lon))

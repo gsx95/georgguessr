@@ -23,7 +23,7 @@ func (cr *CreatorUnrestricted) CreateRoom(reqBody string) (string, error) {
 
 	log.Printf("generate random positions\n")
 
-	for i := 0; i < room.Rounds +additionalCreationTries; i++ {
+	for i := 0; i < room.Rounds + additionalCreationTries; i++ {
 		lat, lon := spherand.Geographical()
 		positions.Pos = append(positions.Pos, newRoundPos(i, lat, lon))
 	}

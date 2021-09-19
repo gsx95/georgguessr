@@ -282,7 +282,7 @@ func getStreetviewPositions(positions positions, num int) (*streetViewIDs, error
 	for _, generatedSV := range allStreetViews.Panos {
 		if generatedSV.PanoID != "" {
 			okStreetViews.Panos = append(okStreetViews.Panos, pano{
-				Round: generatedSV.Round,
+				Round: count,
 				Pos: generatedSV.Pos,
 				PanoID: generatedSV.PanoID,
 			})

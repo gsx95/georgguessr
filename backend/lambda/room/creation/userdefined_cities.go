@@ -40,7 +40,7 @@ func (cr *CreatorUserdefinedCities) CreateRoom(reqBody string) (string, error) {
 		return "", pkg.InternalErr(fmt.Sprintf("could not generate features for places %v", room.Places))
 	}
 
-	for i := 0; i < room.Rounds +additionalCreationTries; i++ {
+	for i := 0; i < room.Rounds + additionalCreationTries; i++ {
 		place := room.Places[rand.Intn(len(room.Places))]
 		point, err := randomPosForCity(placeFeatures[cr.getPlaceID(place)], place.Pos)
 		if err != nil {

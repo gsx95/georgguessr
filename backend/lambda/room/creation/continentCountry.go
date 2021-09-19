@@ -53,7 +53,7 @@ func (cr *CreatorCountryContinent) CreateRoom(reqBody string) (string, error) {
 	}
 
 	log.Println("got boundaries, generate random position")
-	randomPositions := cr.randomPositionsInFeature(selectedFeature, room.Rounds+additionalCreationTries)
+	randomPositions := cr.randomPositionsInFeature(selectedFeature, room.Rounds + additionalCreationTries)
 	positions := positions{}
 	for i, pos := range randomPositions {
 		positions.Pos = append(positions.Pos, newRoundPos(i, pos.Lat(), pos.Lon()))
